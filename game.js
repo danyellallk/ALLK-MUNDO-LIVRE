@@ -285,24 +285,30 @@ makeAnimal('sheep',2,11);
 makeAnimal('lamb',4.2,7.8);
 makeAnimal('lamb',6.2,8.2);
 
-// Ovelhas com modelo 3D realista CC0 (carregado uma única vez para as três).
-// O modelo é uma pose estática; o grupo continua passeando pelo mapa.
+// Modelo de ovelha realista CC0. Mantém o modelo procedural visível
+// até o GLB terminar de carregar, evitando ovelhas invisíveis em caso de falha.
 (async()=>{
  try{
-  const {GLTFLoader}=await import('https://esm.sh/three@0.160.0/examples/jsm/loaders/GLTFLoader.js');
+  const {GLTFLoader}=await import('https://esm.sh/three@0.160.0/examples/jsm/loaders/GLTFLoader.js?bundle');
   const loader=new GLTFLoader();
   loader.load('https://cdn.3dassets.dev/assets/29189/v1/model.glb',(gltf)=>{
    const template=gltf.scene;
+   const box=new THREE.Box3().setFromObject(template);
+   const size=new THREE.Vector3();box.getSize(size);
+   const maxDim=Math.max(size.x,size.y,size.z);
+   if(!Number.isFinite(maxDim)||maxDim<=0){console.warn('Modelo de ovelha sem dimensões válidas');return}
    for(const animal of animals.filter(a=>a.kind==='sheep')){
-    for(const child of animal.group.children) child.visible=false;
     const model=template.clone(true);
-    model.scale.setScalar(.82);
-    model.position.set(0,0,0);
+    model.scale.setScalar(1.55/maxDim);
+    const fitted=new THREE.Box3().setFromObject(model);
+    model.position.y-=fitted.min.y;
     animal.group.add(model);
     animal.realisticModel=model;
+    for(const child of animal.group.children){if(child!==model)child.visible=false}
    }
-  },undefined,(err)=>console.warn('Modelo 3D da ovelha não carregou:',err));
- }catch(err){console.warn('Não foi possível iniciar o modelo 3D da ovelha:',err)}
+   console.info('Modelo realista de ovelha carregado.');
+  },undefined,(err)=>console.error('Falha ao carregar o modelo de ovelha; mantendo modelo anterior:',err));
+ }catch(err){console.error('Falha ao iniciar GLTFLoader; mantendo modelo anterior:',err)}
 })();
 function nearestBush(){let best=null,d0=4.5;for(const b of berryBushes){if(!b.visible)continue;const d=Math.hypot(b.position.x-player.position.x,b.position.z-player.position.z);if(d<d0){best=b;d0=d}}return best}
 
