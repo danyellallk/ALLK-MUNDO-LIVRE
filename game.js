@@ -121,8 +121,18 @@ function makeAnimal(kind,x,z){
   const upper=new THREE.Mesh(upperGeo,coat);
   upper.position.y=front?-.18:-.20;pivot.add(upper);
   const knee=new THREE.Group();knee.position.set(0,front?-.37:-.39,0);pivot.add(knee);
-  oval(knee,coat,0,0,0,upperRadius*1.02,.058,upperRadius*1.02);
-  const lower=new THREE.Mesh(new THREE.CapsuleGeometry(lowerRadius,.29,8,14),coat);
+  // Articulação compacta, acompanhando a largura real da perna
+  oval(knee,coat,0,-.008,0,upperRadius*.91,.052,upperRadius*.94);
+  const lowerGeo=new THREE.CapsuleGeometry(lowerRadius,.29,8,14);
+  const lowerPos=lowerGeo.attributes.position;
+  for(let vi=0;vi<lowerPos.count;vi++){
+   const yy=lowerPos.getY(vi);
+   const taper=1-THREE.MathUtils.clamp((-yy-.12)/.28,0,1)*.12;
+   lowerPos.setX(vi,lowerPos.getX(vi)*taper);
+   lowerPos.setZ(vi,lowerPos.getZ(vi)*taper);
+  }
+  lowerGeo.computeVertexNormals();
+  const lower=new THREE.Mesh(lowerGeo,coat);
   lower.position.y=-.18;knee.add(lower);
   // Boleto estreito e casco curto, apoiado no chão
   oval(knee,coat,0,-.325,.018,lowerRadius*1.25,.055,.052);
