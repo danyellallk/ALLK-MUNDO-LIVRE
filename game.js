@@ -28,7 +28,7 @@ function makeAnimal(kind,x,z){
  function oval(parent,material,x,y,z,sx,sy,sz,rx=0,ry=0,rz=0){const m=new THREE.Mesh(new THREE.SphereGeometry(1,28,20),material);m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.rotation.set(rx,ry,rz);parent.add(m);return m}
  // Proporção geral: tronco comprido, peito profundo e garupa arredondada
  oval(g,coat,0,1.02,-.02,isCow?.78:.62,isCow?.48:.42,isCow?.94:.78);
- oval(g,coat,0,1.13,.42,isCow?.48:.37:.36,isCow?.4:.34,isCow?.43:.34);
+ oval(g,coat,0,1.13,.42,isCow?.48:.37,isCow?.4:.34,isCow?.43:.34);
  // Pescoço e cabeça menores em relação ao tronco
  oval(g,coat,0,1.38,.57,isCow?.25:.18,isCow?.39:.34,isCow?.29:.24,-.32);
  oval(g,coat,0,1.68,.78,isCow?.25:.205,isCow?.27:.23,isCow?.26:.22);
