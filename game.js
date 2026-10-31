@@ -33,6 +33,11 @@ function makeAnimal(kind,x,z){
  oval(g,coat,0,1.38,.57,isCow?.25:.18,isCow?.39:.34,isCow?.29:.24,-.32);
  oval(g,coat,0,1.68,.78,isCow?.25:.205,isCow?.27:.23,isCow?.26:.22);
  oval(g,muzzle,0,1.55,.99,isCow?.22:.14,isCow?.13:.095,isCow?.17:.13);
+ // Orelhas com formato natural e interior mais escuro
+ for(const side of [-1,1]){
+  oval(g,coat,side*(isCow?.31:.25),1.78,.72,isCow?.13:.16,.065,.22,side*-.18,0,side*-.32);
+  oval(g,muzzle,side*(isCow?.31:.25),1.785,.755,.075,.025,.13,side*-.18,0,side*-.32);
+ }
  for(const side of [-1,1]){
   oval(g,dark,side*(isCow?.09:.06),1.56,1.125,.022,.018,.012);
   oval(g,dark,side*(isCow?.19:.16),1.72,.965,.055,.065,.035);
@@ -51,12 +56,19 @@ function makeAnimal(kind,x,z){
   legs.push(pivot);
  }
  if(isCow){
+  // Manchas assimétricas no pelo para dar identidade visual à vaca
+  const patchMat=mat(0x55483f,.98);
+  oval(g,patchMat,.69,1.22,.18,.035,.22,.31,.08,0,.12);
+  oval(g,patchMat,-.68,.91,-.28,.032,.19,.25,-.12,0,-.1);
+  oval(g,patchMat,.48,.86,-.48,.028,.14,.19,.1,0,.18);
   for(const side of [-1,1]){
    oval(g,coat,side*.34,1.77,.7,.19,.065,.095,0,0,side*.18);
    const horn=new THREE.Mesh(new THREE.ConeGeometry(.055,.2,12),mat(0xd8c9aa));horn.position.set(side*.17,1.98,.75);horn.rotation.z=side*-.32;g.add(horn);
    oval(g,dark,side*.57,1.12,-.1,.035,.22,.27);
   }
  }else{
+  // Peito e ventre mais claros, característicos de um cervídeo
+  oval(g,mat(0xd8c4a4,.98),0,.83,.39,.36,.25,.52,.12);
   for(const side of [-1,1]){
    oval(g,coat,side*.25,1.88,.72,.17,.055,.075,0,0,side*.25);
    const antler=new THREE.Group();antler.position.set(side*.13,1.91,.78);g.add(antler);
