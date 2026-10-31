@@ -60,19 +60,19 @@ function makeAnimal(kind,x,z){
  // Orelhas com formato natural e interior mais escuro
  const ears=[];
  for(const side of [-1,1]){
-  const ear=oval(g,coat,side*(isCow?.31:.25),1.78,.72,isCow?.13:.16,.065,.22,side*-.18,0,side*-.32);
-  oval(g,innerEarMat,side*(isCow?.31:.25),1.785,.755,.075,.025,.13,side*-.18,0,side*-.32);
-  // Pequena dobra arredondada na base da orelha
-  oval(g,coat,side*(isCow?.245:.195),1.79,.735,.085,.075,.095,side*-.12,0,side*-.2);
+  const ear=oval(g,coat,side*(isCow?.32:.255),1.79,.72,isCow?.145:.17,.047,.235,side*-.16,0,side*-.30);
+  oval(g,innerEarMat,side*(isCow?.32:.255),1.795,.755,isCow?.078:.085,.016,.15,side*-.16,0,side*-.30);
+  // Base da orelha mais estreita e fundida ao crânio
+  oval(g,coat,side*(isCow?.255:.205),1.79,.735,.07,.052,.09,side*-.12,0,side*-.2);
   ears.push(ear);
  }
  for(const side of [-1,1]){
   oval(g,dark,side*(isCow?.09:.06),1.56,1.125,.022,.018,.012);
   oval(g,dark,side*(isCow?.19:.16),1.72,.965,.055,.065,.035);
   // Íris castanha, pupila e brilho dos olhos
-  oval(g,mat(isCow?0x493326:0x68452e,.55),side*(isCow?.205:.175),1.72,1.012,.022,.03,.012);
-  oval(g,eyeMat,side*(isCow?.205:.175),1.72,1.023,.012,.022,.008);
-  oval(g,white,side*(isCow?.214:.183),1.737,1.032,.008,.009,.006);
+  oval(g,mat(isCow?0x493326:0x68452e,.55),side*(isCow?.205:.175),1.72,1.012,.018,.024,.009);
+  oval(g,eyeMat,side*(isCow?.205:.175),1.72,1.021,.009,.017,.006);
+  oval(g,white,side*(isCow?.214:.183),1.735,1.028,.005,.006,.004);
   // Pálpebras suaves e contorno discreto para integrar melhor os olhos ao rosto
   oval(g,coat,side*(isCow?.19:.16),1.765,.997,.071,.022,.026,side*.08);
   oval(g,coat,side*(isCow?.19:.16),1.678,.997,.062,.014,.022,-side*.04);
