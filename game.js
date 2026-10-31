@@ -42,10 +42,26 @@ function makeAnimal(kind,x,z){
   bodyPos.setXYZ(i,x*bellyTaper*backWidth*flank,y+(y<0?y*.055:0),z*(1-lower*.035));
  }
  torso.geometry.computeVertexNormals();
- // Peitoral integrado e mais estreito, sem formar uma segunda barriga
- oval(g,coat,0,1.095,.385,isCow?.385:.31,isCow?.285:.245,isCow?.35:.30);
- // Pescoço e cabeça menores em relação ao tronco
+ // Peitoral integrado ao tronco, com volume gradual e parte inferior menos saliente
+ const chest=oval(g,coat,0,1.095,.385,isCow?.385:.31,isCow?.285:.245,isCow?.35:.30);
+ const chestPos=chest.geometry.attributes.position;
+ for(let vi=0;vi<chestPos.count;vi++){
+  const px=chestPos.getX(vi),py=chestPos.getY(vi),pz=chestPos.getZ(vi);
+  const lower=THREE.MathUtils.clamp(-py,0,1);
+  chestPos.setXYZ(vi,px*(1-lower*.075),py,pz*(1-lower*.045));
+ }
+ chest.geometry.computeVertexNormals();
+ // Pescoço com base mais larga e topo suavemente estreito
  const neck=oval(g,coat,0,1.39,.59,isCow?.215:isSheep?.155:.16,isCow?.365:isSheep?.315:.30,isCow?.34:.29,-.43);
+ const neckPos=neck.geometry.attributes.position;
+ for(let vi=0;vi<neckPos.count;vi++){
+  const py=neckPos.getY(vi);
+  const base=THREE.MathUtils.clamp(-py,0,1);
+  const width=1+base*.09;
+  neckPos.setX(vi,neckPos.getX(vi)*width);
+  neckPos.setZ(vi,neckPos.getZ(vi)*width);
+ }
+ neck.geometry.computeVertexNormals();
  // Ombros ligados ao peito por uma transição alongada, evitando efeito de esfera separada
  oval(g,coat,0,1.12,.34,isCow?.39:.30,isCow?.29:.245,isCow?.40:.34,-.12);
  const head=oval(g,coat,0,1.685,.825,isCow?.245:.20,isCow?.255:.22,isCow?.275:.235,-.08);
