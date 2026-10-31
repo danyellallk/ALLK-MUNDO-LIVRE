@@ -221,7 +221,7 @@ for(let i=0;i<5;i++){
 let gameClock=9;
 const daySky=new THREE.Color(0x8fc8ed),nightSky=new THREE.Color(0x101a35);
 function updateDayNight(dt){
- gameClock=(gameClock+dt*.4)%24;
+ gameClock=(gameClock+dt*.04)%24;
  const angle=(gameClock-6)/12*Math.PI;
  const sunHeight=Math.sin(angle);
  const daylight=THREE.MathUtils.smoothstep(sunHeight,-.18,.28);
