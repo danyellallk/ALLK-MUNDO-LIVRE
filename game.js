@@ -47,15 +47,16 @@ function makeAnimal(kind,x,z){
   oval(g,white,side*(isCow?.214:.183),1.737,1.007,.011,.013,.008);
  }
  // Quatro pernas longas e mais finas, com joelhos e cascos pequenos
- const legs=[];
+ const legs=[],knees=[];
  const xs=isCow?[-.49,.49]:[-.34,.34],zs=[.48,-.56];
  for(let xi=0;xi<2;xi++)for(let zi=0;zi<2;zi++){
   const pivot=new THREE.Group();pivot.position.set(xs[xi],.78,zs[zi]);g.add(pivot);
   const upper=new THREE.Mesh(new THREE.CylinderGeometry(isCow?.09:.065,isCow?.065:.045,.38,16),coat);upper.position.y=-.19;pivot.add(upper);
-  oval(pivot,coat,0,-.39,0,isCow?.075:.055,.075,isCow?.065:.05);
-  const lower=new THREE.Mesh(new THREE.CylinderGeometry(isCow?.052:.038,isCow?.042:.032,.34,14),isCow?coat:dark);lower.position.set(0,-.59,0);pivot.add(lower);
-  oval(pivot,hoofMat,0,-.77,.035,isCow?.075:.06,.055,.105);
-  legs.push(pivot);
+  const knee=new THREE.Group();knee.position.set(0,-.39,0);pivot.add(knee);
+  oval(knee,coat,0,0,0,isCow?.075:.055,.075,isCow?.065:.05);
+  const lower=new THREE.Mesh(new THREE.CylinderGeometry(isCow?.052:.038,isCow?.042:.032,.34,14),isCow?coat:dark);lower.position.y=-.17;knee.add(lower);
+  oval(knee,hoofMat,0,-.38,.035,isCow?.075:.06,.055,.105);
+  legs.push(pivot);knees.push(knee);
  }
  if(isCow){
   // Manchas assimétricas no pelo para dar identidade visual à vaca
@@ -83,7 +84,7 @@ function makeAnimal(kind,x,z){
  const tailMesh=new THREE.Mesh(new THREE.CylinderGeometry(.018,.035,.38,10),isCow?coat:dark);tailMesh.position.y=-.17;tailMesh.rotation.x=-.55;tail.add(tailMesh);const tailTuft=oval(tail,isCow?dark:coat,0,-.36,-.015,isCow?.075:.065,.12,.075);
  g.scale.setScalar(isCow?.92:.84);
  g.position.set(x,0,z);scene.add(g);
- animals.push({group:g,kind,legs,tail,ears,neck,head,torso,tailTuft,phase:Math.random()*6,speed:.45+Math.random()*.35,homeX:x,homeZ:z});
+ animals.push({group:g,kind,legs,knees,tail,ears,neck,head,torso,tailTuft,phase:Math.random()*6,speed:.45+Math.random()*.35,homeX:x,homeZ:z});
 }
 for(let i=0;i<5;i++)makeAnimal(i<3?'deer':'cow',(Math.random()-.5)*85+35,(Math.random()-.5)*85+25);
 function nearestBush(){let best=null,d0=4.5;for(const b of berryBushes){if(!b.visible)continue;const d=Math.hypot(b.position.x-player.position.x,b.position.z-player.position.z);if(d<d0){best=b;d0=d}}return best}
@@ -335,7 +336,7 @@ function updateWind(dt){
  }
 }
 
-function update(dt){updateDayNight(dt);updateWeather(dt);updateWind(dt);const nearChest=insideCabin&&Math.hypot(player.position.x-9.7,player.position.z+14.8)<2.8;document.querySelector('#chestPanel').hidden=!nearChest;storeButton.disabled=!nearChest||(wood===0&&berries===0);takeButton.disabled=!nearChest||(storedWood===0&&storedBerries===0);const nearCabin=Math.hypot(player.position.x-12,player.position.z-(-13))<8;interact.disabled=!nearCabin;if(insideCabin){interact.disabled=false;interact.textContent='SAIR DA CABANA'}else if(!nearCabin)interact.textContent='APROXIME-SE DA CABANA';else if(!cabinOpen)interact.textContent='ABRIR CABANA';else interact.textContent='ENTRAR NA CABANA';hunger=Math.max(0,hunger-dt*.12);if(hunger===0)document.querySelector('#health').textContent=Math.max(0,Number(document.querySelector('#health').textContent)-dt*.7).toFixed(0);for(const cloud of clouds){cloud.group.position.x+=cloud.speed*dt;if(cloud.group.position.x>125)cloud.group.position.x=-125;}for(const bird of birds){bird.phase+=dt*2.2;bird.group.position.x=bird.homeX+Math.sin(bird.phase*.45)*8;bird.group.position.y=20+Math.sin(bird.phase*2)*.7;bird.group.position.z=bird.homeZ+Math.cos(bird.phase*.45)*7;bird.group.rotation.y=Math.atan2(Math.cos(bird.phase*.45),-Math.sin(bird.phase*.45));bird.leftWing.rotation.z=-.18+Math.sin(bird.phase*5)*.42;bird.rightWing.rotation.z=.18-Math.sin(bird.phase*5)*.42;}for(const a of animals){a.phase+=dt*a.speed;a.group.position.x=a.homeX+Math.sin(a.phase)*5;a.group.position.z=a.homeZ+Math.cos(a.phase*.7)*4;a.group.rotation.y=Math.atan2(Math.cos(a.phase)*5,-Math.sin(a.phase*.7)*2.8);for(let j=0;j<a.legs.length;j++){const front=j%2===0?1:-1;const side=j<2?1:-1;a.legs[j].rotation.x=Math.sin(a.phase*3+front*Math.PI*.5+(side<0?Math.PI:0))*.32}if(a.tail)a.tail.rotation.x=Math.sin(a.phase*2.2)*.18;if(a.torso)a.torso.scale.y=(a.kind==='cow'?.48:.42)*(1+Math.sin(a.phase*1.8)*.012);if(a.ears){a.ears[0].rotation.z=Math.sin(a.phase*1.7)*.08-.12;a.ears[1].rotation.z=-Math.sin(a.phase*1.5+1)*.08+.12}if(a.neck)a.neck.rotation.x=-.32+Math.sin(a.phase*1.4)*.035;if(a.head)a.head.rotation.x=Math.sin(a.phase*1.4+.5)*.045;a.group.position.y=Math.abs(Math.sin(a.phase*3))*.035}const forward=(keys.w||keys.arrowup?1:0)-(keys.s||keys.arrowdown?1:0)-joyY,side=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joyX,s=Math.sin(yaw),c=Math.cos(yaw);const oldX=player.position.x,oldZ=player.position.z;
+function update(dt){updateDayNight(dt);updateWeather(dt);updateWind(dt);const nearChest=insideCabin&&Math.hypot(player.position.x-9.7,player.position.z+14.8)<2.8;document.querySelector('#chestPanel').hidden=!nearChest;storeButton.disabled=!nearChest||(wood===0&&berries===0);takeButton.disabled=!nearChest||(storedWood===0&&storedBerries===0);const nearCabin=Math.hypot(player.position.x-12,player.position.z-(-13))<8;interact.disabled=!nearCabin;if(insideCabin){interact.disabled=false;interact.textContent='SAIR DA CABANA'}else if(!nearCabin)interact.textContent='APROXIME-SE DA CABANA';else if(!cabinOpen)interact.textContent='ABRIR CABANA';else interact.textContent='ENTRAR NA CABANA';hunger=Math.max(0,hunger-dt*.12);if(hunger===0)document.querySelector('#health').textContent=Math.max(0,Number(document.querySelector('#health').textContent)-dt*.7).toFixed(0);for(const cloud of clouds){cloud.group.position.x+=cloud.speed*dt;if(cloud.group.position.x>125)cloud.group.position.x=-125;}for(const bird of birds){bird.phase+=dt*2.2;bird.group.position.x=bird.homeX+Math.sin(bird.phase*.45)*8;bird.group.position.y=20+Math.sin(bird.phase*2)*.7;bird.group.position.z=bird.homeZ+Math.cos(bird.phase*.45)*7;bird.group.rotation.y=Math.atan2(Math.cos(bird.phase*.45),-Math.sin(bird.phase*.45));bird.leftWing.rotation.z=-.18+Math.sin(bird.phase*5)*.42;bird.rightWing.rotation.z=.18-Math.sin(bird.phase*5)*.42;}for(const a of animals){a.phase+=dt*a.speed;a.group.position.x=a.homeX+Math.sin(a.phase)*5;a.group.position.z=a.homeZ+Math.cos(a.phase*.7)*4;a.group.rotation.y=Math.atan2(Math.cos(a.phase)*5,-Math.sin(a.phase*.7)*2.8);for(let j=0;j<a.legs.length;j++){const front=j%2===0?1:-1;const side=j<2?1:-1;const stride=Math.sin(a.phase*3+front*Math.PI*.5+(side<0?Math.PI:0));a.legs[j].rotation.x=stride*.32;if(a.knees)a.knees[j].rotation.x=Math.max(0,-stride)*.48}if(a.tail)a.tail.rotation.x=Math.sin(a.phase*2.2)*.18;if(a.torso)a.torso.scale.y=(a.kind==='cow'?.48:.42)*(1+Math.sin(a.phase*1.8)*.012);if(a.ears){a.ears[0].rotation.z=Math.sin(a.phase*1.7)*.08-.12;a.ears[1].rotation.z=-Math.sin(a.phase*1.5+1)*.08+.12}if(a.neck)a.neck.rotation.x=-.32+Math.sin(a.phase*1.4)*.035;if(a.head)a.head.rotation.x=Math.sin(a.phase*1.4+.5)*.045;a.group.position.y=Math.abs(Math.sin(a.phase*3))*.035}const forward=(keys.w||keys.arrowup?1:0)-(keys.s||keys.arrowdown?1:0)-joyY,side=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joyX,s=Math.sin(yaw),c=Math.cos(yaw);const oldX=player.position.x,oldZ=player.position.z;
 const nextX=oldX+(side*c-forward*s)*6*(running?1.6:1)*dt,nextZ=oldZ+(side*s-forward*c)*6*(running?1.6:1)*dt;
 const oldLX=oldX-12,oldLZ=oldZ+13,newLX=nextX-12,newLZ=nextZ+13;
 const insideBounds=Math.abs(newLX)<3.72&&Math.abs(newLZ)<2.72;
