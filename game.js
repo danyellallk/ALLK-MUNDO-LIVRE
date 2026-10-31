@@ -299,7 +299,7 @@ makeAnimal('lamb',6.2,8.2);
    if(!Number.isFinite(maxDim)||maxDim<=0){console.warn('Modelo de ovelha sem dimensões válidas');return}
    for(const animal of animals.filter(a=>a.kind==='sheep')){
     const model=template.clone(true);
-    model.scale.setScalar(1.55/maxDim);
+    model.scale.setScalar(2.25/maxDim);
     const fitted=new THREE.Box3().setFromObject(model);
     model.position.y-=fitted.min.y;
     animal.group.add(model);
