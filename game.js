@@ -34,8 +34,12 @@ function makeAnimal(kind,x,z){
  for(let i=0;i<bodyPos.count;i++){
   const x=bodyPos.getX(i),y=bodyPos.getY(i),z=bodyPos.getZ(i);
   const lower=Math.max(0,-y);
-  const taper=1-lower*.075;
-  bodyPos.setXYZ(i,x*taper,y+(y<0?y*.045:0),z*(1-lower*.025));
+  const upper=Math.max(0,y);
+  // Dorso um pouco mais firme, flancos suaves e ventre menos pesado
+  const bellyTaper=1-lower*.095;
+  const backWidth=1+upper*.025;
+  const flank=1-Math.pow(Math.abs(z),2)*.018;
+  bodyPos.setXYZ(i,x*bellyTaper*backWidth*flank,y+(y<0?y*.055:0),z*(1-lower*.035));
  }
  torso.geometry.computeVertexNormals();
  // Peitoral integrado e mais estreito, sem formar uma segunda barriga
