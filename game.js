@@ -33,8 +33,31 @@ const sand=new THREE.Mesh(new THREE.CircleGeometry(18,48),mat(0xc5b47a));sand.ro
 const lake=new THREE.Mesh(new THREE.CircleGeometry(15.5,48),new THREE.MeshStandardMaterial({color:0x329bc4,roughness:.25,metalness:.12}));lake.rotation.x=-Math.PI/2;lake.position.set(-28,.04,-20);scene.add(lake);
 const dirtTexture=makeSurfaceTexture('#806344',['#d8bd8a','#4c3928','#b59667','#685037','#e0c99b'],291);dirtTexture.repeat.set(2,18);dirtTexture.magFilter=THREE.LinearFilter;dirtTexture.minFilter=THREE.LinearMipmapLinearFilter;
 const path=new THREE.Mesh(new THREE.PlaneGeometry(5,75),new THREE.MeshStandardMaterial({map:dirtTexture,roughness:1}));path.rotation.x=-Math.PI/2;path.position.set(7,.015,-22);scene.add(path);
-const trees=[],trunkMat=mat(0x765033),leafMat=mat(0x28683c),leaf2=mat(0x3d8244);
-function tree(x,z,s=1){const g=new THREE.Group();const t=new THREE.Mesh(new THREE.CylinderGeometry(.2*s,.3*s,2.2*s,7),trunkMat);t.position.y=1.1*s;g.add(t);const c=new THREE.Mesh(new THREE.ConeGeometry(1.35*s,3.6*s,8),leafMat);c.position.y=3.1*s;g.add(c);const c2=new THREE.Mesh(new THREE.SphereGeometry(.85*s,8,7),leaf2);c2.position.set(.45*s,3.15*s,.1*s);g.add(c2);g.position.set(x,0,z);g.userData.windPhase=Math.random()*Math.PI*2;g.userData.windStrength=.012+Math.random()*.012;scene.add(g);trees.push(g)}
+function makeBarkTexture(){
+ const c=document.createElement('canvas');c.width=256;c.height=512;const q=c.getContext('2d');
+ q.fillStyle='#60402b';q.fillRect(0,0,256,512);let seed=73;
+ const rnd=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
+ for(let i=0;i<950;i++){const x=rnd()*256,y=rnd()*512;q.globalAlpha=.12+rnd()*.28;q.strokeStyle=['#ad8050','#241b15','#d0a16b','#49301f'][i%4];q.lineWidth=1+rnd()*4;q.beginPath();q.moveTo(x,y);q.lineTo(x+(rnd()-.5)*9,y+12+rnd()*85);q.stroke()}
+ q.globalAlpha=1;const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.colorSpace=THREE.SRGBColorSpace;return t;
+}
+function makeLeafTexture(){
+ const c=document.createElement('canvas');c.width=256;c.height=256;const q=c.getContext('2d');
+ q.fillStyle='#315f2b';q.fillRect(0,0,256,256);let seed=119;
+ const rnd=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
+ for(let i=0;i<1800;i++){const x=rnd()*256,y=rnd()*256,r=1+rnd()*5;q.globalAlpha=.18+rnd()*.5;q.fillStyle=['#8fb84c','#477d32','#244d27','#c0c96a','#39703a'][i%5];q.beginPath();q.ellipse(x,y,r*1.5,r,.4,0,Math.PI*2);q.fill()}
+ q.globalAlpha=1;const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t;
+}
+const barkTexture=makeBarkTexture(),leafTexture=makeLeafTexture();
+const trees=[],trunkMat=new THREE.MeshStandardMaterial({map:barkTexture,roughness:1}),leafMat=new THREE.MeshStandardMaterial({map:leafTexture,roughness:1});
+const canopyGeo=new THREE.SphereGeometry(1,14,11);
+function tree(x,z,s=1){
+ const g=new THREE.Group();
+ const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.18*s,.34*s,2.7*s,10,5),trunkMat);trunk.position.y=1.35*s;g.add(trunk);
+ for(let k=0;k<3;k++){const branch=new THREE.Mesh(new THREE.CylinderGeometry(.045*s,.10*s,.9*s,7),trunkMat);branch.position.set((k-1)*.23*s,2.15*s,.12*s);branch.rotation.z=(k-1)*-.55;g.add(branch)}
+ const clusters=[[-.55,3.05,0,.92],[.48,3.15,.12,1.02],[0,3.75,-.12,.95],[.02,2.85,.62,.82]];
+ for(const [cx,cy,cz,r] of clusters){const crown=new THREE.Mesh(canopyGeo,leafMat);crown.position.set(cx*s,cy*s,cz*s);crown.scale.set(r*s,r*.82*s,r*s);g.add(crown)}
+ g.position.set(x,0,z);g.userData.windPhase=Math.random()*Math.PI*2;g.userData.windStrength=.012+Math.random()*.012;scene.add(g);trees.push(g)
+}
 for(let i=0;i<115;i++){let x=(Math.random()-.5)*220,z=(Math.random()-.5)*220;if(Math.hypot(x,z)>13&&!(x<-8&&x>-49&&z<-1&&z>-39))tree(x,z,.65+Math.random()*.8)}
 // Grama 3D: milhares de folhas finas em pequenos tufos, desenhadas em uma única chamada por instância.
 {
