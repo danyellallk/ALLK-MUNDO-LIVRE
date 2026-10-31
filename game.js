@@ -159,8 +159,9 @@ function makeAnimal(kind,x,z){
   const pos=fleeceGeo.attributes.position;
   for(let i=0;i<pos.count;i++){
    const x=pos.getX(i),y=pos.getY(i),z=pos.getZ(i);
-   const fine=(Math.sin(x*38+y*17+z*23)*Math.sin(z*31-y*29+x*13))*.004;
-   const broad=Math.sin(x*11+z*9+y*7)*.003;
+   // Ondulações largas e discretas dão aspecto de lã natural sem formar tufos
+   const fine=(Math.sin(x*24+y*13+z*19)*Math.sin(z*21-y*17+x*11))*.0025;
+   const broad=(Math.sin(x*8+z*7+y*6)+Math.sin(z*5-y*9+x*4))*.0035;
    const k=1+fine+broad;
    pos.setXYZ(i,x*.655*k,y*.445*k,z*.845*k);
   }
