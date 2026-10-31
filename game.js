@@ -22,7 +22,7 @@ grid.position.y=-.06; scene.add(grid);
 
 function tree(x,z,s=1){
   const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.18*s,.25*s,2*s,6),new THREE.MeshStandardMaterial({color:0x76502e}));
-  trunk.position.set(x,s,z); scene.add(trunk);
+  trunk.position.set(0,s,0); group.add(trunk);
   const crown=new THREE.Mesh(new THREE.ConeGeometry(1.15*s,3*s,7),new THREE.MeshStandardMaterial({color:0x28633b}));
   crown.position.set(x,2.8*s,z); scene.add(crown);
 }
@@ -34,7 +34,7 @@ for(let i=0;i<105;i++){
   const x=(Math.random()-.5)*180,z=(Math.random()-.5)*180;
   if(Math.hypot(x,z)>9) tree(x,z,.7+Math.random()*.65);
 }
-for(let i=0;i<34;i++) rock((Math.random()-.5)*170,(Math.random()-.5)*170,.6+Math.random());
+document.querySelector('#trees').textContent=trees.length;\nfor(let i=0;i<34;i++) rock((Math.random()-.5)*170,(Math.random()-.5)*170,.6+Math.random());
 
 const player=new THREE.Group();
 const skin=new THREE.MeshStandardMaterial({color:0xc58e68});
@@ -60,7 +60,7 @@ let lookPointer=null,lastX=0,lastY=0;
 renderer.domElement.addEventListener('pointerdown',e=>{if(e.clientX<innerWidth*.42 && e.clientY>innerHeight*.55)return;lookPointer=e.pointerId;lastX=e.clientX;lastY=e.clientY;renderer.domElement.setPointerCapture(e.pointerId)});
 renderer.domElement.addEventListener('pointermove',e=>{if(e.pointerId!==lookPointer)return;yaw-=(e.clientX-lastX)*.005;pitch=Math.max(-.7,Math.min(.45,pitch+(e.clientY-lastY)*.003));lastX=e.clientX;lastY=e.clientY});
 renderer.domElement.addEventListener('pointerup',()=>lookPointer=null);
-document.querySelector('#jump').onclick=()=>{if(grounded){velocityY=7;grounded=false}};
+const collectButton=document.querySelector('#collect');\nfunction nearestTree(){let best=null,bestD=3.4;for(const t of trees){if(!t.visible)continue;const d=Math.hypot(t.position.x-player.position.x,t.position.z-player.position.z);if(d<bestD){best=t;bestD=d}}return best}\ncollectButton.onclick=()=>{const t=nearestTree();if(!t)return;t.visible=false;wood+=3;document.querySelector('#wood').textContent=wood;document.querySelector('#trees').textContent=trees.filter(x=>x.visible).length};\n document.querySelector('#jump').onclick=()=>{if(grounded){velocityY=7;grounded=false}};
 document.querySelector('#camera').onclick=()=>{firstPerson=!firstPerson;document.querySelector('#camera').textContent=firstPerson?'VOLTAR 3ª PESSOA':'1ª / 3ª PESSOA'};
 
 function update(dt){
@@ -79,7 +79,7 @@ function update(dt){
  else {const dist=6.5;camera.position.set(target.x+Math.sin(yaw)*dist,target.y+2.2+pitch*3,target.z+Math.cos(yaw)*dist);camera.lookAt(target)}
 }
 let last=performance.now();
-function animate(now){requestAnimationFrame(animate);const dt=Math.min((now-last)/1000,.04);last=now;update(dt);renderer.render(scene,camera)}
+function animate(now){requestAnimationFrame(animate);const near=nearestTree();collectButton.disabled=!near;collectButton.textContent=near?'COLETAR MADEIRA (+3)':'APROXIME-SE DE UMA ÁRVORE';const dt=Math.min((now-last)/1000,.04);last=now;update(dt);renderer.render(scene,camera)}
 requestAnimationFrame(animate);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 document.querySelector('#loading').style.display='none';
