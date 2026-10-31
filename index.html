@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
   <meta name="theme-color" content="#101820">
   <title>ALLK MUNDO LIVRE</title>
-  <link rel="stylesheet" href="style.css?v=18">
+  <link rel="stylesheet" href="style.css?v=19">
 </head>
 <body>
   <div id="loading">Preparando seu mundo...</div>
@@ -15,6 +15,7 @@
     <div class="help">Arraste para olhar • Use o controle para andar • Toque em PULAR</div>
   </div>
   <div id="joystick"><div id="stick"></div></div>
+  <div id="chestPanel" hidden><b>📦 BAÚ DA CABANA</b><div>🪵 Madeira guardada: <span id="storedWood">0</span></div><div>🍓 Frutas guardadas: <span id="storedBerries">0</span></div></div>
   <div id="inventoryPanel" hidden>
     <b>🎒 INVENTÁRIO</b>
     <div>🪵 Madeira: <span id="invWood">0</span></div>
@@ -24,6 +25,8 @@
   </div>
   <div id="actions">
     <button id="interact" disabled>ABRIR CABANA</button>
+    <button id="storeChest" disabled>GUARDAR NO BAÚ</button>
+    <button id="takeChest" disabled>RETIRAR DO BAÚ</button>
     <button id="collect">COLETAR MADEIRA</button>
     <button id="craft">CRIAR FOGUEIRA (8)</button>
     <button id="bag">🎒 INVENTÁRIO</button>
@@ -32,6 +35,6 @@
     <button id="jump">PULAR</button>
     <button id="camera">1ª / 3ª PESSOA</button>
   </div>
-  <script type="module" src="game.js?v=18"></script>
+  <script type="module" src="game.js?v=19"></script>
 </body>
 </html>
