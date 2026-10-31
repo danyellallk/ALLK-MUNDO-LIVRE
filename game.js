@@ -36,7 +36,36 @@ const path=new THREE.Mesh(new THREE.PlaneGeometry(5,75),new THREE.MeshStandardMa
 const trees=[],trunkMat=mat(0x765033),leafMat=mat(0x28683c),leaf2=mat(0x3d8244);
 function tree(x,z,s=1){const g=new THREE.Group();const t=new THREE.Mesh(new THREE.CylinderGeometry(.2*s,.3*s,2.2*s,7),trunkMat);t.position.y=1.1*s;g.add(t);const c=new THREE.Mesh(new THREE.ConeGeometry(1.35*s,3.6*s,8),leafMat);c.position.y=3.1*s;g.add(c);const c2=new THREE.Mesh(new THREE.SphereGeometry(.85*s,8,7),leaf2);c2.position.set(.45*s,3.15*s,.1*s);g.add(c2);g.position.set(x,0,z);g.userData.windPhase=Math.random()*Math.PI*2;g.userData.windStrength=.012+Math.random()*.012;scene.add(g);trees.push(g)}
 for(let i=0;i<115;i++){let x=(Math.random()-.5)*220,z=(Math.random()-.5)*220;if(Math.hypot(x,z)>13&&!(x<-8&&x>-49&&z<-1&&z>-39))tree(x,z,.65+Math.random()*.8)}
-for(let i=0;i<70;i++){const x=(Math.random()-.5)*200,z=(Math.random()-.5)*200;if(Math.hypot(x,z)>8){const tuft=new THREE.Mesh(new THREE.ConeGeometry(.22+Math.random()*.18,.6,5),mat(0x3f7137));tuft.position.set(x,.25,z);scene.add(tuft)}}
+// Grama 3D: milhares de folhas finas em pequenos tufos, desenhadas em uma única chamada por instância.
+{
+ const bladeMat=new THREE.MeshStandardMaterial({color:0x6b963f,roughness:1,side:THREE.DoubleSide});
+ const bladeGeo=new THREE.BufferGeometry();
+ const verts=[
+  0,0,0, -.075,.42,0, .075,.42,0,
+  0,0,0, 0,.53,.035, .045,.38,.035,
+  0,0,0, -.035,.36,-.035, 0,.49,-.035
+ ];
+ bladeGeo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
+ bladeGeo.computeVertexNormals();
+ const grass=new THREE.InstancedMesh(bladeGeo,bladeMat,12500);
+ const dummy=new THREE.Object3D();
+ let count=0;
+ for(let i=0;i<12500;i++){
+  const x=(Math.random()-.5)*210,z=(Math.random()-.5)*210;
+  const lakeDist=Math.hypot(x+28,z+20);
+  const pathZone=Math.abs(x-7)<3.8&&z>-61&&z<17;
+  const sandZone=lakeDist<18.8;
+  if(lakeDist<16.2||pathZone||sandZone)continue;
+  dummy.position.set(x,.015,z);
+  dummy.rotation.set(0,Math.random()*Math.PI*2,0);
+  const scale=.55+Math.random()*1.05;
+  dummy.scale.set(scale,.65+Math.random()*.8,scale);
+  dummy.updateMatrix();grass.setMatrixAt(count++,dummy.matrix);
+ }
+ grass.count=count;
+ grass.instanceMatrix.needsUpdate=true;
+ scene.add(grass);
+}
 for(let i=0;i<38;i++){const r=new THREE.Mesh(new THREE.DodecahedronGeometry(.7+Math.random()*.8,0),mat(0x858b88));r.position.set((Math.random()-.5)*190,.35,(Math.random()-.5)*190);r.scale.y=.65;scene.add(r)}
 
 // Arbustos de frutas silvestres
