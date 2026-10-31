@@ -94,6 +94,32 @@ for(const side of [-1,1]){
  addPart(player,new THREE.BoxGeometry(.28,.035,.44),mat(0x777777),side*.2,.045,.09);
  addPart(player,new THREE.BoxGeometry(.13,.07,.025),mat(0x333333),side*.2,.14,.29);
 }
+// Volume corporal e acabamento das roupas
+// Ombros arredondados e peito com transição mais humana
+for(const side of [-1,1]){
+ const shoulder=addPart(player,new THREE.SphereGeometry(.17,16,12),shirt,side*.34,1.69,0,1.12,.88,1);
+ shoulder.rotation.z=side*.12;
+ addPart(player,new THREE.SphereGeometry(.105,14,10),shirtDark,side*.405,1.62,.012,.92,.72,.94);
+ // Costura lateral e punho da manga
+ addPart(player,new THREE.TorusGeometry(.105,.012,6,14),shirtDark,side*.405,1.56,0,1,1,.9).rotation.x=Math.PI/2;
+ // Bolsos laterais da calça e costuras discretas
+ addPart(player,new THREE.BoxGeometry(.12,.19,.018),mat(0x252b34),side*.235,.72,.13);
+ addPart(player,new THREE.BoxGeometry(.025,.12,.012),mat(0x59616b),side*.235,.72,.145);
+}
+// Barra inferior da camiseta e costura da cintura
+addPart(player,new THREE.TorusGeometry(.285,.018,6,20),shirtDark,0,1.02,0,1,.72,.88).rotation.x=Math.PI/2;
+for(const side of [-1,1]){
+ // Cabedal arredondado do tênis, sobre a sola já existente
+ addPart(player,new THREE.SphereGeometry(.15,14,10),shoeMat,side*.2,.13,.17,1,.62,1.42);
+ // Detalhe da lingueta e cadarços
+ addPart(player,new THREE.BoxGeometry(.09,.035,.12),mat(0x777777),side*.2,.19,.245);
+ for(let lace=0;lace<3;lace++){
+  addPart(player,new THREE.BoxGeometry(.105,.012,.012),mat(0xbababa),side*.2,.205+lace*.018,.27);
+ }
+}
+// Pequenos detalhes de tecido no peito
+addPart(player,new THREE.BoxGeometry(.12,.012,.012),shirtDark,0,1.55,.253);
+addPart(player,new THREE.BoxGeometry(.018,.11,.012),shirtDark,.12,1.48,.253);
 // Membros articulados: ombros, cotovelos, quadris e joelhos
 const armPivots=[],elbowPivots=[],legPivots=[],kneePivots=[];
 for(const side of [-1,1]){
