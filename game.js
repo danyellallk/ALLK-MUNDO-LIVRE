@@ -47,6 +47,8 @@ function makeAnimal(kind,x,z){
  for(const side of [-1,1]){
   const ear=oval(g,coat,side*(isCow?.31:.25),1.78,.72,isCow?.13:.16,.065,.22,side*-.18,0,side*-.32);
   oval(g,innerEarMat,side*(isCow?.31:.25),1.785,.755,.075,.025,.13,side*-.18,0,side*-.32);
+  // Pequena dobra arredondada na base da orelha
+  oval(g,coat,side*(isCow?.245:.195),1.79,.735,.085,.075,.095,side*-.12,0,side*-.2);
   ears.push(ear);
  }
  for(const side of [-1,1]){
