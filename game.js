@@ -54,15 +54,30 @@ addPart(player,new THREE.CylinderGeometry(.13,.14,.22,12),skin,0,1.91,0);
 addPart(player,new THREE.SphereGeometry(.265,18,14),skin,0,2.19,0,.88,1.12,.9);
 addPart(player,new THREE.SphereGeometry(.27,16,10),hairMat,0,2.34,-.035,.92,.55,.94);
 addPart(player,new THREE.SphereGeometry(.105,12,8),hairMat,0,2.28,.205,1.15,.6,.8);
-for(const x of [-.105,.105]){addPart(player,new THREE.SphereGeometry(.027,8,6),eyeMat,x,2.22,.235,1,1,.55);addPart(player,new THREE.SphereGeometry(.045,8,6),skin,x*2.35,2.18,0,.65,1,.7)}
+for(const side of [-1,1]){
+ const lock=addPart(player,new THREE.SphereGeometry(.105,12,10),hairMat,side*.19,2.29,.035,.72,1.1,.78);
+ lock.rotation.z=side*-.18;
+}
+addPart(player,new THREE.SphereGeometry(.12,12,8),hairMat,0,2.405,-.055,1.05,.42,.92);
+for(const x of [-.105,.105]){
+ addPart(player,new THREE.SphereGeometry(.052,16,12),mat(0xf1e9df),x,2.22,.226,1.05,.78,.48);
+ addPart(player,new THREE.SphereGeometry(.026,14,10),mat(0x5b3827),x,2.22,.251);
+ addPart(player,new THREE.SphereGeometry(.013,10,8),eyeMat,x,2.22,.264);
+ addPart(player,new THREE.SphereGeometry(.007,8,6),mat(0xffffff),x-.006,2.23,.271);
+ addPart(player,new THREE.SphereGeometry(.045,12,8),skin,x*2.35,2.18,0,.65,1,.7);
+}
 addPart(player,new THREE.SphereGeometry(.055,10,8),skin,0,2.12,.25,.65,.75,.7);
 // detalhes do rosto: orelhas, nariz, boca e sobrancelhas
 for(const side of [-1,1]){
- addPart(player,new THREE.SphereGeometry(.075,10,8),skin,side*.232,2.18,0,.65,1,.7);
+ addPart(player,new THREE.SphereGeometry(.075,16,12),skin,side*.232,2.18,0,.65,1,.7);
+ addPart(player,new THREE.SphereGeometry(.034,10,8),mat(0x9b6250),side*.253,2.18,.038,.55,1,.45);
  addPart(player,new THREE.BoxGeometry(.09,.025,.035),hairMat,side*.105,2.265,.235);
 }
-addPart(player,new THREE.SphereGeometry(.045,10,8),skin,0,2.17,.265,.75,.85,.8);
-addPart(player,new THREE.BoxGeometry(.075,.018,.018),mat(0x633d35),0,2.075,.238);
+capsuleBetween(player,[0,2.24,.235],[0,2.13,.29],.027,skin);
+addPart(player,new THREE.SphereGeometry(.052,14,10),skin,0,2.13,.285,.9,.72,.8);
+for(const side of [-1,1])addPart(player,new THREE.SphereGeometry(.012,8,6),mat(0x70483a),side*.026,2.105,.323);
+addPart(player,new THREE.BoxGeometry(.075,.012,.012),mat(0x633d35),0,2.075,.247);
+addPart(player,new THREE.BoxGeometry(.085,.018,.012),mat(0x8f5148),0,2.055,.246);
 // gola, mangas, bolso e costuras da camiseta
 addPart(player,new THREE.TorusGeometry(.145,.035,7,16),shirtDark,0,1.84,.015,1,1,.8).rotation.x=Math.PI/2;
 for(const side of [-1,1]){
@@ -86,7 +101,13 @@ for(const side of [-1,1]){
  capsuleBetween(arm,[0,0,0],[side*.035,-.36,0],.115,shirt);
  const elbow=new THREE.Group();elbow.position.set(side*.035,-.36,0);arm.add(elbow);elbowPivots.push(elbow);
  capsuleBetween(elbow,[0,0,0],[side*.015,-.34,.015],.085,skin);
- addPart(elbow,new THREE.SphereGeometry(.085,10,8),skin,side*.015,-.36,.02,.9,1,.9);
+ addPart(elbow,new THREE.SphereGeometry(.085,14,10),skin,side*.015,-.36,.02,.9,1,.9);
+ addPart(elbow,new THREE.SphereGeometry(.078,14,10),skin,side*.015,-.445,.055,.82,.72,.72);
+ for(let finger=0;finger<4;finger++){
+  const fx=side*.015+(finger-1.5)*.035;
+  capsuleBetween(elbow,[fx,-.47,.075],[fx,-.555-(finger===1||finger===2?.018:0),.08],.014,skin);
+ }
+ capsuleBetween(elbow,[side*.075,-.43,.06],[side*.105,-.50,.095],.018,skin);
  const leg=new THREE.Group();leg.position.set(side*.19,.82,0);player.add(leg);legPivots.push(leg);
  capsuleBetween(leg,[0,0,0],[0,-.39,0],.145,pants);
  const knee=new THREE.Group();knee.position.set(0,-.39,0);leg.add(knee);kneePivots.push(knee);
