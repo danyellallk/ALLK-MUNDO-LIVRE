@@ -144,12 +144,13 @@ player.position.x=THREE.MathUtils.clamp(player.position.x,-165,165);player.posit
 const moveAmount=Math.min(1,distanceMoved/Math.max(dt*4,.001));
 if(distanceMoved>.002)walkPhase+=distanceMoved*2.4;
 const stride=distanceMoved>.002?Math.sin(walkPhase)*.72*moveAmount:0;
+const jumpPose=grounded?0:1;
 for(let i=0;i<2;i++){
  const direction=i===0?1:-1;
- legPivots[i].rotation.x=stride*direction;
- kneePivots[i].rotation.x=Math.max(0,-stride*direction)*.9;
- armPivots[i].rotation.x=-stride*direction*.72;
- elbowPivots[i].rotation.x=-.12+Math.max(0,stride*direction)*.28;
+ legPivots[i].rotation.x=stride*direction-.22*jumpPose;
+ kneePivots[i].rotation.x=Math.max(0,-stride*direction)*.9+.62*jumpPose;
+ armPivots[i].rotation.x=-stride*direction*.72-.78*jumpPose;
+ elbowPivots[i].rotation.x=-.12+Math.max(0,stride*direction)*.28+.22*jumpPose;
 }
 if(Math.abs(forward)+Math.abs(side)>.08)player.rotation.y=Math.atan2(-s,-c);velocityY-=18*dt;player.position.y+=velocityY*dt;if(player.position.y<0){player.position.y=0;velocityY=0;grounded=true}const target=new THREE.Vector3(player.position.x,player.position.y+(firstPerson?1.8:2.2),player.position.z);if(firstPerson){camera.position.copy(target);camera.rotation.set(pitch,yaw,0,'YXZ')}else{camera.position.set(target.x+Math.sin(yaw)*7,target.y+2.1+pitch*3,target.z+Math.cos(yaw)*7);camera.lookAt(target)}}
 let last=performance.now();function animate(now){requestAnimationFrame(animate);const t=nearestTree(),b=nearestBush();collect.disabled=!t;collect.textContent=t?'COLETAR MADEIRA (+3)':'APROXIME-SE DE UMA ÁRVORE';gather.disabled=!b;gather.textContent=b?'COLETAR FRUTAS (+3)':'PROCURE ARBUSTOS';eat.disabled=berries<1||hunger>95;craft.disabled=wood<8;craft.style.opacity=wood<8?'.55':'1';const dt=Math.min((now-last)/1000,.04);last=now;update(dt);renderer.render(scene,camera)}requestAnimationFrame(animate);
