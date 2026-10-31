@@ -2,3 +2,5 @@
 .scene-label{display:inline-block;margin-top:8px;padding:6px 9px;border-radius:8px;background:#173c2bd9;color:#e8f6d9;font-size:11px;font-weight:bold;letter-spacing:.5px;text-shadow:none}#loading{font-size:18px}
 
 #inventoryPanel{position:fixed;right:14px;top:115px;padding:12px 15px;border:1px solid #ffffff88;border-radius:12px;background:#14251feF;color:#fff;font-size:13px;line-height:1.8;text-shadow:0 1px 2px #000}#inventoryPanel small{display:block;color:#d5e7d2;font-size:10px}#craft{background:#76502feF;border-color:#f0d2a4}#bag{background:#304d68eF}
+
+#gather{background:#456c39eF}#eat{background:#80502feF}#eat:disabled,#gather:disabled{opacity:.45}#actions{max-height:62vh;overflow:auto;padding:4px}
