@@ -70,6 +70,16 @@ function makeAnimal(kind,x,z){
  // Ombros ligados ao peito por uma transição alongada, evitando efeito de esfera separada
  oval(g,coat,0,1.12,.34,isCow?.39:.30,isCow?.29:.245,isCow?.40:.34,-.12);
  const head=oval(g,coat,0,1.685,.825,isCow?.245:.20,isCow?.255:.22,isCow?.275:.235,-.08);
+ // Crânio com testa mais contínua e bochechas discretas, evitando cabeça esférica
+ const headPos=head.geometry.attributes.position;
+ for(let vi=0;vi<headPos.count;vi++){
+  const x=headPos.getX(vi),y=headPos.getY(vi),z=headPos.getZ(vi);
+  const forehead=Math.max(0,y)*.045;
+  const cheek=Math.max(0,-y)*Math.max(0,1-Math.abs(x)*1.5)*.035;
+  const muzzleSlope=Math.max(0,z)*.025;
+  headPos.setXYZ(vi,x*(1+cheek),y+forehead,z*(1+muzzleSlope));
+ }
+ head.geometry.computeVertexNormals();
  const muzzleShape=oval(g,muzzle,0,1.545,1.005,isCow?.205:.135,isCow?.115:.085,isCow?.205:.155,-.08);
  // Ponte nasal mais longa e estreita, integrando testa e focinho
  oval(g,coat,0,1.625,.94,isCow?.105:.078,.09,.16,-.18);
@@ -119,8 +129,8 @@ function makeAnimal(kind,x,z){
   oval(g,coat,side*(isCow?.19:.16),1.678,.997,.062,.014,.022,-side*.04);
   // Sobrancelha baixa e arredondada, dando expressão mais natural
   oval(g,coat,side*(isCow?.19:.16),1.795,.985,.072,.023,.028,0,0,side*.06);
-  // Volume suave nas bochechas, conectando o olho ao focinho
-  oval(g,coat,side*(isCow?.205:.16),1.59,.91,isCow?.075:.055,.085,.075,0,0,side*.12);
+  // Bochecha sutil, sem formar uma esfera saliente
+  oval(g,coat,side*(isCow?.205:.16),1.59,.91,isCow?.064:.047,.067,.061,0,0,side*.12);
  }
  // Pequenos tufos arredondados no contorno do pescoço e ombros, simulando pelagem
  if(!isCow&&!isSheep){
