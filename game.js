@@ -69,6 +69,20 @@ function makeAnimal(kind,x,z){
   // Volume suave nas bochechas, conectando o olho ao focinho
   oval(g,coat,side*(isCow?.205:.16),1.59,.91,isCow?.075:.055,.085,.075,0,0,side*.12);
  }
+ // Pequenos tufos arredondados no contorno do pescoço e ombros, simulando pelagem
+ if(!isCow){
+  const furMat=mat(0x805033,.98);
+  for(let n=0;n<6;n++){
+   const side=n%2===0?1:-1;
+   oval(g,furMat,side*(.19+(n%3)*.035),1.24-(n%3)*.075,.43+(n%3)*.12,.075,.11,.095,0,0,side*.22);
+  }
+ }else{
+  const furLight=mat(0xeee8df,.98);
+  for(let n=0;n<4;n++){
+   const side=n%2===0?1:-1;
+   oval(g,furLight,side*.28,1.37-n*.09,.48-n*.08,.055,.075,.08,0,0,side*.18);
+  }
+ }
  // Quatro pernas longas e mais finas, com joelhos e cascos pequenos
  const legs=[],knees=[];
  const xs=isCow?[-.49,.49]:[-.34,.34],zs=[.48,-.56];
