@@ -158,7 +158,7 @@ function makeAnimal(kind,x,z){
  animals.push({group:g,kind,legs,knees,tail,ears,neck,head,torso,tailTuft,phase:Math.random()*6,gaitPhase:Math.random()*6,lastX:x,lastZ:z,speed:.45+Math.random()*.35,homeX:x,homeZ:z,wanderX:3.5+Math.random()*3.5,wanderZ:2.5+Math.random()*3.5,turnPhase:Math.random()*6.28});
 }
 for(let i=0;i<5;i++)makeAnimal(i<3?'deer':'cow',(Math.random()-.5)*85+35,(Math.random()-.5)*85+25);
-makeAnimal('sheep',(Math.random()-.5)*65+42,(Math.random()-.5)*65+32);
+makeAnimal('sheep',5,7);
 function nearestBush(){let best=null,d0=4.5;for(const b of berryBushes){if(!b.visible)continue;const d=Math.hypot(b.position.x-player.position.x,b.position.z-player.position.z);if(d<d0){best=b;d0=d}}return best}
 
 // Cabana de madeira com telhado, porta e janelas
