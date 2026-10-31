@@ -9,6 +9,8 @@
 </head>
 <body>
   <div id="loading">Preparando seu mundo...</div>
+  <div id="loadError" style="display:none;position:fixed;inset:0;z-index:20;background:#101820;color:#fff;padding:28px;font:16px Arial;line-height:1.5;white-space:pre-wrap">Não foi possível carregar o jogo. Verifique a internet e toque em Atualizar.</div>
+  <script>window.addEventListener("error",e=>{const p=document.getElementById("loadError");if(p){p.style.display="block";p.textContent="ERRO AO INICIAR O JOGO:\n"+(e.message||"Falha no carregamento")}});window.addEventListener("unhandledrejection",e=>{const p=document.getElementById("loadError");if(p){p.style.display="block";p.textContent="FALHA AO CARREGAR O MOTOR 3D:\n"+String(e.reason||"Verifique a conexão")}});</script>
   <div id="hud">
     <div class="brand">ALLK <span>MUNDO LIVRE</span></div>
     <div class="stats"><span>❤️ <b id="health">100</b></span><span>🪵 Madeira: <b id="wood">0</b></span><span>🌿 Árvores: <b id="trees">0</b></span><span>🔥 Fogueiras: <b id="fires">0</b></span><span>🍓 Frutas: <b id="berries">0</b></span><span>🍗 Fome: <b id="hunger">100</b>%</span></div>
@@ -36,6 +38,6 @@
     <button id="run">CORRER</button>
     <button id="camera">1ª / 3ª PESSOA</button>
   </div>
-  <script type="module" src="game.js?v=42"></script>
+  <script type="module" src="game.js?v=42-reload1"></script>
 </body>
 </html>
