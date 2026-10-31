@@ -41,11 +41,34 @@ const roof=new THREE.Mesh(new THREE.ConeGeometry(5.8,3.2,4),roofMat);roof.rotati
 const doorPivot=new THREE.Group();doorPivot.position.set(-.75,1.3,3.06);cabin.add(doorPivot);const door=new THREE.Mesh(new THREE.BoxGeometry(1.5,2.6,.12),doorMat);door.position.x=.75;doorPivot.add(door);let cabinOpen=false,insideCabin=false;
 for(const x of [-2.4,2.4]){const w=new THREE.Mesh(new THREE.BoxGeometry(1.1,1.1,.13),mat(0x9bd9e8,.2));w.position.set(x,2.6,3.08);cabin.add(w)}
 cabin.position.set(12,0,-13);scene.add(cabin);
-// Jogador
-const player=new THREE.Group(),skin=mat(0xc58e68),shirt=mat(0x245c91),pants=mat(0x303744);
-const body=new THREE.Mesh(new THREE.CapsuleGeometry(.38,.65,4,8),shirt);body.position.y=1.25;player.add(body);
-const head=new THREE.Mesh(new THREE.SphereGeometry(.27,12,10),skin);head.position.y=2.05;player.add(head);
-const legs=new THREE.Mesh(new THREE.BoxGeometry(.48,.65,.3),pants);legs.position.set(0,.55,0);player.add(legs);player.position.set(0,0,0);scene.add(player);
+// Jogador humano com proporções mais naturais e roupas detalhadas
+const player=new THREE.Group();
+const skin=mat(0xb98260),shirt=mat(0x245c91),shirtDark=mat(0x173f68),pants=mat(0x303744),shoeMat=mat(0x17191d),hairMat=mat(0x29211e),eyeMat=mat(0x171717);
+function addPart(parent,geometry,material,x,y,z,sx=1,sy=1,sz=1){const mesh=new THREE.Mesh(geometry,material);mesh.position.set(x,y,z);mesh.scale.set(sx,sy,sz);parent.add(mesh);return mesh}
+function capsuleBetween(parent,a,b,r,material){const start=new THREE.Vector3(...a),end=new THREE.Vector3(...b),delta=end.clone().sub(start);const mesh=new THREE.Mesh(new THREE.CapsuleGeometry(r,Math.max(.01,delta.length()-r*2),5,8),material);mesh.position.copy(start.add(end).multiplyScalar(.5));mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize());parent.add(mesh);return mesh}
+// tronco, cintura e pescoço
+addPart(player,new THREE.SphereGeometry(1,16,12),shirt,0,1.38,0,.43,.59,.25);
+addPart(player,new THREE.CylinderGeometry(.27,.34,.28,12),pants,0,.82,0,1,1,.85);
+addPart(player,new THREE.CylinderGeometry(.13,.14,.22,12),skin,0,1.91,0);
+// cabeça, cabelo e rosto voltado para a frente (+Z)
+addPart(player,new THREE.SphereGeometry(.265,18,14),skin,0,2.19,0,.88,1.12,.9);
+addPart(player,new THREE.SphereGeometry(.27,16,10),hairMat,0,2.34,-.035,.92,.55,.94);
+addPart(player,new THREE.SphereGeometry(.105,12,8),hairMat,0,2.28,.205,1.15,.6,.8);
+for(const x of [-.105,.105]){addPart(player,new THREE.SphereGeometry(.027,8,6),eyeMat,x,2.22,.235,1,1,.55);addPart(player,new THREE.SphereGeometry(.045,8,6),skin,x*2.35,2.18,0,.65,1,.7)}
+addPart(player,new THREE.SphereGeometry(.055,10,8),skin,0,2.12,.25,.65,.75,.7);
+// braços e mãos
+for(const side of [-1,1]){
+ capsuleBetween(player,[side*.39,1.72,0],[side*.53,1.15,.04],.115,shirt);
+ capsuleBetween(player,[side*.53,1.15,.04],[side*.55,.91,.08],.085,skin);
+ addPart(player,new THREE.SphereGeometry(.09,10,8),skin,side*.55,.87,.09,.8,1,.75);
+}
+// pernas separadas e calçados
+for(const side of [-1,1]){
+ capsuleBetween(player,[side*.19,.78,0],[side*.2,.32,.015],.14,pants);
+ addPart(player,new THREE.SphereGeometry(.145,12,8),pants,side*.2,.29,0,.9,1.25,.95);
+ addPart(player,new THREE.BoxGeometry(.27,.16,.43),shoeMat,side*.2,.11,.09);
+}
+player.position.set(0,0,0);scene.add(player);
 let yaw=0,pitch=-.12,firstPerson=false,velocityY=0,grounded=true,wood=0;const fires=[];let berries=0,hunger=100,storedWood=0,storedBerries=0;
 const keys={};addEventListener('keydown',e=>keys[e.key.toLowerCase()]=true);addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
 const joystick=document.querySelector('#joystick'),stick=document.querySelector('#stick');let joyX=0,joyY=0,joyPointer=null;
