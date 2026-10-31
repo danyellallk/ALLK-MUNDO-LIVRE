@@ -93,19 +93,24 @@ function makeAnimal(kind,x,z){
    oval(g,furLight,side*.28,1.37-n*.09,.48-n*.08,.055,.075,.08,0,0,side*.18);
   }
  }
- // Quatro pernas longas e mais finas, com joelhos e cascos pequenos
+ // Pernas com articulações mais definidas e transições anatômicas suaves
  const legs=[],knees=[];
- const xs=isCow?[-.49,.49]:[-.34,.34],zs=[.48,-.56];
+ const xs=isCow?[-.47,.47]:[-.33,.33],zs=[.47,-.57];
  for(let xi=0;xi<2;xi++)for(let zi=0;zi<2;zi++){
-  const pivot=new THREE.Group();pivot.position.set(xs[xi],.78,zs[zi]);g.add(pivot);
-  const upper=new THREE.Mesh(new THREE.CapsuleGeometry(isCow?.075:.055,.27,6,16),coat);upper.position.y=-.19;pivot.add(upper);
-  const knee=new THREE.Group();knee.position.set(0,-.39,0);pivot.add(knee);
-  oval(knee,coat,0,0,0,isCow?.075:.055,.075,isCow?.065:.05);
-  const lower=new THREE.Mesh(new THREE.CapsuleGeometry(isCow?.043:.032,.25,6,14),isCow?coat:dark);lower.position.y=-.17;knee.add(lower);
-  // Transição arredondada do boleto e casco mais definido, sem aparência cúbica
-  oval(knee,coat,0,-.305,.018,isCow?.052:.043,.075,.058);
-  const hoof=new THREE.Mesh(new THREE.CylinderGeometry(isCow?.055:.047,isCow?.078:.066,.14,14),hoofMat);
-  hoof.position.set(0,-.405,.045);hoof.scale.z=1.35;knee.add(hoof);
+  const front=zi===0;
+  const upperRadius=isCow?.064:isSheep?.047:.043;
+  const lowerRadius=isCow?.036:isSheep?.027:.025;
+  const pivot=new THREE.Group();pivot.position.set(xs[xi],.79,zs[zi]);g.add(pivot);
+  const upper=new THREE.Mesh(new THREE.CapsuleGeometry(upperRadius,front?.25:.29,8,16),coat);
+  upper.position.y=front?-.18:-.20;pivot.add(upper);
+  const knee=new THREE.Group();knee.position.set(0,front?-.37:-.39,0);pivot.add(knee);
+  oval(knee,coat,0,0,0,upperRadius*1.02,.058,upperRadius*1.02);
+  const lower=new THREE.Mesh(new THREE.CapsuleGeometry(lowerRadius,.29,8,14),coat);
+  lower.position.y=-.18;knee.add(lower);
+  // Boleto estreito e casco curto, apoiado no chão
+  oval(knee,coat,0,-.325,.018,lowerRadius*1.25,.055,.052);
+  const hoof=new THREE.Mesh(new THREE.CylinderGeometry(isCow?.049:.041,isCow?.064:.054,.115,16),hoofMat);
+  hoof.position.set(0,-.405,.045);hoof.scale.z=1.28;knee.add(hoof);
   // Fenda frontal sutil no casco, especialmente visível nas vacas
   if(isCow){const split=new THREE.Mesh(new THREE.BoxGeometry(.009,.065,.008),mat(0x171615,.9));split.position.set(0,-.405,.116);knee.add(split);}
   // Pequenos ergôs arredondados atrás do casco, detalhe anatômico de bovinos e cervídeos
