@@ -86,9 +86,25 @@ function makeAnimal(kind,x,z){
  const ears=[];
  for(const side of [-1,1]){
   const ear=oval(g,coat,side*(isCow?.32:.255),1.79,.72,isCow?.145:.17,.047,.235,side*-.16,0,side*-.30);
-  oval(g,innerEarMat,side*(isCow?.32:.255),1.795,.755,isCow?.078:.085,.016,.15,side*-.16,0,side*-.30);
-  // Base da orelha mais estreita e fundida ao crânio
-  oval(g,coat,side*(isCow?.255:.205),1.79,.735,.07,.052,.09,side*-.12,0,side*-.2);
+  // Orelha afinada junto à cabeça e ligeiramente mais larga na região central
+  const earPos=ear.geometry.attributes.position;
+  for(let vi=0;vi<earPos.count;vi++){
+   const ez=earPos.getZ(vi),ey=earPos.getY(vi);
+   const base=THREE.MathUtils.clamp(ez,0,1);
+   const mid=1-Math.abs(ez)*.12;
+   earPos.setX(vi,earPos.getX(vi)*(mid-base*.13));
+   earPos.setY(vi,ey*(1-base*.08));
+  }
+  ear.geometry.computeVertexNormals();
+  const innerEar=oval(g,innerEarMat,side*(isCow?.32:.255),1.795,.755,isCow?.078:.085,.016,.15,side*-.16,0,side*-.30);
+  const innerPos=innerEar.geometry.attributes.position;
+  for(let vi=0;vi<innerPos.count;vi++){
+   const ez=innerPos.getZ(vi);
+   innerPos.setX(vi,innerPos.getX(vi)*(1-THREE.MathUtils.clamp(ez,0,1)*.12));
+  }
+  innerEar.geometry.computeVertexNormals();
+  // Pequena transição na raiz, sem formar uma bola separada
+  oval(g,coat,side*(isCow?.255:.205),1.79,.735,.055,.041,.075,side*-.12,0,side*-.2);
   ears.push(ear);
  }
  for(const side of [-1,1]){
