@@ -81,11 +81,22 @@ function makeAnimal(kind,x,z){
  }
  head.geometry.computeVertexNormals();
  const muzzleShape=oval(g,muzzle,0,1.545,1.005,isCow?.205:.135,isCow?.115:.085,isCow?.205:.155,-.08);
- // Ponte nasal mais longa e estreita, integrando testa e focinho
+ // Focinho com base mais larga e ponta suavemente afunilada
+ const muzzlePos=muzzleShape.geometry.attributes.position;
+ for(let vi=0;vi<muzzlePos.count;vi++){
+  const mz=muzzlePos.getZ(vi),my=muzzlePos.getY(vi);
+  const tip=THREE.MathUtils.clamp((mz+.05)/.95,0,1);
+  const taper=1-tip*.13;
+  muzzlePos.setX(vi,muzzlePos.getX(vi)*taper);
+  muzzlePos.setY(vi,my*(1-tip*.08));
+ }
+ muzzleShape.geometry.computeVertexNormals();
+ // Ponte nasal alongada, estreita e ligada à testa
  oval(g,coat,0,1.625,.94,isCow?.105:.078,.09,.16,-.18);
  oval(g,muzzle,0,1.535,1.075,isCow?.135:.085,.048,.085);
- // Mandíbula inferior discreta, com perfil menos arredondado
- oval(g,muzzle,0,1.485,1.005,isCow?.15:.095,.043,.12);
+ // Mandíbula inferior mais fina e ligeiramente alongada para a frente
+ const jaw=oval(g,muzzle,0,1.485,1.005,isCow?.15:.095,.043,.12);
+ jaw.scale.z=isCow?.13:.105;
  const mouthMat=mat(0x38251f,.95);
  oval(g,mouthMat,0,1.49,1.073,isCow?.105:.065,.009,.008);
  // Narinas discretas integradas ao focinho
