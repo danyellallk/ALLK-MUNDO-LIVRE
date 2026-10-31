@@ -581,31 +581,35 @@ for(const side of [-1,1]){
  capsuleBetween(knee,[0,0,0],[0,-.32,.015],.105,pants);
  addPart(knee,new THREE.BoxGeometry(.27,.14,.42),shoeMat,0,-.39,.12);
 }
-// Substitui o boneco geométrico por um avatar humano GLB leve e rigado.
-// O modelo é carregado como filho do jogador para preservar posição, câmera e controles.
-let realisticAvatarLoaded=false;
+// Avatar humano GLB do projeto oficial Three.js (modelo animado de demonstração).
+let realisticAvatarLoaded=false,playerMixer=null,playerActions={},activePlayerAction=null;
+function playPlayerAction(name){
+ const next=playerActions[name];if(!next||activePlayerAction===next)return;
+ next.reset().fadeIn(.2).play();if(activePlayerAction)activePlayerAction.fadeOut(.2);activePlayerAction=next;
+}
 (async()=>{
  try{
   const {GLTFLoader}=await import('https://esm.sh/three@0.160.0/examples/jsm/loaders/GLTFLoader.js?bundle');
   const loader=new GLTFLoader();
-  loader.load('https://models.codelove.in/models/military-male-03.glb',(gltf)=>{
+  loader.load('https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/gltf/Soldier.glb',(gltf)=>{
    const avatar=gltf.scene;
    avatar.updateMatrixWorld(true);
    const bounds=new THREE.Box3().setFromObject(avatar);
    const size=new THREE.Vector3();bounds.getSize(size);
    const center=new THREE.Vector3();bounds.getCenter(center);
-   const height=size.y||1.85;
-   avatar.scale.setScalar(2.35/height);
-   avatar.position.set(-center.x*avatar.scale.x,-bounds.min.y*avatar.scale.y,-center.z*avatar.scale.z);
-   avatar.rotation.y=Math.PI;
-   avatar.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;if(o.material){o.material.side=THREE.FrontSide;o.material.needsUpdate=true}}});
-   // Esconde o modelo provisório somente depois que o GLB carregar corretamente.
+   const scale=2.35/(size.y||1.8);
+   avatar.scale.setScalar(scale);
+   avatar.position.set(-center.x*scale,-bounds.min.y*scale,-center.z*scale);
+   avatar.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
    player.children.forEach(child=>child.visible=false);
    player.add(avatar);
+   playerMixer=new THREE.AnimationMixer(avatar);
+   for(const clip of gltf.animations)playerActions[clip.name]=playerMixer.clipAction(clip);
+   playPlayerAction('Idle');
    realisticAvatarLoaded=true;
-   console.info('Avatar humano realista carregado:',size);
-  },undefined,error=>console.error('Não foi possível carregar o avatar humano:',error));
- }catch(error){console.error('Falha ao iniciar o avatar humano:',error)}
+   console.info('Avatar Soldier carregado; animações:',gltf.animations.map(a=>a.name).join(', '));
+  },undefined,error=>console.error('Falha ao carregar Soldier.glb:',error));
+ }catch(error){console.error('Falha no GLTFLoader do jogador:',error)}
 })();
 player.position.set(0,0,0);scene.add(player);
 let yaw=0,pitch=-.12,firstPerson=false,velocityY=0,grounded=true,wood=0;const fires=[];let berries=0,hunger=100,storedWood=0,storedBerries=0;
@@ -762,5 +766,5 @@ const moving=distanceMoved>.002;
 const runLean=running&&moving&&!jumpPose?-.055:0;
 player.rotation.x=runLean;
 player.rotation.z=moving?Math.sin(walkPhase*.5)*(running?.035:.018)*moveAmount:0;velocityY-=18*dt;player.position.y+=velocityY*dt;if(player.position.y<0){player.position.y=0;velocityY=0;grounded=true}const target=new THREE.Vector3(player.position.x,player.position.y+(firstPerson?1.8:2.2),player.position.z);if(firstPerson){camera.position.copy(target);camera.rotation.set(pitch,yaw,0,'YXZ')}else{camera.position.set(target.x+Math.sin(yaw)*7,target.y+2.1+pitch*3,target.z+Math.cos(yaw)*7);camera.lookAt(target)}}
-let last=performance.now();function animate(now){requestAnimationFrame(animate);const t=nearestTree(),b=nearestBush();collect.disabled=!t;collect.textContent=t?'COLETAR MADEIRA (+3)':'APROXIME-SE DE UMA ÁRVORE';gather.disabled=!b;gather.textContent=b?'COLETAR FRUTAS (+3)':'PROCURE ARBUSTOS';eat.disabled=berries<1||hunger>95;craft.disabled=wood<8;craft.style.opacity=wood<8?'.55':'1';const dt=Math.min((now-last)/1000,.04);last=now;update(dt);renderer.render(scene,camera)}requestAnimationFrame(animate);
+let last=performance.now();function animate(now){requestAnimationFrame(animate);if(playerMixer)playerMixer.update(Math.min((now-last)/1000,.04));const t=nearestTree(),b=nearestBush();collect.disabled=!t;collect.textContent=t?'COLETAR MADEIRA (+3)':'APROXIME-SE DE UMA ÁRVORE';gather.disabled=!b;gather.textContent=b?'COLETAR FRUTAS (+3)':'PROCURE ARBUSTOS';eat.disabled=berries<1||hunger>95;craft.disabled=wood<8;craft.style.opacity=wood<8?'.55':'1';const dt=Math.min((now-last)/1000,.04);last=now;update(dt);renderer.render(scene,camera)}requestAnimationFrame(animate);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});document.querySelector('#loading').style.display='none';
