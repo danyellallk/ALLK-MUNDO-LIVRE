@@ -45,12 +45,12 @@ function makeAnimal(kind,x,z){
  // Ombros ligados ao peito por uma transição alongada, evitando efeito de esfera separada
  oval(g,coat,0,1.12,.34,isCow?.39:.30,isCow?.29:.245,isCow?.40:.34,-.12);
  const head=oval(g,coat,0,1.685,.825,isCow?.245:.20,isCow?.255:.22,isCow?.275:.235,-.08);
- const muzzleShape=oval(g,muzzle,0,1.55,.99,isCow?.22:.14,isCow?.13:.095,isCow?.17:.13);
- // Ponte nasal e lábio superior arredondados para suavizar a transição entre testa e focinho
- oval(g,coat,0,1.625,.91,isCow?.115:.085,.105,.12,-.22);
- oval(g,muzzle,0,1.535,1.045,isCow?.145:.09,.052,.075);
- // Linha da boca e mandíbula inferior para dar volume ao focinho
- oval(g,muzzle,0,1.485,.965,isCow?.17:.105,.055,.105);
+ const muzzleShape=oval(g,muzzle,0,1.545,1.005,isCow?.205:.135,isCow?.115:.085,isCow?.205:.155,-.08);
+ // Ponte nasal mais longa e estreita, integrando testa e focinho
+ oval(g,coat,0,1.625,.94,isCow?.105:.078,.09,.16,-.18);
+ oval(g,muzzle,0,1.535,1.075,isCow?.135:.085,.048,.085);
+ // Mandíbula inferior discreta, com perfil menos arredondado
+ oval(g,muzzle,0,1.485,1.005,isCow?.15:.095,.043,.12);
  const mouthMat=mat(0x38251f,.95);
  oval(g,mouthMat,0,1.49,1.073,isCow?.105:.065,.009,.008);
  // Narinas discretas integradas ao focinho
