@@ -2,7 +2,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x8fc8ed);scene.fog=new THREE.Fog(0x8fc8ed,65,210);
 const camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,.1,420);
 const renderer=new THREE.WebGLRenderer({antialias:false,powerPreference:'low-power'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.35));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;document.body.appendChild(renderer.domElement);
-scene.add(new THREE.HemisphereLight(0xd9efff,0x53633c,2.1));const sun=new THREE.DirectionalLight(0xffedc5,2.2);sun.position.set(-45,70,35);scene.add(sun);
+const hemi=new THREE.HemisphereLight(0xd9efff,0x53633c,2.1);scene.add(hemi);const sun=new THREE.DirectionalLight(0xffedc5,2.2);sun.position.set(-45,70,35);scene.add(sun);
 const mat=(color,roughness=1)=>new THREE.MeshStandardMaterial({color,roughness});
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(360,360),mat(0x638d42));ground.rotation.x=-Math.PI/2;ground.position.y=-.12;scene.add(ground);
 function hill(x,z,sx,sy,sz,color){const m=new THREE.Mesh(new THREE.SphereGeometry(1,12,9),mat(color));m.position.set(x,sy*.35,z);m.scale.set(sx,sy,sz);scene.add(m)}
@@ -218,7 +218,20 @@ for(let i=0;i<5;i++){
   clouds.push({group:cloud,startX:cloud.position.x,speed:1.1+(i%3)*.25});
  }
 
-function update(dt){const nearChest=insideCabin&&Math.hypot(player.position.x-9.7,player.position.z+14.8)<2.8;document.querySelector('#chestPanel').hidden=!nearChest;storeButton.disabled=!nearChest||(wood===0&&berries===0);takeButton.disabled=!nearChest||(storedWood===0&&storedBerries===0);const nearCabin=Math.hypot(player.position.x-12,player.position.z-(-13))<8;interact.disabled=!nearCabin;if(insideCabin){interact.disabled=false;interact.textContent='SAIR DA CABANA'}else if(!nearCabin)interact.textContent='APROXIME-SE DA CABANA';else if(!cabinOpen)interact.textContent='ABRIR CABANA';else interact.textContent='ENTRAR NA CABANA';hunger=Math.max(0,hunger-dt*.12);if(hunger===0)document.querySelector('#health').textContent=Math.max(0,Number(document.querySelector('#health').textContent)-dt*.7).toFixed(0);for(const cloud of clouds){cloud.group.position.x+=cloud.speed*dt;if(cloud.group.position.x>125)cloud.group.position.x=-125;}for(const bird of birds){bird.phase+=dt*2.2;bird.group.position.x=bird.homeX+Math.sin(bird.phase*.45)*8;bird.group.position.y=20+Math.sin(bird.phase*2)*.7;bird.group.position.z=bird.homeZ+Math.cos(bird.phase*.45)*7;bird.group.rotation.y=Math.atan2(Math.cos(bird.phase*.45),-Math.sin(bird.phase*.45));bird.leftWing.rotation.z=-.18+Math.sin(bird.phase*5)*.42;bird.rightWing.rotation.z=.18-Math.sin(bird.phase*5)*.42;}for(const a of animals){a.phase+=dt*a.speed;a.group.position.x=a.homeX+Math.sin(a.phase)*5;a.group.position.z=a.homeZ+Math.cos(a.phase*.7)*4;a.group.rotation.y=Math.atan2(Math.cos(a.phase)*5,-Math.sin(a.phase*.7)*2.8)}const forward=(keys.w||keys.arrowup?1:0)-(keys.s||keys.arrowdown?1:0)-joyY,side=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joyX,s=Math.sin(yaw),c=Math.cos(yaw);const oldX=player.position.x,oldZ=player.position.z;
+let gameClock=9;
+const daySky=new THREE.Color(0x8fc8ed),nightSky=new THREE.Color(0x101a35);
+function updateDayNight(dt){
+ gameClock=(gameClock+dt*.4)%24;
+ const angle=(gameClock-6)/12*Math.PI;
+ const sunHeight=Math.sin(angle);
+ const daylight=THREE.MathUtils.smoothstep(sunHeight,-.18,.28);
+ scene.background.copy(nightSky).lerp(daySky,daylight);
+ scene.fog.color.copy(scene.background);
+ sun.position.set(Math.cos(angle)*75,Math.max(-12,sunHeight*85),28);
+ sun.intensity=.12+2.08*daylight;
+ hemi.intensity=.28+1.82*daylight;
+}
+function update(dt){updateDayNight(dt);const nearChest=insideCabin&&Math.hypot(player.position.x-9.7,player.position.z+14.8)<2.8;document.querySelector('#chestPanel').hidden=!nearChest;storeButton.disabled=!nearChest||(wood===0&&berries===0);takeButton.disabled=!nearChest||(storedWood===0&&storedBerries===0);const nearCabin=Math.hypot(player.position.x-12,player.position.z-(-13))<8;interact.disabled=!nearCabin;if(insideCabin){interact.disabled=false;interact.textContent='SAIR DA CABANA'}else if(!nearCabin)interact.textContent='APROXIME-SE DA CABANA';else if(!cabinOpen)interact.textContent='ABRIR CABANA';else interact.textContent='ENTRAR NA CABANA';hunger=Math.max(0,hunger-dt*.12);if(hunger===0)document.querySelector('#health').textContent=Math.max(0,Number(document.querySelector('#health').textContent)-dt*.7).toFixed(0);for(const cloud of clouds){cloud.group.position.x+=cloud.speed*dt;if(cloud.group.position.x>125)cloud.group.position.x=-125;}for(const bird of birds){bird.phase+=dt*2.2;bird.group.position.x=bird.homeX+Math.sin(bird.phase*.45)*8;bird.group.position.y=20+Math.sin(bird.phase*2)*.7;bird.group.position.z=bird.homeZ+Math.cos(bird.phase*.45)*7;bird.group.rotation.y=Math.atan2(Math.cos(bird.phase*.45),-Math.sin(bird.phase*.45));bird.leftWing.rotation.z=-.18+Math.sin(bird.phase*5)*.42;bird.rightWing.rotation.z=.18-Math.sin(bird.phase*5)*.42;}for(const a of animals){a.phase+=dt*a.speed;a.group.position.x=a.homeX+Math.sin(a.phase)*5;a.group.position.z=a.homeZ+Math.cos(a.phase*.7)*4;a.group.rotation.y=Math.atan2(Math.cos(a.phase)*5,-Math.sin(a.phase*.7)*2.8)}const forward=(keys.w||keys.arrowup?1:0)-(keys.s||keys.arrowdown?1:0)-joyY,side=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joyX,s=Math.sin(yaw),c=Math.cos(yaw);const oldX=player.position.x,oldZ=player.position.z;
 const nextX=oldX+(side*c-forward*s)*6*(running?1.6:1)*dt,nextZ=oldZ+(side*s-forward*c)*6*(running?1.6:1)*dt;
 const oldLX=oldX-12,oldLZ=oldZ+13,newLX=nextX-12,newLZ=nextZ+13;
 const insideBounds=Math.abs(newLX)<3.72&&Math.abs(newLZ)<2.72;
