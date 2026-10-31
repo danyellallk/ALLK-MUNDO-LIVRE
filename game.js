@@ -54,10 +54,13 @@ function makeAnimal(kind,x,z){
  for(const side of [-1,1]){
   oval(g,dark,side*(isCow?.09:.06),1.56,1.125,.022,.018,.012);
   oval(g,dark,side*(isCow?.19:.16),1.72,.965,.055,.065,.035);
-  // Íris castanha discreta e pupila para um olhar menos vazio
+  // Íris castanha, pupila e brilho dos olhos
   oval(g,mat(isCow?0x493326:0x68452e,.55),side*(isCow?.205:.175),1.72,1.012,.022,.03,.012);
   oval(g,eyeMat,side*(isCow?.205:.175),1.72,1.023,.012,.022,.008);
   oval(g,white,side*(isCow?.214:.183),1.737,1.032,.008,.009,.006);
+  // Pálpebras suaves e contorno discreto para integrar melhor os olhos ao rosto
+  oval(g,coat,side*(isCow?.19:.16),1.765,.997,.071,.022,.026,side*.08);
+  oval(g,coat,side*(isCow?.19:.16),1.678,.997,.062,.014,.022,-side*.04);
  }
  // Quatro pernas longas e mais finas, com joelhos e cascos pequenos
  const legs=[],knees=[];
