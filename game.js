@@ -41,8 +41,10 @@ function makeAnimal(kind,x,z){
  // Peitoral integrado e mais estreito, sem formar uma segunda barriga
  oval(g,coat,0,1.095,.385,isCow?.385:.31,isCow?.285:.245,isCow?.35:.30);
  // Pescoço e cabeça menores em relação ao tronco
- const neck=oval(g,coat,0,1.38,.57,isCow?.25:.18,isCow?.39:.34,isCow?.29:.24,-.32);
- const head=oval(g,coat,0,1.68,.78,isCow?.25:.205,isCow?.27:.23,isCow?.26:.22);
+ const neck=oval(g,coat,0,1.39,.59,isCow?.215:isSheep?.155:.16,isCow?.365:isSheep?.315:.30,isCow?.34:.29,-.43);
+ // Ombros ligados ao peito por uma transição alongada, evitando efeito de esfera separada
+ oval(g,coat,0,1.12,.34,isCow?.39:.30,isCow?.29:.245,isCow?.40:.34,-.12);
+ const head=oval(g,coat,0,1.685,.825,isCow?.245:.20,isCow?.255:.22,isCow?.275:.235,-.08);
  const muzzleShape=oval(g,muzzle,0,1.55,.99,isCow?.22:.14,isCow?.13:.095,isCow?.17:.13);
  // Ponte nasal e lábio superior arredondados para suavizar a transição entre testa e focinho
  oval(g,coat,0,1.625,.91,isCow?.115:.085,.105,.12,-.22);
