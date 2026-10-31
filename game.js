@@ -25,6 +25,7 @@ const animals=[];
 function makeAnimal(kind,x,z){
  const g=new THREE.Group(),isCow=kind==='cow';
  const coat=mat(isCow?0xe5dfd3:0x98613d,.95),dark=mat(0x302820,.9),muzzle=mat(isCow?0x92746c:0x50352c,.85),hoofMat=mat(0x292522,.8),eyeMat=mat(0x17130f,.4),white=mat(0xffffff,.3);
+ const noseMat=mat(isCow?0x765a55:0x402a22,.9),innerEarMat=mat(isCow?0xb98c88:0x72503d,.95);
  function oval(parent,material,x,y,z,sx,sy,sz,rx=0,ry=0,rz=0){const m=new THREE.Mesh(new THREE.SphereGeometry(1,28,20),material);m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.rotation.set(rx,ry,rz);parent.add(m);return m}
  // Proporção geral: tronco comprido, peito profundo e garupa arredondada
  const torso=oval(g,coat,0,1.02,-.02,isCow?.78:.62,isCow?.48:.42,isCow?.94:.78);
@@ -32,12 +33,16 @@ function makeAnimal(kind,x,z){
  // Pescoço e cabeça menores em relação ao tronco
  const neck=oval(g,coat,0,1.38,.57,isCow?.25:.18,isCow?.39:.34,isCow?.29:.24,-.32);
  const head=oval(g,coat,0,1.68,.78,isCow?.25:.205,isCow?.27:.23,isCow?.26:.22);
- oval(g,muzzle,0,1.55,.99,isCow?.22:.14,isCow?.13:.095,isCow?.17:.13);
+ const muzzleShape=oval(g,muzzle,0,1.55,.99,isCow?.22:.14,isCow?.13:.095,isCow?.17:.13);
+ // Narinas discretas integradas ao focinho
+ for(const side of [-1,1]){
+  oval(g,noseMat,side*(isCow?.105:.065),1.575,1.105,isCow?.035:.018,.022,.012);
+ }
  // Orelhas com formato natural e interior mais escuro
  const ears=[];
  for(const side of [-1,1]){
   const ear=oval(g,coat,side*(isCow?.31:.25),1.78,.72,isCow?.13:.16,.065,.22,side*-.18,0,side*-.32);
-  oval(g,muzzle,side*(isCow?.31:.25),1.785,.755,.075,.025,.13,side*-.18,0,side*-.32);
+  oval(g,innerEarMat,side*(isCow?.31:.25),1.785,.755,.075,.025,.13,side*-.18,0,side*-.32);
   ears.push(ear);
  }
  for(const side of [-1,1]){
