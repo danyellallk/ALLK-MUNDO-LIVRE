@@ -39,7 +39,12 @@ function makeAnimal(kind,x,z){
   const bellyTaper=1-lower*.095;
   const backWidth=1+upper*.025;
   const flank=1-Math.pow(Math.abs(z),2)*.018;
-  bodyPos.setXYZ(i,x*bellyTaper*backWidth*flank,y+(y<0?y*.055:0),z*(1-lower*.035));
+  // Linha superior mais firme, sem criar uma lombada arredondada
+  const backFlatten=Math.max(0,y-.58)*.045;
+  // Garupa discretamente mais larga na região traseira do tronco
+  const rump=Math.max(0,-z-.28);
+  const rumpWidth=1+rump*.055;
+  bodyPos.setXYZ(i,x*bellyTaper*backWidth*flank*rumpWidth,y+(y<0?y*.055:0)-backFlatten,z*(1-lower*.035));
  }
  torso.geometry.computeVertexNormals();
  // Peitoral integrado ao tronco, com volume gradual e parte inferior menos saliente
