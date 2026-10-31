@@ -4,13 +4,33 @@ const camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,.1,420);
 const renderer=new THREE.WebGLRenderer({antialias:false,powerPreference:'low-power'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.35));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;document.body.appendChild(renderer.domElement);
 const hemi=new THREE.HemisphereLight(0xd9efff,0x53633c,2.1);scene.add(hemi);const sun=new THREE.DirectionalLight(0xffedc5,2.2);sun.position.set(-45,70,35);scene.add(sun);
 const mat=(color,roughness=1)=>new THREE.MeshStandardMaterial({color,roughness});
-const ground=new THREE.Mesh(new THREE.PlaneGeometry(360,360),mat(0x638d42));ground.rotation.x=-Math.PI/2;ground.position.y=-.12;scene.add(ground);
+// Texturas procedurais leves: geradas localmente, sem downloads ou serviços pagos.
+function makeSurfaceTexture(base,spots,seed=1){
+ const canvas=document.createElement('canvas');canvas.width=512;canvas.height=512;
+ const ctx=canvas.getContext('2d');ctx.fillStyle=base;ctx.fillRect(0,0,512,512);
+ let n=seed;
+ const rand=()=>{n=(n*1664525+1013904223)>>>0;return n/4294967296};
+ for(let i=0;i<10500;i++){
+  const x=rand()*512,y=rand()*512,r=.5+rand()*3.2;
+  ctx.globalAlpha=.08+rand()*.22;ctx.fillStyle=spots[Math.floor(rand()*spots.length)];
+  ctx.beginPath();ctx.ellipse(x,y,r*1.8,r,rand()*Math.PI,0,Math.PI*2);ctx.fill();
+ }
+ ctx.globalAlpha=1;
+ const tex=new THREE.CanvasTexture(canvas);tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
+ tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());
+ return tex;
+}
+const grassTexture=makeSurfaceTexture('#627f3d',['#9aaa54','#344f2b','#c0ad63','#496c31'],17);
+grassTexture.repeat.set(9,9);
+const groundMaterial=new THREE.MeshStandardMaterial({map:grassTexture,color:0xffffff,roughness:1});
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(360,360),groundMaterial);ground.rotation.x=-Math.PI/2;ground.position.y=-.12;scene.add(ground);
 function hill(x,z,sx,sy,sz,color){const m=new THREE.Mesh(new THREE.SphereGeometry(1,12,9),mat(color));m.position.set(x,sy*.35,z);m.scale.set(sx,sy,sz);scene.add(m)}
 for(let i=0;i<22;i++){const a=i/22*Math.PI*2;hill(Math.cos(a)*145,Math.sin(a)*145,24+Math.random()*20,24+Math.random()*28,25+Math.random()*20,i%2?0x65865a:0x78946b)}
 hill(-58,18,22,18,30,0x71945e);hill(58,-42,28,22,25,0x6b8c59);hill(32,75,24,18,24,0x789767);
 const sand=new THREE.Mesh(new THREE.CircleGeometry(18,48),mat(0xc5b47a));sand.rotation.x=-Math.PI/2;sand.position.set(-28,.01,-20);scene.add(sand);
 const lake=new THREE.Mesh(new THREE.CircleGeometry(15.5,48),new THREE.MeshStandardMaterial({color:0x329bc4,roughness:.25,metalness:.12}));lake.rotation.x=-Math.PI/2;lake.position.set(-28,.04,-20);scene.add(lake);
-const path=new THREE.Mesh(new THREE.PlaneGeometry(5,75),mat(0xb6a078));path.rotation.x=-Math.PI/2;path.position.set(7,.015,-22);scene.add(path);
+const dirtTexture=makeSurfaceTexture('#a58a60',['#d0b98a','#70583d','#c3a879','#8a704c'],29);dirtTexture.repeat.set(1,8);
+const path=new THREE.Mesh(new THREE.PlaneGeometry(5,75),new THREE.MeshStandardMaterial({map:dirtTexture,roughness:1}));path.rotation.x=-Math.PI/2;path.position.set(7,.015,-22);scene.add(path);
 const trees=[],trunkMat=mat(0x765033),leafMat=mat(0x28683c),leaf2=mat(0x3d8244);
 function tree(x,z,s=1){const g=new THREE.Group();const t=new THREE.Mesh(new THREE.CylinderGeometry(.2*s,.3*s,2.2*s,7),trunkMat);t.position.y=1.1*s;g.add(t);const c=new THREE.Mesh(new THREE.ConeGeometry(1.35*s,3.6*s,8),leafMat);c.position.y=3.1*s;g.add(c);const c2=new THREE.Mesh(new THREE.SphereGeometry(.85*s,8,7),leaf2);c2.position.set(.45*s,3.15*s,.1*s);g.add(c2);g.position.set(x,0,z);g.userData.windPhase=Math.random()*Math.PI*2;g.userData.windStrength=.012+Math.random()*.012;scene.add(g);trees.push(g)}
 for(let i=0;i<115;i++){let x=(Math.random()-.5)*220,z=(Math.random()-.5)*220;if(Math.hypot(x,z)>13&&!(x<-8&&x>-49&&z<-1&&z>-39))tree(x,z,.65+Math.random()*.8)}
