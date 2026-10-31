@@ -580,7 +580,34 @@ for(const side of [-1,1]){
  const knee=new THREE.Group();knee.position.set(0,-.39,0);leg.add(knee);kneePivots.push(knee);
  capsuleBetween(knee,[0,0,0],[0,-.32,.015],.105,pants);
  addPart(knee,new THREE.BoxGeometry(.27,.14,.42),shoeMat,0,-.39,.12);
-}player.position.set(0,0,0);scene.add(player);
+}
+// Substitui o boneco geométrico por um avatar humano GLB leve e rigado.
+// O modelo é carregado como filho do jogador para preservar posição, câmera e controles.
+let realisticAvatarLoaded=false;
+(async()=>{
+ try{
+  const {GLTFLoader}=await import('https://esm.sh/three@0.160.0/examples/jsm/loaders/GLTFLoader.js?bundle');
+  const loader=new GLTFLoader();
+  loader.load('https://models.codelove.in/models/military-male-03.glb',(gltf)=>{
+   const avatar=gltf.scene;
+   avatar.updateMatrixWorld(true);
+   const bounds=new THREE.Box3().setFromObject(avatar);
+   const size=new THREE.Vector3();bounds.getSize(size);
+   const center=new THREE.Vector3();bounds.getCenter(center);
+   const height=size.y||1.85;
+   avatar.scale.setScalar(2.35/height);
+   avatar.position.set(-center.x*avatar.scale.x,-bounds.min.y*avatar.scale.y,-center.z*avatar.scale.z);
+   avatar.rotation.y=Math.PI;
+   avatar.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;if(o.material){o.material.side=THREE.FrontSide;o.material.needsUpdate=true}}});
+   // Esconde o modelo provisório somente depois que o GLB carregar corretamente.
+   player.children.forEach(child=>child.visible=false);
+   player.add(avatar);
+   realisticAvatarLoaded=true;
+   console.info('Avatar humano realista carregado:',size);
+  },undefined,error=>console.error('Não foi possível carregar o avatar humano:',error));
+ }catch(error){console.error('Falha ao iniciar o avatar humano:',error)}
+})();
+player.position.set(0,0,0);scene.add(player);
 let yaw=0,pitch=-.12,firstPerson=false,velocityY=0,grounded=true,wood=0;const fires=[];let berries=0,hunger=100,storedWood=0,storedBerries=0;
 const keys={};addEventListener('keydown',e=>keys[e.key.toLowerCase()]=true);addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
 const joystick=document.querySelector('#joystick'),stick=document.querySelector('#stick');let joyX=0,joyY=0,joyPointer=null;
