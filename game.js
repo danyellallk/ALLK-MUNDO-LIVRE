@@ -253,14 +253,15 @@ function makeAnimal(kind,x,z){
  }else{
   // Pelagem contínua e orgânica: uma única superfície, sem bolas ou tufos salientes
   const wool=mat(0xeee8dc,.99);
-  const fleeceGeo=new THREE.SphereGeometry(1,48,32);
+  const fleeceGeo=new THREE.SphereGeometry(1,64,40);
   const pos=fleeceGeo.attributes.position;
   for(let i=0;i<pos.count;i++){
    const x=pos.getX(i),y=pos.getY(i),z=pos.getZ(i);
-   // Ondulações largas e discretas dão aspecto de lã natural sem formar tufos
-   const fine=(Math.sin(x*24+y*13+z*19)*Math.sin(z*21-y*17+x*11))*.0025;
-   const broad=(Math.sin(x*8+z*7+y*6)+Math.sin(z*5-y*9+x*4))*.0035;
-   const k=1+fine+broad;
+   // Ondas finas e contínuas, orientadas no sentido do pelo; relevo baixo e sem nódulos
+   const flow=Math.sin(z*15-y*5+x*3)*Math.cos(x*11+z*4)*.0028;
+   const fine=Math.sin(x*27+y*15+z*17)*Math.sin(z*19-y*13+x*9)*.0014;
+   const broad=(Math.sin(x*7+z*6+y*5)+Math.sin(z*4-y*7+x*3))*.0022;
+   const k=1+flow+fine+broad;
    pos.setXYZ(i,x*.655*k,y*.445*k,z*.845*k);
   }
   fleeceGeo.computeVertexNormals();
