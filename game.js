@@ -285,33 +285,8 @@ makeAnimal('sheep',2,11);
 makeAnimal('lamb',4.2,7.8);
 makeAnimal('lamb',6.2,8.2);
 
-// Modelo de ovelha realista CC0. Mantém o modelo procedural visível
-// até o GLB terminar de carregar, evitando ovelhas invisíveis em caso de falha.
-(async()=>{
- try{
-  const {GLTFLoader}=await import('https://esm.sh/three@0.160.0/examples/jsm/loaders/GLTFLoader.js?bundle');
-  const loader=new GLTFLoader();
-  loader.load('https://cdn.3dassets.dev/assets/29189/v1/model.glb',(gltf)=>{
-   const template=gltf.scene;
-   const box=new THREE.Box3().setFromObject(template);
-   const size=new THREE.Vector3();box.getSize(size);
-   const maxDim=Math.max(size.x,size.y,size.z);
-   if(!Number.isFinite(maxDim)||maxDim<=0){console.warn('Modelo de ovelha sem dimensões válidas');return}
-   for(const animal of animals.filter(a=>a.kind==='sheep')){
-    const model=template.clone(true);
-    model.scale.setScalar(3.8/maxDim);
-    const fitted=new THREE.Box3().setFromObject(model);
-    model.position.y-=fitted.min.y;
-    animal.group.add(model);
-    animal.realisticModel=model;
-    for(const child of animal.group.children){if(child!==model)child.visible=false}
-    // Reativa as quatro pernas procedurais: elas já recebem a animação de caminhada do jogo.
-    for(const leg of animal.legs)leg.visible=true
-   }
-   console.info('Modelo realista de ovelha carregado.');
-  },undefined,(err)=>console.error('Falha ao carregar o modelo de ovelha; mantendo modelo anterior:',err));
- }catch(err){console.error('Falha ao iniciar GLTFLoader; mantendo modelo anterior:',err)}
-})();
+// Ovelhas usam o modelo procedural do jogo para manter as patas
+// ligadas à animação de caminhada e evitar flutuação do modelo estático.
 function nearestBush(){let best=null,d0=4.5;for(const b of berryBushes){if(!b.visible)continue;const d=Math.hypot(b.position.x-player.position.x,b.position.z-player.position.z);if(d<d0){best=b;d0=d}}return best}
 
 // Cabana de madeira com telhado, porta e janelas
