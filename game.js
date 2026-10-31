@@ -20,11 +20,30 @@ function makeSurfaceTexture(base,spots,seed=1){
  tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());
  return tex;
 }
-const grassTexture=makeSurfaceTexture('#405f2c',['#b0a653','#263f20','#789744','#d0bb69','#35532a'],171);
-grassTexture.repeat.set(24,24);
+const grassTexture=makeSurfaceTexture('#405b2b',['#b0a653','#263f20','#789744','#d0bb69','#35532a','#8b9b49'],171);
+grassTexture.repeat.set(18,18);
 grassTexture.magFilter=THREE.LinearFilter;
 grassTexture.minFilter=THREE.LinearMipmapLinearFilter;
-const groundMaterial=new THREE.MeshStandardMaterial({map:grassTexture,bumpMap:grassTexture,bumpScale:.12,color:0xffffff,roughness:1});
+// Pequenas manchas orgânicas e grãos finos para quebrar a aparência chapada do terreno.
+function makeGroundDetail(){
+ const c=document.createElement('canvas');c.width=1024;c.height=1024;
+ const q=c.getContext('2d');q.fillStyle='#59472f';q.fillRect(0,0,1024,1024);
+ let seed=8421;const rnd=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
+ for(let i=0;i<22000;i++){
+  const x=rnd()*1024,y=rnd()*1024,r=.5+rnd()*3.5;
+  q.globalAlpha=.08+rnd()*.2;q.fillStyle=['#d2b982','#34291e','#806342','#b49a6c','#493a29'][i%5];
+  q.beginPath();q.ellipse(x,y,r*1.8,r,.0,0,Math.PI*2);q.fill();
+ }
+ for(let i=0;i<180;i++){
+  const x=rnd()*1024,y=rnd()*1024,rx=5+rnd()*30,ry=3+rnd()*18;
+  q.globalAlpha=.05+rnd()*.09;q.fillStyle=rnd()>.5?'#c2ad72':'#243b20';
+  q.beginPath();q.ellipse(x,y,rx,ry,rnd()*Math.PI,0,Math.PI*2);q.fill();
+ }
+ q.globalAlpha=1;const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;
+ t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());return t;
+}
+const groundDetail=makeGroundDetail();groundDetail.repeat.set(9,9);
+const groundMaterial=new THREE.MeshStandardMaterial({map:grassTexture,bumpMap:groundDetail,bumpScale:.22,color:0xffffff,roughness:1});
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(360,360),groundMaterial);ground.rotation.x=-Math.PI/2;ground.position.y=-.12;scene.add(ground);
 function hill(x,z,sx,sy,sz,color){const m=new THREE.Mesh(new THREE.SphereGeometry(1,12,9),mat(color));m.position.set(x,sy*.35,z);m.scale.set(sx,sy,sz);scene.add(m)}
 for(let i=0;i<22;i++){const a=i/22*Math.PI*2;hill(Math.cos(a)*145,Math.sin(a)*145,24+Math.random()*20,24+Math.random()*28,25+Math.random()*20,i%2?0x65865a:0x78946b)}
