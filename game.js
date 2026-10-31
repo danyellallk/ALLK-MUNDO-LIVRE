@@ -110,6 +110,10 @@ function makeAnimal(kind,x,z){
   oval(g,patchMat,.69,1.22,.18,.035,.22,.31,.08,0,.12);
   oval(g,patchMat,-.68,.91,-.28,.032,.19,.25,-.12,0,-.1);
   oval(g,patchMat,.48,.86,-.48,.028,.14,.19,.1,0,.18);
+  // Manchas menores e irregulares para quebrar a aparência uniforme do pelo
+  oval(g,patchMat,-.73,1.32,.38,.025,.13,.18,.18,0,-.16);
+  oval(g,patchMat,.72,1.05,-.48,.024,.12,.16,-.12,0,.2);
+  oval(g,patchMat,-.61,.78,-.62,.022,.09,.13,.1,0,-.2);
   // Úbere discreto e arredondado, com quatro tetos curtos sob o ventre
   const udderMat=mat(0xc99c91,.96);
   oval(g,udderMat,0,.62,-.18,.29,.16,.31);
