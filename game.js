@@ -68,7 +68,12 @@ function makeAnimal(kind,x,z){
   const knee=new THREE.Group();knee.position.set(0,-.39,0);pivot.add(knee);
   oval(knee,coat,0,0,0,isCow?.075:.055,.075,isCow?.065:.05);
   const lower=new THREE.Mesh(new THREE.CapsuleGeometry(isCow?.043:.032,.25,6,14),isCow?coat:dark);lower.position.y=-.17;knee.add(lower);
-  oval(knee,hoofMat,0,-.38,.035,isCow?.075:.06,.055,.105);
+  // Transição arredondada do boleto e casco mais definido, sem aparência cúbica
+  oval(knee,coat,0,-.305,.018,isCow?.052:.043,.075,.058);
+  const hoof=new THREE.Mesh(new THREE.CylinderGeometry(isCow?.055:.047,isCow?.078:.066,.14,14),hoofMat);
+  hoof.position.set(0,-.405,.045);hoof.scale.z=1.35;knee.add(hoof);
+  // Fenda frontal sutil no casco, especialmente visível nas vacas
+  if(isCow){const split=new THREE.Mesh(new THREE.BoxGeometry(.009,.065,.008),mat(0x171615,.9));split.position.set(0,-.405,.116);knee.add(split);}
   legs.push(pivot);knees.push(knee);
  }
  if(isCow){
