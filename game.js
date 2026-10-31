@@ -56,6 +56,29 @@ addPart(player,new THREE.SphereGeometry(.27,16,10),hairMat,0,2.34,-.035,.92,.55,
 addPart(player,new THREE.SphereGeometry(.105,12,8),hairMat,0,2.28,.205,1.15,.6,.8);
 for(const x of [-.105,.105]){addPart(player,new THREE.SphereGeometry(.027,8,6),eyeMat,x,2.22,.235,1,1,.55);addPart(player,new THREE.SphereGeometry(.045,8,6),skin,x*2.35,2.18,0,.65,1,.7)}
 addPart(player,new THREE.SphereGeometry(.055,10,8),skin,0,2.12,.25,.65,.75,.7);
+// detalhes do rosto: orelhas, nariz, boca e sobrancelhas
+for(const side of [-1,1]){
+ addPart(player,new THREE.SphereGeometry(.075,10,8),skin,side*.232,2.18,0,.65,1,.7);
+ addPart(player,new THREE.BoxGeometry(.09,.025,.035),hairMat,side*.105,2.265,.235);
+}
+addPart(player,new THREE.SphereGeometry(.045,10,8),skin,0,2.17,.265,.75,.85,.8);
+addPart(player,new THREE.BoxGeometry(.075,.018,.018),mat(0x633d35),0,2.075,.238);
+// gola, mangas, bolso e costuras da camiseta
+addPart(player,new THREE.TorusGeometry(.145,.035,7,16),shirtDark,0,1.84,.015,1,1,.8).rotation.x=Math.PI/2;
+for(const side of [-1,1]){
+ addPart(player,new THREE.SphereGeometry(.16,12,9),shirt,side*.39,1.69,0,1,.8,.9);
+ addPart(player,new THREE.BoxGeometry(.16,.19,.025),shirtDark,side*.25,1.48,.235);
+}
+addPart(player,new THREE.BoxGeometry(.16,.19,.025),shirtDark,.19,1.48,.235);
+// cinto e detalhes das calças
+addPart(player,new THREE.BoxGeometry(.55,.055,.34),shoeMat,0,.91,0);
+addPart(player,new THREE.BoxGeometry(.11,.075,.025),mat(0xb69a55),0,.91,.18);
+for(const side of [-1,1]){
+ addPart(player,new THREE.BoxGeometry(.13,.16,.025),mat(0x252b34),side*.2,.65,.145);
+ // sola clara e língua do calçado
+ addPart(player,new THREE.BoxGeometry(.28,.035,.44),mat(0x777777),side*.2,.045,.09);
+ addPart(player,new THREE.BoxGeometry(.13,.07,.025),mat(0x333333),side*.2,.14,.29);
+}
 // braços e mãos
 for(const side of [-1,1]){
  capsuleBetween(player,[side*.39,1.72,0],[side*.53,1.15,.04],.115,shirt);
