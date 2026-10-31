@@ -279,11 +279,12 @@ function makeAnimal(kind,x,z){
  animals.push({group:g,kind,legs,knees,tail,ears,neck,head,torso,tailTuft,phase:Math.random()*6,gaitPhase:Math.random()*6,lastX:x,lastZ:z,speed:.45+Math.random()*.35,homeX:x,homeZ:z,wanderX:kind==='lamb'?1.8+Math.random()*1.2:3.5+Math.random()*3.5,wanderZ:kind==='lamb'?1.5+Math.random()*1.2:2.5+Math.random()*3.5,turnPhase:Math.random()*6.28});
 }
 for(let i=0;i<5;i++)makeAnimal(i<3?'deer':'cow',(Math.random()-.5)*85+35,(Math.random()-.5)*85+25);
+// Reposiciona o rebanho para evitar que os modelos se sobreponham.
 makeAnimal('sheep',5,7);
-makeAnimal('sheep',8,10);
-makeAnimal('sheep',2,11);
-makeAnimal('lamb',4.2,7.8);
-makeAnimal('lamb',6.2,8.2);
+makeAnimal('sheep',32,24);
+makeAnimal('sheep',-28,30);
+makeAnimal('lamb',9,10);
+makeAnimal('lamb',13,13);
 
 // Ovelhas usam o modelo procedural do jogo para manter as patas
 // ligadas à animação de caminhada e evitar flutuação do modelo estático.
