@@ -118,9 +118,10 @@ bag.onclick=()=>{inventoryPanel.hidden=!inventoryPanel.hidden;bag.textContent=in
 craft.onclick=()=>{if(wood<8){craft.textContent='PRECISA DE 8 MADEIRAS';setTimeout(()=>craft.textContent='CRIAR FOGUEIRA (8)',1500);return}wood-=8;const fire=new THREE.Group();const logMat=mat(0x654128);for(let i=0;i<3;i++){const log=new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,1.5,7),logMat);log.rotation.z=Math.PI/2;log.rotation.y=i*Math.PI/3;log.position.y=.15;fire.add(log)}const flame=new THREE.Mesh(new THREE.ConeGeometry(.38,1.1,7),new THREE.MeshBasicMaterial({color:0xff8a19}));flame.position.y=.8;fire.add(flame);const glow=new THREE.PointLight(0xff8a28,1.5,9);glow.position.y=1;fire.add(glow);fire.position.set(player.position.x+Math.sin(yaw)*2,0,player.position.z+Math.cos(yaw)*2);scene.add(fire);fires.push(fire);updateInventory()};collect.onclick=()=>{const t=nearestTree();if(!t)return;t.visible=false;wood+=3;updateInventory()};updateInventory();
 document.querySelector('#jump').onclick=()=>{if(grounded){velocityY=7;grounded=false}};
 document.querySelector('#camera').onclick=()=>{firstPerson=!firstPerson;document.querySelector('#camera').textContent=firstPerson?'VOLTAR 3ª PESSOA':'1ª / 3ª PESSOA'};
-let walkPhase=0,previousPlayerX=0,previousPlayerZ=0;
+let walkPhase=0,previousPlayerX=0,previousPlayerZ=0,running=false;
+document.querySelector('#run').onclick=()=>{running=!running;document.querySelector('#run').textContent=running?'CORRIDA: LIGADA':'CORRER';};
 function update(dt){const nearChest=insideCabin&&Math.hypot(player.position.x-9.7,player.position.z+14.8)<2.8;document.querySelector('#chestPanel').hidden=!nearChest;storeButton.disabled=!nearChest||(wood===0&&berries===0);takeButton.disabled=!nearChest||(storedWood===0&&storedBerries===0);const nearCabin=Math.hypot(player.position.x-12,player.position.z-(-13))<8;interact.disabled=!nearCabin;if(insideCabin){interact.disabled=false;interact.textContent='SAIR DA CABANA'}else if(!nearCabin)interact.textContent='APROXIME-SE DA CABANA';else if(!cabinOpen)interact.textContent='ABRIR CABANA';else interact.textContent='ENTRAR NA CABANA';hunger=Math.max(0,hunger-dt*.12);if(hunger===0)document.querySelector('#health').textContent=Math.max(0,Number(document.querySelector('#health').textContent)-dt*.7).toFixed(0);for(const a of animals){a.phase+=dt*a.speed;a.group.position.x=a.homeX+Math.sin(a.phase)*5;a.group.position.z=a.homeZ+Math.cos(a.phase*.7)*4;a.group.rotation.y=Math.atan2(Math.cos(a.phase)*5,-Math.sin(a.phase*.7)*2.8)}const forward=(keys.w||keys.arrowup?1:0)-(keys.s||keys.arrowdown?1:0)-joyY,side=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joyX,s=Math.sin(yaw),c=Math.cos(yaw);const oldX=player.position.x,oldZ=player.position.z;
-const nextX=oldX+(side*c-forward*s)*6*dt,nextZ=oldZ+(side*s-forward*c)*6*dt;
+const nextX=oldX+(side*c-forward*s)*6*(running?1.6:1)*dt,nextZ=oldZ+(side*s-forward*c)*6*(running?1.6:1)*dt;
 const oldLX=oldX-12,oldLZ=oldZ+13,newLX=nextX-12,newLZ=nextZ+13;
 const insideBounds=Math.abs(newLX)<3.72&&Math.abs(newLZ)<2.72;
 const crossedDoorIn=oldLZ>=3.05&&newLZ<3.05&&Math.abs(newLX)<.88;
@@ -142,14 +143,14 @@ if(!insideCabin){
 if(allowMove){player.position.x=nextX;player.position.z=nextZ}
 player.position.x=THREE.MathUtils.clamp(player.position.x,-165,165);player.position.z=THREE.MathUtils.clamp(player.position.z,-165,165);const distanceMoved=Math.hypot(player.position.x-oldX,player.position.z-oldZ);
 const moveAmount=Math.min(1,distanceMoved/Math.max(dt*4,.001));
-if(distanceMoved>.002)walkPhase+=distanceMoved*2.4;
-const stride=distanceMoved>.002?Math.sin(walkPhase)*.72*moveAmount:0;
+if(distanceMoved>.002)walkPhase+=distanceMoved*(running?3.5:2.4);
+const stride=distanceMoved>.002?Math.sin(walkPhase)*(running?.9:.72)*moveAmount:0;
 const jumpPose=grounded?0:1;
 for(let i=0;i<2;i++){
  const direction=i===0?1:-1;
  legPivots[i].rotation.x=stride*direction-.22*jumpPose;
  kneePivots[i].rotation.x=Math.max(0,-stride*direction)*.9+.62*jumpPose;
- armPivots[i].rotation.x=-stride*direction*.72-.78*jumpPose;
+ armPivots[i].rotation.x=-stride*direction*(running?1.05:.72)-.78*jumpPose;
  elbowPivots[i].rotation.x=-.12+Math.max(0,stride*direction)*.28+.22*jumpPose;
 }
 if(Math.abs(forward)+Math.abs(side)>.08)player.rotation.y=Math.atan2(-s,-c);velocityY-=18*dt;player.position.y+=velocityY*dt;if(player.position.y<0){player.position.y=0;velocityY=0;grounded=true}const target=new THREE.Vector3(player.position.x,player.position.y+(firstPerson?1.8:2.2),player.position.z);if(firstPerson){camera.position.copy(target);camera.rotation.set(pitch,yaw,0,'YXZ')}else{camera.position.set(target.x+Math.sin(yaw)*7,target.y+2.1+pitch*3,target.z+Math.cos(yaw)*7);camera.lookAt(target)}}
