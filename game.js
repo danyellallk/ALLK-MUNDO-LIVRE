@@ -103,7 +103,18 @@ function makeAnimal(kind,x,z){
   const upperRadius=isCow?.064:isSheep?.047:.043;
   const lowerRadius=isCow?.036:isSheep?.027:.025;
   const pivot=new THREE.Group();pivot.position.set(xs[xi],.79,zs[zi]);g.add(pivot);
-  const upper=new THREE.Mesh(new THREE.CapsuleGeometry(upperRadius,front?.25:.29,8,16),coat);
+  const upperGeo=new THREE.CapsuleGeometry(upperRadius,front?.25:.29,8,16);
+  // Parte superior ligeiramente mais larga, fundindo a perna ao quadril sem criar uma bola
+  const upperPos=upperGeo.attributes.position;
+  for(let vi=0;vi<upperPos.count;vi++){
+   const yy=upperPos.getY(vi);
+   const blend=THREE.MathUtils.clamp((yy+.08)/.22,0,1);
+   const factor=1+blend*.16;
+   upperPos.setX(vi,upperPos.getX(vi)*factor);
+   upperPos.setZ(vi,upperPos.getZ(vi)*factor);
+  }
+  upperGeo.computeVertexNormals();
+  const upper=new THREE.Mesh(upperGeo,coat);
   upper.position.y=front?-.18:-.20;pivot.add(upper);
   const knee=new THREE.Group();knee.position.set(0,front?-.37:-.39,0);pivot.add(knee);
   oval(knee,coat,0,0,0,upperRadius*1.02,.058,upperRadius*1.02);
