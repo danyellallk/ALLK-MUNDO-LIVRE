@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
   <meta name="theme-color" content="#101820">
   <title>ALLK MUNDO LIVRE</title>
-  <link rel="stylesheet" href="style.css?v=6">
+  <link rel="stylesheet" href="style.css?v=7">
 </head>
 <body>
   <div id="loading">Preparando seu mundo...</div>
@@ -15,10 +15,22 @@
     <div class="help">Arraste para olhar • Use o controle para andar • Toque em PULAR</div>
   </div>
   <div id="joystick"><div id="stick"></div></div>
-  <div id="inventoryPanel" hidden><b>🎒 INVENTÁRIO</b><div>🪵 Madeira: <span id="invWood">0</span></div><div>🔥 Fogueiras: <span id="invFires">0</span></div><div>🍓 Frutas: <span id="invBerries">0</span></div><small>Colete frutas e coma para recuperar energia.</small></div>\n  <div id="actions">
-    <button id="collect">COLETAR MADEIRA</button>\n    <button id="jump">PULAR</button>
+  <div id="inventoryPanel" hidden>
+    <b>🎒 INVENTÁRIO</b>
+    <div>🪵 Madeira: <span id="invWood">0</span></div>
+    <div>🔥 Fogueiras: <span id="invFires">0</span></div>
+    <div>🍓 Frutas: <span id="invBerries">0</span></div>
+    <small>Colete frutas e coma para recuperar energia.</small>
+  </div>
+  <div id="actions">
+    <button id="collect">COLETAR MADEIRA</button>
+    <button id="craft">CRIAR FOGUEIRA (8)</button>
+    <button id="bag">🎒 INVENTÁRIO</button>
+    <button id="gather">🍓 COLETAR FRUTAS</button>
+    <button id="eat">COMER FRUTA</button>
+    <button id="jump">PULAR</button>
     <button id="camera">1ª / 3ª PESSOA</button>
   </div>
-  <script type="module" src="game.js?v=6"></script>
+  <script type="module" src="game.js?v=7"></script>
 </body>
 </html>
