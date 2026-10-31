@@ -148,6 +148,29 @@ function makeAnimal(kind,x,z){
    const side=n%2===0?1:-1;
    oval(g,wool,side*(.13+(n%3)*.035),1.48+(n%2)*.1,.52+(n%3)*.08,.16,.16,.17);
   }
+  // Pequenas mechas de lã com variação de tamanho e tom, acompanhando o volume do corpo
+  const curlGeo=new THREE.SphereGeometry(1,10,8);
+  const curlMats=[mat(0xf8f4eb,.99),mat(0xece5d8,.99),mat(0xf2ecdf,.99)];
+  for(let row=0;row<3;row++)for(let n=0;n<12;n++){
+   const ang=(n/12)*Math.PI*2+(row%2)*.18;
+   const px=Math.cos(ang)*(.49+(row===1?.045:0));
+   const pz=Math.sin(ang)*(.65+(row===1?.035:0))-.02;
+   const py=.91+row*.22+Math.sin(n*2.17+row)*.035;
+   const curl=new THREE.Mesh(curlGeo,curlMats[(n+row)%curlMats.length]);
+   curl.position.set(px,py,pz);
+   const size=.075+((n*7+row*3)%5)*.009;
+   curl.scale.set(size,size*(.82+(n%3)*.1),size);
+   curl.rotation.set(Math.sin(n)*.3,ang,Math.cos(n*1.7)*.25);
+   g.add(curl);
+  }
+  // Mechas menores na testa e nas laterais do pescoço
+  for(let n=0;n<9;n++){
+   const side=n%2?1:-1;
+   const curl=new THREE.Mesh(curlGeo,curlMats[n%curlMats.length]);
+   curl.position.set(side*(.13+(n%3)*.035),1.48+(n%4)*.075,.54+(n%3)*.055);
+   curl.scale.set(.085,.09,.085);
+   g.add(curl);
+  }
   // Cabeça e focinho permanecem descobertos para destacar o rosto da ovelha
   oval(g,mat(0x51413c,.9),0,1.56,1.075,.11,.075,.055);
  }
