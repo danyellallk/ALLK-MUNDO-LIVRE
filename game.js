@@ -455,7 +455,19 @@ for(const x of [-2.4,2.4]){const w=new THREE.Mesh(new THREE.BoxGeometry(1.1,1.1,
 cabin.position.set(12,0,-13);scene.add(cabin);
 // Jogador humano com proporções mais naturais e roupas detalhadas
 const player=new THREE.Group();
-const skin=mat(0xb98260,.82),shirt=mat(0x245c91,.94),shirtDark=mat(0x173f68,.9),pants=mat(0x303744,.96),shoeMat=mat(0x17191d,.78),hairMat=mat(0x29211e,.9),eyeMat=mat(0x171717,.35);
+// Materiais com microtextura para pele, tecido e cabelo, gerados localmente.
+function makeClothTexture(base,tones,seed){
+ const c=document.createElement('canvas');c.width=256;c.height=256;const q=c.getContext('2d');q.fillStyle=base;q.fillRect(0,0,256,256);
+ let n=seed;const rnd=()=>{n=(n*1664525+1013904223)>>>0;return n/4294967296};
+ for(let i=0;i<6200;i++){const x=rnd()*256,y=rnd()*256;q.globalAlpha=.035+rnd()*.10;q.fillStyle=tones[i%tones.length];q.fillRect(x,y,.6+rnd()*1.4,.6+rnd()*1.4)}
+ q.globalAlpha=1;const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;return t;
+}
+const skinTex=makeClothTexture('#b98260',['#e1ad89','#8e5d45','#c98f6c'],31);
+const fabricTex=makeClothTexture('#245c91',['#3979aa','#173f68','#2c6798'],62);
+const denimTex=makeClothTexture('#303744',['#48515e','#202833','#626b76'],94);
+const skin=new THREE.MeshStandardMaterial({color:0xffffff,map:skinTex,roughness:.88,bumpMap:skinTex,bumpScale:.018});
+const shirt=new THREE.MeshStandardMaterial({color:0xffffff,map:fabricTex,roughness:1,bumpMap:fabricTex,bumpScale:.035});
+const shirtDark=mat(0x173f68,.96),pants=new THREE.MeshStandardMaterial({color:0xffffff,map:denimTex,roughness:1,bumpMap:denimTex,bumpScale:.025}),shoeMat=mat(0x17191d,.78),hairMat=mat(0x29211e,.94),eyeMat=mat(0x171717,.35);
 function addPart(parent,geometry,material,x,y,z,sx=1,sy=1,sz=1){const mesh=new THREE.Mesh(geometry,material);mesh.position.set(x,y,z);mesh.scale.set(sx,sy,sz);parent.add(mesh);return mesh}
 function capsuleBetween(parent,a,b,r,material){const start=new THREE.Vector3(...a),end=new THREE.Vector3(...b),delta=end.clone().sub(start);const mesh=new THREE.Mesh(new THREE.CapsuleGeometry(r,Math.max(.01,delta.length()-r*2),5,8),material);mesh.position.copy(start.add(end).multiplyScalar(.5));mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize());parent.add(mesh);return mesh}
 // tronco, cintura e pescoço
