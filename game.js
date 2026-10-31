@@ -768,6 +768,31 @@ const speedNow=Math.hypot(horizontalVX,horizontalVZ);
 if(speedNow>maxSpeed){horizontalVX*=maxSpeed/speedNow;horizontalVZ*=maxSpeed/speedNow;}
 let nextX=oldX+horizontalVX*dt,nextZ=oldZ+horizontalVZ*dt;
 for(const obstacle of trees){if(!obstacle.visible)continue;const dx=nextX-obstacle.position.x,dz=nextZ-obstacle.position.z,minDist=.68,d2=dx*dx+dz*dz;if(d2<minDist*minDist){const d=Math.sqrt(d2)||.001;nextX=obstacle.position.x+dx/d*minDist;nextZ=obstacle.position.z+dz/d*minDist;horizontalVX*=.18;horizontalVZ*=.18;}}
+// Colisão sólida do jogador com pedras e animais (vista superior).
+// Corrige a posição antes de aplicar o movimento, impedindo atravessamentos.
+const playerRadius=.48;
+for(const rock of rocks){
+ const dx=nextX-rock.position.x,dz=nextZ-rock.position.z;
+ const minDist=playerRadius+rock.userData.radius;
+ const d2=dx*dx+dz*dz;
+ if(d2<minDist*minDist){
+  const d=Math.sqrt(d2)||.001,nx=dx/d,nz=dz/d;
+  nextX=rock.position.x+nx*minDist;nextZ=rock.position.z+nz*minDist;
+  horizontalVX*=.12;horizontalVZ*=.12;
+ }
+}
+for(const animal of animals){
+ const body=animal.group||animal;
+ if(!body||!body.position)continue;
+ const dx=nextX-body.position.x,dz=nextZ-body.position.z;
+ const animalRadius=animal.kind==='cow'?1.05:.88;
+ const minDist=playerRadius+animalRadius,d2=dx*dx+dz*dz;
+ if(d2<minDist*minDist){
+  const d=Math.sqrt(d2)||.001,nx=dx/d,nz=dz/d;
+  nextX=body.position.x+nx*minDist;nextZ=body.position.z+nz*minDist;
+  horizontalVX*=.10;horizontalVZ*=.10;
+ }
+}
 const oldLX=oldX-12,oldLZ=oldZ+13,newLX=nextX-12,newLZ=nextZ+13;
 const insideBounds=Math.abs(newLX)<3.72&&Math.abs(newLZ)<2.72;
 const crossedDoorIn=oldLZ>=3.05&&newLZ<3.05&&Math.abs(newLX)<.88;
