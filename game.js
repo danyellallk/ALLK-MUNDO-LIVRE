@@ -133,14 +133,16 @@ function makeAnimal(kind,x,z){
   const upperPos=upperGeo.attributes.position;
   for(let vi=0;vi<upperPos.count;vi++){
    const yy=upperPos.getY(vi);
-   const blend=THREE.MathUtils.clamp((yy+.08)/.22,0,1);
-   const factor=1+blend*.16;
+   const blend=THREE.MathUtils.clamp((yy+.10)/.24,0,1);
+   const smoothBlend=blend*blend*(3-2*blend);
+   const factor=1+smoothBlend*.12;
    upperPos.setX(vi,upperPos.getX(vi)*factor);
    upperPos.setZ(vi,upperPos.getZ(vi)*factor);
   }
   upperGeo.computeVertexNormals();
   const upper=new THREE.Mesh(upperGeo,coat);
-  upper.position.y=front?-.18:-.20;pivot.add(upper);
+  // Sobreposição discreta com o tronco para esconder a emenda sem criar volume esférico
+  upper.position.y=front?-.155:-.175;pivot.add(upper);
   const knee=new THREE.Group();knee.position.set(0,front?-.37:-.39,0);pivot.add(knee);
   // Articulação compacta, acompanhando a largura real da perna
   oval(knee,coat,0,-.008,0,upperRadius*.91,.052,upperRadius*.94);
