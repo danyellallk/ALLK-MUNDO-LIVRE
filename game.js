@@ -51,10 +51,10 @@ function makeAnimal(kind,x,z){
  const xs=isCow?[-.49,.49]:[-.34,.34],zs=[.48,-.56];
  for(let xi=0;xi<2;xi++)for(let zi=0;zi<2;zi++){
   const pivot=new THREE.Group();pivot.position.set(xs[xi],.78,zs[zi]);g.add(pivot);
-  const upper=new THREE.Mesh(new THREE.CylinderGeometry(isCow?.09:.065,isCow?.065:.045,.38,16),coat);upper.position.y=-.19;pivot.add(upper);
+  const upper=new THREE.Mesh(new THREE.CapsuleGeometry(isCow?.075:.055,.27,6,16),coat);upper.position.y=-.19;pivot.add(upper);
   const knee=new THREE.Group();knee.position.set(0,-.39,0);pivot.add(knee);
   oval(knee,coat,0,0,0,isCow?.075:.055,.075,isCow?.065:.05);
-  const lower=new THREE.Mesh(new THREE.CylinderGeometry(isCow?.052:.038,isCow?.042:.032,.34,14),isCow?coat:dark);lower.position.y=-.17;knee.add(lower);
+  const lower=new THREE.Mesh(new THREE.CapsuleGeometry(isCow?.043:.032,.25,6,14),isCow?coat:dark);lower.position.y=-.17;knee.add(lower);
   oval(knee,hoofMat,0,-.38,.035,isCow?.075:.06,.055,.105);
   legs.push(pivot);knees.push(knee);
  }
