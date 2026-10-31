@@ -584,7 +584,7 @@ for(const side of [-1,1]){
 // Mantém o personagem humano procedural detalhado; remove o modelo Soldier com aparência robótica.
 let realisticAvatarLoaded=false,playerMixer=null,playerActions={},activePlayerAction=null;
 avatarStatus('Personagem humano carregado.');
-player.position.set(0,0,0);scene.add(player);
+player.position.set(0,0,0);player.visible=true;player.scale.setScalar(1);player.traverse(o=>{o.visible=true;if(o.isMesh){o.frustumCulled=false;o.renderOrder=2}});scene.add(player);
 let yaw=0,pitch=-.12,firstPerson=false,velocityY=0,grounded=true,wood=0;const fires=[];let berries=0,hunger=100,storedWood=0,storedBerries=0;
 const keys={};addEventListener('keydown',e=>keys[e.key.toLowerCase()]=true);addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
 const joystick=document.querySelector('#joystick'),stick=document.querySelector('#stick');let joyX=0,joyY=0,joyPointer=null;
@@ -738,6 +738,6 @@ if(Math.abs(forward)+Math.abs(side)>.08)player.rotation.y=Math.atan2(-s,-c);
 const moving=distanceMoved>.002;
 const runLean=running&&moving&&!jumpPose?-.055:0;
 player.rotation.x=runLean;
-player.rotation.z=moving?Math.sin(walkPhase*.5)*(running?.035:.018)*moveAmount:0;velocityY-=18*dt;player.position.y+=velocityY*dt;if(player.position.y<0){player.position.y=0;velocityY=0;grounded=true}const target=new THREE.Vector3(player.position.x,player.position.y+(firstPerson?1.8:2.2),player.position.z);if(firstPerson){camera.position.copy(target);camera.rotation.set(pitch,yaw,0,'YXZ')}else{camera.position.set(target.x+Math.sin(yaw)*7,target.y+2.1+pitch*3,target.z+Math.cos(yaw)*7);camera.lookAt(target)}}
+player.rotation.z=moving?Math.sin(walkPhase*.5)*(running?.035:.018)*moveAmount:0;velocityY-=18*dt;player.position.y+=velocityY*dt;if(player.position.y<0){player.position.y=0;velocityY=0;grounded=true}const target=new THREE.Vector3(player.position.x,player.position.y+(firstPerson?1.65:1.25),player.position.z);if(firstPerson){camera.position.copy(target);camera.rotation.set(pitch,yaw,0,'YXZ')}else{camera.position.set(target.x+Math.sin(yaw)*5.8,target.y+1.15+pitch*2,target.z+Math.cos(yaw)*5.8);camera.lookAt(target)}}
 let last=performance.now();function animate(now){requestAnimationFrame(animate);if(playerMixer)playerMixer.update(Math.min((now-last)/1000,.04));const t=nearestTree(),b=nearestBush();collect.disabled=!t;collect.textContent=t?'COLETAR MADEIRA (+3)':'APROXIME-SE DE UMA ÁRVORE';gather.disabled=!b;gather.textContent=b?'COLETAR FRUTAS (+3)':'PROCURE ARBUSTOS';eat.disabled=berries<1||hunger>95;craft.disabled=wood<8;craft.style.opacity=wood<8?'.55':'1';const dt=Math.min((now-last)/1000,.04);last=now;update(dt);renderer.render(scene,camera)}requestAnimationFrame(animate);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});document.querySelector('#loading').style.display='none';
