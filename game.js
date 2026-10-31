@@ -50,6 +50,13 @@ for(let i=0;i<22;i++){const a=i/22*Math.PI*2;hill(Math.cos(a)*145,Math.sin(a)*14
 hill(-58,18,22,18,30,0x71945e);hill(58,-42,28,22,25,0x6b8c59);hill(32,75,24,18,24,0x789767);
 const sand=new THREE.Mesh(new THREE.CircleGeometry(18,48),mat(0xc5b47a));sand.rotation.x=-Math.PI/2;sand.position.set(-28,.01,-20);scene.add(sand);
 const lake=new THREE.Mesh(new THREE.CircleGeometry(15.5,48),new THREE.MeshStandardMaterial({color:0x329bc4,roughness:.25,metalness:.12}));lake.rotation.x=-Math.PI/2;lake.position.set(-28,.04,-20);scene.add(lake);
+const waterRipples=[];
+const rippleMaterial=new THREE.MeshBasicMaterial({color:0xbcefff,transparent:true,opacity:.55,side:THREE.DoubleSide,depthWrite:false});
+function makeWaterRipple(x,z){
+ const ring=new THREE.Mesh(new THREE.RingGeometry(.12,.2,32),rippleMaterial.clone());
+ ring.rotation.x=-Math.PI/2;ring.position.set(x,.075,z);scene.add(ring);
+ waterRipples.push({mesh:ring,life:0});
+}
 const dirtTexture=makeSurfaceTexture('#806344',['#d8bd8a','#4c3928','#b59667','#685037','#e0c99b'],291);dirtTexture.repeat.set(2,18);dirtTexture.magFilter=THREE.LinearFilter;dirtTexture.minFilter=THREE.LinearMipmapLinearFilter;
 const path=new THREE.Mesh(new THREE.PlaneGeometry(5,75),new THREE.MeshStandardMaterial({map:dirtTexture,roughness:1}));path.rotation.x=-Math.PI/2;path.position.set(7,.015,-22);scene.add(path);
 function makeBarkTexture(){
@@ -108,7 +115,15 @@ for(let i=0;i<115;i++){let x=(Math.random()-.5)*220,z=(Math.random()-.5)*220;if(
  grass.instanceMatrix.needsUpdate=true;
  scene.add(grass);
 }
-for(let i=0;i<38;i++){const r=new THREE.Mesh(new THREE.DodecahedronGeometry(.7+Math.random()*.8,0),mat(0x858b88));r.position.set((Math.random()-.5)*190,.35,(Math.random()-.5)*190);r.scale.y=.65;scene.add(r)}
+// Pedras físicas: podem ser empurradas pelo jogador e desaceleram no terreno.
+const rocks=[];
+for(let i=0;i<38;i++){
+ const rock=new THREE.Mesh(new THREE.DodecahedronGeometry(.7+Math.random()*.8,0),mat(0x858b88));
+ rock.position.set((Math.random()-.5)*190,.35,(Math.random()-.5)*190);
+ rock.scale.y=.65;rock.rotation.set(Math.random()*.3,Math.random()*Math.PI,Math.random()*.3);
+ rock.userData={vx:0,vz:0,radius:.72+rock.scale.x*.45};
+ scene.add(rock);rocks.push(rock);
+}
 
 // Arbustos de frutas silvestres
 const berryBushes=[];
@@ -715,7 +730,34 @@ function updateWind(dt){
  }
 }
 
-function update(dt){updateDayNight(dt);updateWeather(dt);updateWind(dt);const nearChest=insideCabin&&Math.hypot(player.position.x-9.7,player.position.z+14.8)<2.8;document.querySelector('#chestPanel').hidden=!nearChest;storeButton.disabled=!nearChest||(wood===0&&berries===0);takeButton.disabled=!nearChest||(storedWood===0&&storedBerries===0);const nearCabin=Math.hypot(player.position.x-12,player.position.z-(-13))<8;interact.disabled=!nearCabin;if(insideCabin){interact.disabled=false;interact.textContent='SAIR DA CABANA'}else if(!nearCabin)interact.textContent='APROXIME-SE DA CABANA';else if(!cabinOpen)interact.textContent='ABRIR CABANA';else interact.textContent='ENTRAR NA CABANA';hunger=Math.max(0,hunger-dt*.12);if(hunger===0)document.querySelector('#health').textContent=Math.max(0,Number(document.querySelector('#health').textContent)-dt*.7).toFixed(0);for(const cloud of clouds){cloud.group.position.x+=cloud.speed*dt;if(cloud.group.position.x>125)cloud.group.position.x=-125;}for(const bird of birds){bird.phase+=dt*2.2;bird.group.position.x=bird.homeX+Math.sin(bird.phase*.45)*8;bird.group.position.y=20+Math.sin(bird.phase*2)*.7;bird.group.position.z=bird.homeZ+Math.cos(bird.phase*.45)*7;bird.group.rotation.y=Math.atan2(Math.cos(bird.phase*.45),-Math.sin(bird.phase*.45));bird.leftWing.rotation.z=-.18+Math.sin(bird.phase*5)*.42;bird.rightWing.rotation.z=.18-Math.sin(bird.phase*5)*.42;}for(const a of animals){if(a.mixer)a.mixer.update(dt);a.phase+=dt*a.speed*.24;const oldX=a.group.position.x,oldZ=a.group.position.z;a.group.position.x=a.homeX+Math.sin(a.phase)*a.wanderX;a.group.position.z=a.homeZ+Math.cos(a.phase*.7)*a.wanderZ;const travel=Math.hypot(a.group.position.x-oldX,a.group.position.z-oldZ);a.gaitPhase+=travel*4.2;const moving=travel>0.0005;const gait=moving?1:0.12;const wander=Math.sin(a.phase*.22+a.turnPhase)>.82?.28:1;a.group.rotation.y=Math.atan2(Math.cos(a.phase)*a.wanderX,-Math.sin(a.phase*.7)*a.wanderZ);for(let j=0;j<a.legs.length;j++){const front=j%2===0?1:-1;const side=j<2?1:-1;const stride=Math.sin(a.gaitPhase+front*Math.PI*.5+(side<0?Math.PI:0))*gait*wander;a.legs[j].rotation.x=stride*.42;if(a.knees){a.knees[j].rotation.x=Math.max(0,-stride)*.46;a.knees[j].rotation.z=Math.sin(a.gaitPhase+front*Math.PI*.5+(side<0?Math.PI:0))*.018}}if(a.tail){a.tail.rotation.x=Math.sin(a.phase*2.2)*.24;a.tail.rotation.z=Math.sin(a.phase*1.35+1.2)*.18}if(a.tailTuft)a.tailTuft.rotation.z=Math.sin(a.phase*2.2+.6)*.12;if(a.torso){a.torso.scale.y=(a.kind==='cow'?.385:.325)*(1+Math.sin(a.phase*1.8)*.009);a.torso.position.y=1.015+Math.sin(a.phase*1.8)*.007}if(a.ears){a.ears[0].rotation.z=Math.sin(a.phase*1.7)*.08-.12;a.ears[1].rotation.z=-Math.sin(a.phase*1.5+1)*.08+.12}const graze=Math.pow(Math.max(0,Math.sin(a.phase*.32)),8);if(a.neck){a.neck.rotation.x=-.32+Math.sin(a.phase*1.4)*.065+graze*.32;a.neck.rotation.z=Math.sin(a.phase*.9)*.075}if(a.head){a.head.rotation.x=Math.sin(a.phase*1.4+.5)*.09-graze*.22;a.head.rotation.y=Math.sin(a.phase*.8)*.055;a.head.rotation.z=Math.sin(a.phase*1.1+.7)*.085}if(a.ears){a.ears[0].rotation.x=Math.sin(a.phase*2.1)*.16;a.ears[0].rotation.z=-.32+Math.sin(a.phase*1.7)*.12;a.ears[1].rotation.x=Math.sin(a.phase*1.8+1)*.16;a.ears[1].rotation.z=.32-Math.sin(a.phase*1.5+.8)*.12}if(a.kind==='sheep'||a.kind==='lamb'){const nibble=Math.pow(Math.max(0,Math.sin(a.phase*.42+1.1)),10);a.head.rotation.x+=nibble*.28;a.neck.rotation.x+=nibble*.22;a.ears[0].rotation.z+=Math.sin(a.phase*2.4)*.10;a.ears[1].rotation.z+=Math.sin(a.phase*2.1+1)*.10;a.tail.rotation.x=Math.sin(a.phase*3.1)*.32;a.tail.rotation.z=Math.sin(a.phase*2.3)*.22;const playerDist=Math.hypot(a.group.position.x-player.position.x,a.group.position.z-player.position.z);if(playerDist<4){a.head.rotation.y+=Math.sin(a.phase*5)*.16;a.ears[0].rotation.z-=.12;a.ears[1].rotation.z+=.12;}}a.group.position.y=.085;if(a.realisticModel){a.realisticModel.position.y=a.modelBaseY+Math.abs(Math.sin(a.gaitPhase*1.8))*.018}}const forward=(keys.w||keys.arrowup?1:0)-(keys.s||keys.arrowdown?1:0)-joyY,side=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joyX,s=Math.sin(yaw),c=Math.cos(yaw);const oldX=player.position.x,oldZ=player.position.z;
+function update(dt){
+ // Água: ondulações que se expandem e desaparecem.
+ for(let ri=waterRipples.length-1;ri>=0;ri--){const ripple=waterRipples[ri];ripple.life+=dt;const k=ripple.life/.9;ripple.mesh.scale.setScalar(.25+k*3.8);ripple.mesh.material.opacity=Math.max(0,.55*(1-k));if(k>=1){scene.remove(ripple.mesh);ripple.mesh.material.dispose();waterRipples.splice(ri,1);}}
+ const lakeDistance=Math.hypot(player.position.x+28,player.position.z+20);
+ const inWater=lakeDistance<15.1;
+ if(inWater){
+  if(!player.userData.wasInWater)makeWaterRipple(player.position.x,player.position.z);
+  player.userData.waterRipple=(player.userData.waterRipple||0)+dt;
+  if(player.userData.waterRipple>.65){makeWaterRipple(player.position.x,player.position.z);player.userData.waterRipple=0;}
+  // Resistência da água reduz a velocidade horizontal.
+  horizontalVX*=Math.exp(-1.8*dt);horizontalVZ*=Math.exp(-1.8*dt);
+  player.position.y=Math.max(player.position.y,.04)+Math.sin(performance.now()*.003)*.025;
+ }else{player.userData.waterRipple=0;}
+ player.userData.wasInWater=inWater;
+ // Pedras recebem impulso ao contato e deslizam até o atrito pará-las.
+ for(const rock of rocks){
+  const dx=rock.position.x-player.position.x,dz=rock.position.z-player.position.z;
+  const dist=Math.hypot(dx,dz),minDist=rock.userData.radius+.38;
+  if(dist<minDist&&dist>.001){
+   const nx=dx/dist,nz=dz/dist;
+   rock.userData.vx+=nx*2.8*dt;rock.userData.vz+=nz*2.8*dt;
+   player.position.x-=nx*(minDist-dist)*.35;player.position.z-=nz*(minDist-dist)*.35;
+  }
+  rock.position.x+=rock.userData.vx*dt;rock.position.z+=rock.userData.vz*dt;
+  const drag=Math.exp(-2.7*dt);rock.userData.vx*=drag;rock.userData.vz*=drag;
+  rock.rotation.z+=rock.userData.vx*dt*.35;rock.rotation.x-=rock.userData.vz*dt*.35;
+ }
+ updateDayNight(dt);updateWeather(dt);updateWind(dt);const nearChest=insideCabin&&Math.hypot(player.position.x-9.7,player.position.z+14.8)<2.8;document.querySelector('#chestPanel').hidden=!nearChest;storeButton.disabled=!nearChest||(wood===0&&berries===0);takeButton.disabled=!nearChest||(storedWood===0&&storedBerries===0);const nearCabin=Math.hypot(player.position.x-12,player.position.z-(-13))<8;interact.disabled=!nearCabin;if(insideCabin){interact.disabled=false;interact.textContent='SAIR DA CABANA'}else if(!nearCabin)interact.textContent='APROXIME-SE DA CABANA';else if(!cabinOpen)interact.textContent='ABRIR CABANA';else interact.textContent='ENTRAR NA CABANA';hunger=Math.max(0,hunger-dt*.12);if(hunger===0)document.querySelector('#health').textContent=Math.max(0,Number(document.querySelector('#health').textContent)-dt*.7).toFixed(0);for(const cloud of clouds){cloud.group.position.x+=cloud.speed*dt;if(cloud.group.position.x>125)cloud.group.position.x=-125;}for(const bird of birds){bird.phase+=dt*2.2;bird.group.position.x=bird.homeX+Math.sin(bird.phase*.45)*8;bird.group.position.y=20+Math.sin(bird.phase*2)*.7;bird.group.position.z=bird.homeZ+Math.cos(bird.phase*.45)*7;bird.group.rotation.y=Math.atan2(Math.cos(bird.phase*.45),-Math.sin(bird.phase*.45));bird.leftWing.rotation.z=-.18+Math.sin(bird.phase*5)*.42;bird.rightWing.rotation.z=.18-Math.sin(bird.phase*5)*.42;}for(const a of animals){if(a.mixer)a.mixer.update(dt);a.phase+=dt*a.speed*.24;const oldX=a.group.position.x,oldZ=a.group.position.z;a.group.position.x=a.homeX+Math.sin(a.phase)*a.wanderX;a.group.position.z=a.homeZ+Math.cos(a.phase*.7)*a.wanderZ;const travel=Math.hypot(a.group.position.x-oldX,a.group.position.z-oldZ);a.gaitPhase+=travel*4.2;const moving=travel>0.0005;const gait=moving?1:0.12;const wander=Math.sin(a.phase*.22+a.turnPhase)>.82?.28:1;a.group.rotation.y=Math.atan2(Math.cos(a.phase)*a.wanderX,-Math.sin(a.phase*.7)*a.wanderZ);for(let j=0;j<a.legs.length;j++){const front=j%2===0?1:-1;const side=j<2?1:-1;const stride=Math.sin(a.gaitPhase+front*Math.PI*.5+(side<0?Math.PI:0))*gait*wander;a.legs[j].rotation.x=stride*.42;if(a.knees){a.knees[j].rotation.x=Math.max(0,-stride)*.46;a.knees[j].rotation.z=Math.sin(a.gaitPhase+front*Math.PI*.5+(side<0?Math.PI:0))*.018}}if(a.tail){a.tail.rotation.x=Math.sin(a.phase*2.2)*.24;a.tail.rotation.z=Math.sin(a.phase*1.35+1.2)*.18}if(a.tailTuft)a.tailTuft.rotation.z=Math.sin(a.phase*2.2+.6)*.12;if(a.torso){a.torso.scale.y=(a.kind==='cow'?.385:.325)*(1+Math.sin(a.phase*1.8)*.009);a.torso.position.y=1.015+Math.sin(a.phase*1.8)*.007}if(a.ears){a.ears[0].rotation.z=Math.sin(a.phase*1.7)*.08-.12;a.ears[1].rotation.z=-Math.sin(a.phase*1.5+1)*.08+.12}const graze=Math.pow(Math.max(0,Math.sin(a.phase*.32)),8);if(a.neck){a.neck.rotation.x=-.32+Math.sin(a.phase*1.4)*.065+graze*.32;a.neck.rotation.z=Math.sin(a.phase*.9)*.075}if(a.head){a.head.rotation.x=Math.sin(a.phase*1.4+.5)*.09-graze*.22;a.head.rotation.y=Math.sin(a.phase*.8)*.055;a.head.rotation.z=Math.sin(a.phase*1.1+.7)*.085}if(a.ears){a.ears[0].rotation.x=Math.sin(a.phase*2.1)*.16;a.ears[0].rotation.z=-.32+Math.sin(a.phase*1.7)*.12;a.ears[1].rotation.x=Math.sin(a.phase*1.8+1)*.16;a.ears[1].rotation.z=.32-Math.sin(a.phase*1.5+.8)*.12}if(a.kind==='sheep'||a.kind==='lamb'){const nibble=Math.pow(Math.max(0,Math.sin(a.phase*.42+1.1)),10);a.head.rotation.x+=nibble*.28;a.neck.rotation.x+=nibble*.22;a.ears[0].rotation.z+=Math.sin(a.phase*2.4)*.10;a.ears[1].rotation.z+=Math.sin(a.phase*2.1+1)*.10;a.tail.rotation.x=Math.sin(a.phase*3.1)*.32;a.tail.rotation.z=Math.sin(a.phase*2.3)*.22;const playerDist=Math.hypot(a.group.position.x-player.position.x,a.group.position.z-player.position.z);if(playerDist<4){a.head.rotation.y+=Math.sin(a.phase*5)*.16;a.ears[0].rotation.z-=.12;a.ears[1].rotation.z+=.12;}}a.group.position.y=.085;if(a.realisticModel){a.realisticModel.position.y=a.modelBaseY+Math.abs(Math.sin(a.gaitPhase*1.8))*.018}}const forward=(keys.w||keys.arrowup?1:0)-(keys.s||keys.arrowdown?1:0)-joyY,side=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joyX,s=Math.sin(yaw),c=Math.cos(yaw);const oldX=player.position.x,oldZ=player.position.z;
 // Aceleração gradual e velocidade máxima com corrida.
 const inputX=side*c-forward*s,inputZ=side*s-forward*c;
 const inputLen=Math.hypot(inputX,inputZ)||1;
@@ -746,6 +788,7 @@ if(!insideCabin){
 }
 if(allowMove){player.position.x=nextX;player.position.z=nextZ}else{horizontalVX*=.12;horizontalVZ*=.12}
 player.position.x=THREE.MathUtils.clamp(player.position.x,-165,165);player.position.z=THREE.MathUtils.clamp(player.position.z,-165,165);const distanceMoved=Math.hypot(player.position.x-oldX,player.position.z-oldZ);
+if(inWater){horizontalVX*=.985;horizontalVZ*=.985;}
 const moveAmount=Math.min(1,distanceMoved/Math.max(dt*4,.001));
 if(distanceMoved>.002)walkPhase+=distanceMoved*(running?3.5:2.4);
 const stride=distanceMoved>.002?Math.sin(walkPhase)*(running?.9:.72)*moveAmount:0;
