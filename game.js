@@ -583,7 +583,7 @@ for(const side of [-1,1]){
 }
 // Mantém o personagem humano procedural detalhado; remove o modelo Soldier com aparência robótica.
 let realisticAvatarLoaded=false,playerMixer=null,playerActions={},activePlayerAction=null;
-avatarStatus('Personagem humano carregado.');
+
 player.position.set(0,0,0);player.visible=true;player.scale.setScalar(1);player.traverse(o=>{o.visible=true;if(o.isMesh){o.frustumCulled=false;o.renderOrder=2}});scene.add(player);
 let yaw=0,pitch=-.12,firstPerson=false,velocityY=0,grounded=true,wood=0;const fires=[];let berries=0,hunger=100,storedWood=0,storedBerries=0;
 const keys={};addEventListener('keydown',e=>keys[e.key.toLowerCase()]=true);addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
