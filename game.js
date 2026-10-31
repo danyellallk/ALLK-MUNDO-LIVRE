@@ -74,6 +74,10 @@ function makeAnimal(kind,x,z){
   hoof.position.set(0,-.405,.045);hoof.scale.z=1.35;knee.add(hoof);
   // Fenda frontal sutil no casco, especialmente visível nas vacas
   if(isCow){const split=new THREE.Mesh(new THREE.BoxGeometry(.009,.065,.008),mat(0x171615,.9));split.position.set(0,-.405,.116);knee.add(split);}
+  // Pequenos ergôs arredondados atrás do casco, detalhe anatômico de bovinos e cervídeos
+  for(const dewSide of [-1,1]){
+   oval(knee,hoofMat,dewSide*(isCow?.038:.032),-.285,-.075,isCow?.025:.019,.052,.028,-.18);
+  }
   legs.push(pivot);knees.push(knee);
  }
  if(isCow){
