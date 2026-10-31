@@ -136,17 +136,22 @@ function makeAnimal(kind,x,z){
   }
   for(let n=0;n<11;n++){const x0=((n%4)-1.5)*.22,z0=-.48+Math.floor(n/4)*.23;oval(g,mat(0xe7d7b8),x0,1.37+(n%2)*.06,z0,.018,.025,.018)}
  }else{
-  // Lã volumosa em mechas arredondadas distribuídas pelo dorso e laterais
-  const wool=mat(0xf5f0e6,.98);
-  for(let row=0;row<3;row++)for(let n=0;n<7;n++){
-   const angle=(n/7)*Math.PI*2;
-   const x=Math.cos(angle)*(.43+(row===1?.05:0));
-   const z=Math.sin(angle)*(.57+(row===1?.08:0))-.02;
-   oval(g,wool,x,1.12+row*.17,z,.145,.135,.155,0,0,angle*.12);
-  }
-  for(let n=0;n<5;n++){
-   const side=n%2===0?1:-1;
-   oval(g,wool,side*(.13+(n%3)*.035),1.48+(n%2)*.1,.52+(n%3)*.08,.16,.16,.17);
+  // Manto contínuo de lã: silhueta macia, sem aparência de tufos separados
+  const wool=mat(0xf2ede3,.99);
+  const fleece=new THREE.Mesh(new THREE.SphereGeometry(1,32,24),wool);
+  fleece.position.set(0,1.13,-.035);
+  fleece.scale.set(.665,.455,.865);
+  g.add(fleece);
+  // Textura muito discreta, integrada à superfície da lã
+  const woolGrain=mat(0xf8f4ec,.99);
+  for(let n=0;n<22;n++){
+   const angle=n*2.399;
+   const y=-.62+(n%8)*.175;
+   const ring=Math.sqrt(Math.max(.08,1-y*y));
+   const x=Math.cos(angle)*ring*.63;
+   const z=Math.sin(angle)*ring*.82-.035;
+   const grain=oval(g,woolGrain,x,1.13+y*.43,z,.038,.032,.038);
+   grain.position.y=1.13+y*.43;
   }
   // Cabeça e focinho permanecem descobertos para destacar o rosto da ovelha
   oval(g,mat(0x51413c,.9),0,1.56,1.075,.11,.075,.055);
