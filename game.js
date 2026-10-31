@@ -122,8 +122,17 @@ function makeAnimal(kind,x,z){
   lower.position.y=-.18;knee.add(lower);
   // Boleto estreito e casco curto, apoiado no chão
   oval(knee,coat,0,-.325,.018,lowerRadius*1.25,.055,.052);
-  const hoof=new THREE.Mesh(new THREE.CylinderGeometry(isCow?.049:.041,isCow?.064:.054,.115,16),hoofMat);
-  hoof.position.set(0,-.405,.045);hoof.scale.z=1.28;knee.add(hoof);
+  const hoofGeo=new THREE.CylinderGeometry(isCow?.049:.041,isCow?.064:.054,.115,20,1);
+  // Casco com frente mais larga e arredondada, traseira ligeiramente estreita
+  const hoofPos=hoofGeo.attributes.position;
+  for(let vi=0;vi<hoofPos.count;vi++){
+   const zz=hoofPos.getZ(vi);
+   const toe=THREE.MathUtils.clamp((zz+.5),0,1);
+   hoofPos.setX(vi,hoofPos.getX(vi)*(1+toe*.16));
+  }
+  hoofGeo.computeVertexNormals();
+  const hoof=new THREE.Mesh(hoofGeo,hoofMat);
+  hoof.position.set(0,-.405,.045);hoof.scale.z=1.32;knee.add(hoof);
   // Fenda frontal sutil no casco, especialmente visível nas vacas
   if(isCow){const split=new THREE.Mesh(new THREE.BoxGeometry(.009,.065,.008),mat(0x171615,.9));split.position.set(0,-.405,.116);knee.add(split);}
   // Pequenos ergôs arredondados atrás do casco, detalhe anatômico de bovinos e cervídeos
