@@ -483,6 +483,19 @@ for(const side of [-1,1]){
  lock.rotation.z=side*-.18;
 }
 addPart(player,new THREE.SphereGeometry(.12,12,8),hairMat,0,2.405,-.055,1.05,.42,.92);
+// Mechas sobrepostas no topo e na lateral para quebrar o aspecto liso do cabelo
+const hairHighlight=mat(0x382a25,.98);
+for(let strand=0;strand<7;strand++){
+ const x=-.19+strand*.063;
+ const z=-.13+Math.abs(x)*.16;
+ const y=2.49-Math.abs(x)*.12;
+ const lock=capsuleBetween(player,[x,y,z],[x+.025,y-.035,z+.105],.018,strand%3===0?hairHighlight:hairMat);
+ lock.scale.set(1,.9,1);
+}
+for(let side of [-1,1]){
+ const sideLock=capsuleBetween(player,[side*.225,2.34,-.015],[side*.235,2.20,.035],.035,hairMat);
+ sideLock.scale.set(.9,1,.85);
+}
 for(const x of [-.105,.105]){
  addPart(player,new THREE.SphereGeometry(.052,16,12),mat(0xf1e9df),x,2.22,.226,1.05,.78,.48);
  addPart(player,new THREE.SphereGeometry(.026,14,10),mat(0x5b3827),x,2.22,.251);
