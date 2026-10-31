@@ -289,7 +289,7 @@ makeAnimal('lamb',6.2,8.2);
 // O modelo é uma pose estática; o grupo continua passeando pelo mapa.
 (async()=>{
  try{
-  const {GLTFLoader}=await import('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js');
+  const {GLTFLoader}=await import('https://esm.sh/three@0.160.0/examples/jsm/loaders/GLTFLoader.js');
   const loader=new GLTFLoader();
   loader.load('https://cdn.3dassets.dev/assets/29189/v1/model.glb',(gltf)=>{
    const template=gltf.scene;
