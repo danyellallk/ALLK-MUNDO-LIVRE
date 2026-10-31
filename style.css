@@ -6,3 +6,6 @@
 #gather{background:#456c39eF}#eat{background:#80502feF}#eat:disabled,#gather:disabled{opacity:.45}#actions{max-height:62vh;overflow:auto;padding:4px}
 
 #interact{background:#8a6338eF;border-color:#f0d6a8}#interact:disabled{opacity:.45}
+
+#chestPanel{position:fixed;right:14px;top:220px;padding:12px 15px;border:1px solid #ffffff88;border-radius:12px;background:#3b291eeF;color:#fff;font-size:13px;line-height:1.8}
+#storeChest,#takeChest{background:#684323eF}#storeChest:disabled,#takeChest:disabled{opacity:.4}
