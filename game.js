@@ -153,7 +153,7 @@ function makeAnimal(kind,x,z){
  }
  const tail=new THREE.Group();tail.position.set(0,1.17,-.84);g.add(tail);
  const tailMesh=new THREE.Mesh(new THREE.CylinderGeometry(.018,.035,.38,10),isCow?coat:dark);tailMesh.position.y=-.17;tailMesh.rotation.x=-.55;tail.add(tailMesh);const tailTuft=oval(tail,isCow?dark:coat,0,-.36,-.015,isCow?.075:.065,.12,.075);
- g.scale.setScalar(isCow?.92:isLamb?.48:isSheep?.82:.84);
+ g.scale.setScalar(isCow?.92:isLamb?.68:isSheep?.82:.84);
  g.position.set(x,0,z);scene.add(g);
  animals.push({group:g,kind,legs,knees,tail,ears,neck,head,torso,tailTuft,phase:Math.random()*6,gaitPhase:Math.random()*6,lastX:x,lastZ:z,speed:.45+Math.random()*.35,homeX:x,homeZ:z,wanderX:kind==='lamb'?1.8+Math.random()*1.2:3.5+Math.random()*3.5,wanderZ:kind==='lamb'?1.5+Math.random()*1.2:2.5+Math.random()*3.5,turnPhase:Math.random()*6.28});
 }
@@ -161,8 +161,8 @@ for(let i=0;i<5;i++)makeAnimal(i<3?'deer':'cow',(Math.random()-.5)*85+35,(Math.r
 makeAnimal('sheep',5,7);
 makeAnimal('sheep',8,10);
 makeAnimal('sheep',2,11);
-makeAnimal('lamb',4,9);
-makeAnimal('lamb',7,12);
+makeAnimal('lamb',4.2,7.8);
+makeAnimal('lamb',6.2,8.2);
 function nearestBush(){let best=null,d0=4.5;for(const b of berryBushes){if(!b.visible)continue;const d=Math.hypot(b.position.x-player.position.x,b.position.z-player.position.z);if(d<d0){best=b;d0=d}}return best}
 
 // Cabana de madeira com telhado, porta e janelas
