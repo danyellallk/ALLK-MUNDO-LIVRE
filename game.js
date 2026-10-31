@@ -23,9 +23,9 @@ for(let i=0;i<16;i++){const bush=new THREE.Group();const green=mat(0x356d35),red
 // Animais simples que passeiam pelo vale
 const animals=[];
 function makeAnimal(kind,x,z){
- const g=new THREE.Group(),isCow=kind==='cow';
- const coat=mat(isCow?0xe5dfd3:0x98613d,.95),dark=mat(0x302820,.9),muzzle=mat(isCow?0x92746c:0x50352c,.85),hoofMat=mat(0x292522,.8),eyeMat=mat(0x17130f,.4),white=mat(0xffffff,.3);
- const noseMat=mat(isCow?0x765a55:0x402a22,.9),innerEarMat=mat(isCow?0xb98c88:0x72503d,.95);
+ const g=new THREE.Group(),isCow=kind==='cow',isSheep=kind==='sheep';
+ const coat=mat(isCow?0xe5dfd3:isSheep?0xeee8dc:0x98613d,.95),dark=mat(0x302820,.9),muzzle=mat(isCow?0x92746c:isSheep?0x51413c:0x50352c,.85),hoofMat=mat(0x292522,.8),eyeMat=mat(0x17130f,.4),white=mat(0xffffff,.3);
+ const noseMat=mat(isCow?0x765a55:isSheep?0x403331:0x402a22,.9),innerEarMat=mat(isCow?0xb98c88:isSheep?0x9b7770:0x72503d,.95);
  function oval(parent,material,x,y,z,sx,sy,sz,rx=0,ry=0,rz=0){const m=new THREE.Mesh(new THREE.SphereGeometry(1,28,20),material);m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.rotation.set(rx,ry,rz);parent.add(m);return m}
  // Proporção geral: tronco comprido, peito profundo e garupa arredondada
  const torso=oval(g,coat,0,1.02,-.02,isCow?.78:.62,isCow?.48:.42,isCow?.94:.78);
@@ -70,13 +70,13 @@ function makeAnimal(kind,x,z){
   oval(g,coat,side*(isCow?.205:.16),1.59,.91,isCow?.075:.055,.085,.075,0,0,side*.12);
  }
  // Pequenos tufos arredondados no contorno do pescoço e ombros, simulando pelagem
- if(!isCow){
+ if(!isCow&&!isSheep){
   const furMat=mat(0x805033,.98);
   for(let n=0;n<6;n++){
    const side=n%2===0?1:-1;
    oval(g,furMat,side*(.19+(n%3)*.035),1.24-(n%3)*.075,.43+(n%3)*.12,.075,.11,.095,0,0,side*.22);
   }
- }else{
+ }else if(isCow){
   const furLight=mat(0xeee8df,.98);
   for(let n=0;n<4;n++){
    const side=n%2===0?1:-1;
@@ -125,7 +125,7 @@ function makeAnimal(kind,x,z){
    const horn=new THREE.Mesh(new THREE.ConeGeometry(.055,.2,12),mat(0xd8c9aa));horn.position.set(side*.17,1.98,.75);horn.rotation.z=side*-.32;g.add(horn);
    oval(g,dark,side*.57,1.12,-.1,.035,.22,.27);
   }
- }else{
+ }else if(!isSheep){
   // Peito e ventre mais claros, característicos de um cervídeo
   oval(g,mat(0xd8c4a4,.98),0,.83,.39,.36,.25,.52,.12);
   for(const side of [-1,1]){
@@ -135,14 +135,30 @@ function makeAnimal(kind,x,z){
    for(let k=0;k<3;k++){const tine=new THREE.Mesh(new THREE.CylinderGeometry(.012,.021,.18,9),mat(0x68482d));tine.position.set(side*(.045+k*.03),.25+k*.075,0);tine.rotation.z=side*-.38;antler.add(tine)}
   }
   for(let n=0;n<11;n++){const x0=((n%4)-1.5)*.22,z0=-.48+Math.floor(n/4)*.23;oval(g,mat(0xe7d7b8),x0,1.37+(n%2)*.06,z0,.018,.025,.018)}
+ }else{
+  // Lã volumosa em mechas arredondadas distribuídas pelo dorso e laterais
+  const wool=mat(0xf5f0e6,.98);
+  for(let row=0;row<3;row++)for(let n=0;n<7;n++){
+   const angle=(n/7)*Math.PI*2;
+   const x=Math.cos(angle)*(.43+(row===1?.05:0));
+   const z=Math.sin(angle)*(.57+(row===1?.08:0))-.02;
+   oval(g,wool,x,1.12+row*.17,z,.19,.17,.2,0,0,angle*.12);
+  }
+  for(let n=0;n<5;n++){
+   const side=n%2===0?1:-1;
+   oval(g,wool,side*(.13+(n%3)*.035),1.48+(n%2)*.1,.52+(n%3)*.08,.16,.16,.17);
+  }
+  // Cabeça e focinho permanecem descobertos para destacar o rosto da ovelha
+  oval(g,mat(0x51413c,.9),0,1.56,1.075,.11,.075,.055);
  }
  const tail=new THREE.Group();tail.position.set(0,1.17,-.84);g.add(tail);
  const tailMesh=new THREE.Mesh(new THREE.CylinderGeometry(.018,.035,.38,10),isCow?coat:dark);tailMesh.position.y=-.17;tailMesh.rotation.x=-.55;tail.add(tailMesh);const tailTuft=oval(tail,isCow?dark:coat,0,-.36,-.015,isCow?.075:.065,.12,.075);
- g.scale.setScalar(isCow?.92:.84);
+ g.scale.setScalar(isCow?.92:isSheep?.82:.84);
  g.position.set(x,0,z);scene.add(g);
  animals.push({group:g,kind,legs,knees,tail,ears,neck,head,torso,tailTuft,phase:Math.random()*6,gaitPhase:Math.random()*6,lastX:x,lastZ:z,speed:.45+Math.random()*.35,homeX:x,homeZ:z,wanderX:3.5+Math.random()*3.5,wanderZ:2.5+Math.random()*3.5,turnPhase:Math.random()*6.28});
 }
 for(let i=0;i<5;i++)makeAnimal(i<3?'deer':'cow',(Math.random()-.5)*85+35,(Math.random()-.5)*85+25);
+makeAnimal('sheep',(Math.random()-.5)*65+42,(Math.random()-.5)*65+32);
 function nearestBush(){let best=null,d0=4.5;for(const b of berryBushes){if(!b.visible)continue;const d=Math.hypot(b.position.x-player.position.x,b.position.z-player.position.z);if(d<d0){best=b;d0=d}}return best}
 
 // Cabana de madeira com telhado, porta e janelas
