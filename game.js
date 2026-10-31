@@ -24,55 +24,50 @@ for(let i=0;i<16;i++){const bush=new THREE.Group();const green=mat(0x356d35),red
 const animals=[];
 function makeAnimal(kind,x,z){
  const g=new THREE.Group(),isCow=kind==='cow';
- const coat=mat(isCow?0xe8e1d4:0x98613d,.92),dark=mat(0x302820,.9),muzzle=mat(isCow?0x8f7169:0x4b3028,.85),hoofMat=mat(0x292522,.8),eyeMat=mat(0x17130f,.45),white=mat(0xffffff,.35);
- function oval(parent,material,pos,scale,rot){const mesh=new THREE.Mesh(new THREE.SphereGeometry(1,24,18),material);mesh.position.set(pos[0],pos[1],pos[2]);mesh.scale.set(scale[0],scale[1],scale[2]);if(rot)mesh.rotation.set(rot[0],rot[1],rot[2]);parent.add(mesh);return mesh}
- // Tronco com volumes de peito, barriga e quadril para uma silhueta orgânica
- oval(g,coat,[0,1.05,-.03],isCow?[.91,.55,.62]:[.66,.48,.43]);
- oval(g,coat,[0,1.12,.34],isCow?[.57,.49,.39]:[.43,.43,.35]);
- oval(g,coat,[0,1.12,-.38],isCow?[.59,.49,.39]:[.43,.42,.34]);
- // Pescoço inclinado e cabeça arredondada
- oval(g,coat,[0,1.42,.34],isCow?[.3,.48,.32]:[.23,.52,.25],[ -.28,0,0]);
- oval(g,coat,[0,1.73,.57],isCow?[.31,.32,.32]:[.25,.29,.28]);
- oval(g,muzzle,[0,1.57,.82],isCow?[.25,.17,.2]:[.16,.12,.17]);
- // Narinas
- for(const side of [-1,1])oval(g,dark,[side*(isCow?.105:.07),1.59,.985],[.027,.022,.018]);
- // Olhos posicionados nas laterais do rosto
+ const coat=mat(isCow?0xe5dfd3:0x98613d,.95),dark=mat(0x302820,.9),muzzle=mat(isCow?0x92746c:0x50352c,.85),hoofMat=mat(0x292522,.8),eyeMat=mat(0x17130f,.4),white=mat(0xffffff,.3);
+ function oval(parent,material,x,y,z,sx,sy,sz,rx=0,ry=0,rz=0){const m=new THREE.Mesh(new THREE.SphereGeometry(1,28,20),material);m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.rotation.set(rx,ry,rz);parent.add(m);return m}
+ // Proporção geral: tronco comprido, peito profundo e garupa arredondada
+ oval(g,coat,0,1.02,-.02,isCow?.78:.62,isCow?.48:.42,isCow?.94:.78);
+ oval(g,coat,0,1.13,.42,isCow?.48:.37:.36,isCow?.4:.34,isCow?.43:.34);
+ // Pescoço e cabeça menores em relação ao tronco
+ oval(g,coat,0,1.38,.57,isCow?.25:.18,isCow?.39:.34,isCow?.29:.24,-.32);
+ oval(g,coat,0,1.68,.78,isCow?.25:.205,isCow?.27:.23,isCow?.26:.22);
+ oval(g,muzzle,0,1.55,.99,isCow?.22:.14,isCow?.13:.095,isCow?.17:.13);
  for(const side of [-1,1]){
-  oval(g,dark,[side*.235,1.78,.69],[.078,.09,.045]);
-  oval(g,eyeMat,[side*.25,1.78,.724],[.043,.052,.025]);
-  oval(g,white,[side*.263,1.8,.744],[.014,.017,.01]);
+  oval(g,dark,side*(isCow?.09:.06),1.56,1.125,.022,.018,.012);
+  oval(g,dark,side*(isCow?.19:.16),1.72,.965,.055,.065,.035);
+  oval(g,eyeMat,side*(isCow?.205:.175),1.72,.991,.03,.04,.02);
+  oval(g,white,side*(isCow?.214:.183),1.737,1.007,.011,.013,.008);
  }
- // Pernas articuladas desde o alto, com joelhos e cascos
+ // Quatro pernas longas e mais finas, com joelhos e cascos pequenos
  const legs=[];
- const legXs=isCow?[-.58,.58]:[-.39,.39], legZs=[.36,-.39];
+ const xs=isCow?[-.49,.49]:[-.34,.34],zs=[.48,-.56];
  for(let xi=0;xi<2;xi++)for(let zi=0;zi<2;zi++){
-  const pivot=new THREE.Group();pivot.position.set(legXs[xi],.83,legZs[zi]);g.add(pivot);
-  const upper=new THREE.Mesh(new THREE.CylinderGeometry(isCow?.105:.075,isCow?.075:.055,.43,14),coat);upper.position.y=-.22;pivot.add(upper);
-  const knee=oval(pivot,coat,[0,-.43,0],[isCow?.085:.065,.09,isCow?.08:.06]);
-  const lower=new THREE.Mesh(new THREE.CylinderGeometry(isCow?.065:.05,isCow?.052:.04,.32,12),isCow?coat:dark);lower.position.set(0,-.59,0);pivot.add(lower);
-  oval(pivot,hoofMat,[0,-.77,.045],[.095,.07,.14]);
+  const pivot=new THREE.Group();pivot.position.set(xs[xi],.78,zs[zi]);g.add(pivot);
+  const upper=new THREE.Mesh(new THREE.CylinderGeometry(isCow?.09:.065,isCow?.065:.045,.38,16),coat);upper.position.y=-.19;pivot.add(upper);
+  oval(pivot,coat,0,-.39,0,isCow?.075:.055,.075,isCow?.065:.05);
+  const lower=new THREE.Mesh(new THREE.CylinderGeometry(isCow?.052:.038,isCow?.042:.032,.34,14),isCow?coat:dark);lower.position.set(0,-.59,0);pivot.add(lower);
+  oval(pivot,hoofMat,0,-.77,.035,isCow?.075:.06,.055,.105);
   legs.push(pivot);
  }
- // Orelhas, chifres/galhadas e manchas
  if(isCow){
   for(const side of [-1,1]){
-   oval(g,coat,[side*.43,1.77,.48],[.23,.09,.13],[0,0,side*.2]);
-   const horn=new THREE.Mesh(new THREE.ConeGeometry(.075,.28,12),mat(0xd9c9a8));horn.position.set(side*.23,2.02,.49);horn.rotation.z=side*-.35;g.add(horn);
-   oval(g,dark,[side*.55,1.19,.12],[.23,.29,.045]);
+   oval(g,coat,side*.34,1.77,.7,.19,.065,.095,0,0,side*.18);
+   const horn=new THREE.Mesh(new THREE.ConeGeometry(.055,.2,12),mat(0xd8c9aa));horn.position.set(side*.17,1.98,.75);horn.rotation.z=side*-.32;g.add(horn);
+   oval(g,dark,side*.57,1.12,-.1,.035,.22,.27);
   }
  }else{
   for(const side of [-1,1]){
-   oval(g,coat,[side*.31,1.94,.49],[.22,.075,.09],[0,0,side*.25]);
-   const antler=new THREE.Group();antler.position.set(side*.15,1.94,.52);g.add(antler);
-   const beam=new THREE.Mesh(new THREE.CylinderGeometry(.025,.045,.48,10),mat(0x5a3924));beam.position.y=.23;antler.add(beam);
-   for(let k=0;k<3;k++){const tine=new THREE.Mesh(new THREE.CylinderGeometry(.014,.027,.22,9),mat(0x68452b));tine.position.set(side*(.06+k*.045),.3+k*.12,0);tine.rotation.z=side*-.38;tine.rotation.x=.12;antler.add(tine)}
+   oval(g,coat,side*.25,1.88,.72,.17,.055,.075,0,0,side*.25);
+   const antler=new THREE.Group();antler.position.set(side*.13,1.91,.78);g.add(antler);
+   const beam=new THREE.Mesh(new THREE.CylinderGeometry(.018,.032,.38,10),mat(0x60432c));beam.position.y=.19;antler.add(beam);
+   for(let k=0;k<3;k++){const tine=new THREE.Mesh(new THREE.CylinderGeometry(.012,.021,.18,9),mat(0x68482d));tine.position.set(side*(.045+k*.03),.25+k*.075,0);tine.rotation.z=side*-.38;antler.add(tine)}
   }
-  // Pequenas pintas claras no dorso do filhote/cervo
-  for(let n=0;n<9;n++){const a=n*.9;oval(g,white,[Math.cos(a)*.34,1.35+((n%3)-1)*.08,-.12+Math.sin(a)*.23],[.025,.035,.018]);}
+  for(let n=0;n<11;n++){const x0=((n%4)-1.5)*.22,z0=-.48+Math.floor(n/4)*.23;oval(g,mat(0xe7d7b8),x0,1.37+(n%2)*.06,z0,.018,.025,.018)}
  }
- // Cauda fina com ponta móvel
- const tail=new THREE.Group();tail.position.set(0,1.27,-.56);g.add(tail);
- const tailMesh=new THREE.Mesh(new THREE.CylinderGeometry(.025,.045,.48,10),isCow?coat:dark);tailMesh.position.y=-.2;tailMesh.rotation.x=-.45;tail.add(tailMesh);
+ const tail=new THREE.Group();tail.position.set(0,1.17,-.84);g.add(tail);
+ const tailMesh=new THREE.Mesh(new THREE.CylinderGeometry(.018,.035,.38,10),isCow?coat:dark);tailMesh.position.y=-.17;tailMesh.rotation.x=-.55;tail.add(tailMesh);
+ g.scale.setScalar(isCow?.92:.84);
  g.position.set(x,0,z);scene.add(g);
  animals.push({group:g,kind,legs,tail,phase:Math.random()*6,speed:.45+Math.random()*.35,homeX:x,homeZ:z});
 }
