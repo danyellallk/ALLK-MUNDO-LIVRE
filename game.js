@@ -136,23 +136,21 @@ function makeAnimal(kind,x,z){
   }
   for(let n=0;n<11;n++){const x0=((n%4)-1.5)*.22,z0=-.48+Math.floor(n/4)*.23;oval(g,mat(0xe7d7b8),x0,1.37+(n%2)*.06,z0,.018,.025,.018)}
  }else{
-  // Manto contínuo de lã: silhueta macia, sem aparência de tufos separados
-  const wool=mat(0xf2ede3,.99);
-  const fleece=new THREE.Mesh(new THREE.SphereGeometry(1,32,24),wool);
-  fleece.position.set(0,1.13,-.035);
-  fleece.scale.set(.665,.455,.865);
-  g.add(fleece);
-  // Textura muito discreta, integrada à superfície da lã
-  const woolGrain=mat(0xf8f4ec,.99);
-  for(let n=0;n<22;n++){
-   const angle=n*2.399;
-   const y=-.62+(n%8)*.175;
-   const ring=Math.sqrt(Math.max(.08,1-y*y));
-   const x=Math.cos(angle)*ring*.63;
-   const z=Math.sin(angle)*ring*.82-.035;
-   const grain=oval(g,woolGrain,x,1.13+y*.43,z,.038,.032,.038);
-   grain.position.y=1.13+y*.43;
+  // Pelagem contínua e orgânica: uma única superfície, sem bolas ou tufos salientes
+  const wool=mat(0xeee8dc,.99);
+  const fleeceGeo=new THREE.SphereGeometry(1,48,32);
+  const pos=fleeceGeo.attributes.position;
+  for(let i=0;i<pos.count;i++){
+   const x=pos.getX(i),y=pos.getY(i),z=pos.getZ(i);
+   const fine=(Math.sin(x*38+y*17+z*23)*Math.sin(z*31-y*29+x*13))*.004;
+   const broad=Math.sin(x*11+z*9+y*7)*.003;
+   const k=1+fine+broad;
+   pos.setXYZ(i,x*.655*k,y*.445*k,z*.845*k);
   }
+  fleeceGeo.computeVertexNormals();
+  const fleece=new THREE.Mesh(fleeceGeo,wool);
+  fleece.position.set(0,1.13,-.035);
+  g.add(fleece);
   // Cabeça e focinho permanecem descobertos para destacar o rosto da ovelha
   oval(g,mat(0x51413c,.9),0,1.56,1.075,.11,.075,.055);
  }
