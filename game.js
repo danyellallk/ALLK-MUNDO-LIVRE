@@ -79,17 +79,17 @@ for(const side of [-1,1]){
  addPart(player,new THREE.BoxGeometry(.28,.035,.44),mat(0x777777),side*.2,.045,.09);
  addPart(player,new THREE.BoxGeometry(.13,.07,.025),mat(0x333333),side*.2,.14,.29);
 }
-// braços e mãos
+// Membros articulados em pivôs para permitir animação natural
+const armPivots=[],legPivots=[];
 for(const side of [-1,1]){
- capsuleBetween(player,[side*.39,1.72,0],[side*.53,1.15,.04],.115,shirt);
- capsuleBetween(player,[side*.53,1.15,.04],[side*.55,.91,.08],.085,skin);
- addPart(player,new THREE.SphereGeometry(.09,10,8),skin,side*.55,.87,.09,.8,1,.75);
-}
-// pernas separadas e calçados
-for(const side of [-1,1]){
- capsuleBetween(player,[side*.19,.78,0],[side*.2,.32,.015],.14,pants);
- addPart(player,new THREE.SphereGeometry(.145,12,8),pants,side*.2,.29,0,.9,1.25,.95);
- addPart(player,new THREE.BoxGeometry(.27,.16,.43),shoeMat,side*.2,.11,.09);
+ const arm=new THREE.Group();arm.position.set(side*.39,1.72,0);player.add(arm);armPivots.push(arm);
+ capsuleBetween(arm,[0,0,0],[side*.14,-.57,.04],.115,shirt);
+ capsuleBetween(arm,[side*.14,-.57,.04],[side*.16,-.81,.08],.085,skin);
+ addPart(arm,new THREE.SphereGeometry(.09,10,8),skin,side*.16,-.85,.09,.8,1,.75);
+ const leg=new THREE.Group();leg.position.set(side*.19,.78,0);player.add(leg);legPivots.push(leg);
+ capsuleBetween(leg,[0,0,0],[side*.01,-.46,.015],.14,pants);
+ addPart(leg,new THREE.SphereGeometry(.145,12,8),pants,side*.01,-.49,0,.9,1.25,.95);
+ addPart(leg,new THREE.BoxGeometry(.27,.16,.43),shoeMat,side*.01,-.67,.09);
 }
 player.position.set(0,0,0);scene.add(player);
 let yaw=0,pitch=-.12,firstPerson=false,velocityY=0,grounded=true,wood=0;const fires=[];let berries=0,hunger=100,storedWood=0,storedBerries=0;
@@ -117,6 +117,7 @@ bag.onclick=()=>{inventoryPanel.hidden=!inventoryPanel.hidden;bag.textContent=in
 craft.onclick=()=>{if(wood<8){craft.textContent='PRECISA DE 8 MADEIRAS';setTimeout(()=>craft.textContent='CRIAR FOGUEIRA (8)',1500);return}wood-=8;const fire=new THREE.Group();const logMat=mat(0x654128);for(let i=0;i<3;i++){const log=new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,1.5,7),logMat);log.rotation.z=Math.PI/2;log.rotation.y=i*Math.PI/3;log.position.y=.15;fire.add(log)}const flame=new THREE.Mesh(new THREE.ConeGeometry(.38,1.1,7),new THREE.MeshBasicMaterial({color:0xff8a19}));flame.position.y=.8;fire.add(flame);const glow=new THREE.PointLight(0xff8a28,1.5,9);glow.position.y=1;fire.add(glow);fire.position.set(player.position.x+Math.sin(yaw)*2,0,player.position.z+Math.cos(yaw)*2);scene.add(fire);fires.push(fire);updateInventory()};collect.onclick=()=>{const t=nearestTree();if(!t)return;t.visible=false;wood+=3;updateInventory()};updateInventory();
 document.querySelector('#jump').onclick=()=>{if(grounded){velocityY=7;grounded=false}};
 document.querySelector('#camera').onclick=()=>{firstPerson=!firstPerson;document.querySelector('#camera').textContent=firstPerson?'VOLTAR 3ª PESSOA':'1ª / 3ª PESSOA'};
+let walkPhase=0;
 function update(dt){const nearChest=insideCabin&&Math.hypot(player.position.x-9.7,player.position.z+14.8)<2.8;document.querySelector('#chestPanel').hidden=!nearChest;storeButton.disabled=!nearChest||(wood===0&&berries===0);takeButton.disabled=!nearChest||(storedWood===0&&storedBerries===0);const nearCabin=Math.hypot(player.position.x-12,player.position.z-(-13))<8;interact.disabled=!nearCabin;if(insideCabin){interact.disabled=false;interact.textContent='SAIR DA CABANA'}else if(!nearCabin)interact.textContent='APROXIME-SE DA CABANA';else if(!cabinOpen)interact.textContent='ABRIR CABANA';else interact.textContent='ENTRAR NA CABANA';hunger=Math.max(0,hunger-dt*.12);if(hunger===0)document.querySelector('#health').textContent=Math.max(0,Number(document.querySelector('#health').textContent)-dt*.7).toFixed(0);for(const a of animals){a.phase+=dt*a.speed;a.group.position.x=a.homeX+Math.sin(a.phase)*5;a.group.position.z=a.homeZ+Math.cos(a.phase*.7)*4;a.group.rotation.y=Math.atan2(Math.cos(a.phase)*5,-Math.sin(a.phase*.7)*2.8)}const forward=(keys.w||keys.arrowup?1:0)-(keys.s||keys.arrowdown?1:0)-joyY,side=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joyX,s=Math.sin(yaw),c=Math.cos(yaw);const oldX=player.position.x,oldZ=player.position.z;
 const nextX=oldX+(side*c-forward*s)*6*dt,nextZ=oldZ+(side*s-forward*c)*6*dt;
 const oldLX=oldX-12,oldLZ=oldZ+13,newLX=nextX-12,newLZ=nextZ+13;
@@ -138,6 +139,12 @@ if(!insideCabin){
  }
 }
 if(allowMove){player.position.x=nextX;player.position.z=nextZ}
-player.position.x=THREE.MathUtils.clamp(player.position.x,-165,165);player.position.z=THREE.MathUtils.clamp(player.position.z,-165,165);if(Math.abs(forward)+Math.abs(side)>.08)player.rotation.y=Math.atan2(-s,-c);velocityY-=18*dt;player.position.y+=velocityY*dt;if(player.position.y<0){player.position.y=0;velocityY=0;grounded=true}const target=new THREE.Vector3(player.position.x,player.position.y+(firstPerson?1.8:2.2),player.position.z);if(firstPerson){camera.position.copy(target);camera.rotation.set(pitch,yaw,0,'YXZ')}else{camera.position.set(target.x+Math.sin(yaw)*7,target.y+2.1+pitch*3,target.z+Math.cos(yaw)*7);camera.lookAt(target)}}
+player.position.x=THREE.MathUtils.clamp(player.position.x,-165,165);player.position.z=THREE.MathUtils.clamp(player.position.z,-165,165);const moveAmount=Math.min(1,Math.hypot(forward,side));
+if(moveAmount>.06)walkPhase+=dt*10*moveAmount;
+const swing=moveAmount>.06?Math.sin(walkPhase)*.58*moveAmount:0;
+legPivots[0].rotation.x=swing;legPivots[1].rotation.x=-swing;
+armPivots[0].rotation.x=-swing*.72;armPivots[1].rotation.x=swing*.72;
+player.position.y+=moveAmount>.06?Math.abs(Math.sin(walkPhase*2))*.035:0;
+if(Math.abs(forward)+Math.abs(side)>.08)player.rotation.y=Math.atan2(-s,-c);velocityY-=18*dt;player.position.y+=velocityY*dt;if(player.position.y<0){player.position.y=0;velocityY=0;grounded=true}const target=new THREE.Vector3(player.position.x,player.position.y+(firstPerson?1.8:2.2),player.position.z);if(firstPerson){camera.position.copy(target);camera.rotation.set(pitch,yaw,0,'YXZ')}else{camera.position.set(target.x+Math.sin(yaw)*7,target.y+2.1+pitch*3,target.z+Math.cos(yaw)*7);camera.lookAt(target)}}
 let last=performance.now();function animate(now){requestAnimationFrame(animate);const t=nearestTree(),b=nearestBush();collect.disabled=!t;collect.textContent=t?'COLETAR MADEIRA (+3)':'APROXIME-SE DE UMA ÁRVORE';gather.disabled=!b;gather.textContent=b?'COLETAR FRUTAS (+3)':'PROCURE ARBUSTOS';eat.disabled=berries<1||hunger>95;craft.disabled=wood<8;craft.style.opacity=wood<8?'.55':'1';const dt=Math.min((now-last)/1000,.04);last=now;update(dt);renderer.render(scene,camera)}requestAnimationFrame(animate);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});document.querySelector('#loading').style.display='none';
