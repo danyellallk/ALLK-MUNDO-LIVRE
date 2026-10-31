@@ -305,6 +305,8 @@ makeAnimal('lamb',6.2,8.2);
     animal.group.add(model);
     animal.realisticModel=model;
     for(const child of animal.group.children){if(child!==model)child.visible=false}
+    // Reativa as quatro pernas procedurais: elas já recebem a animação de caminhada do jogo.
+    for(const leg of animal.legs)leg.visible=true
    }
    console.info('Modelo realista de ovelha carregado.');
   },undefined,(err)=>console.error('Falha ao carregar o modelo de ovelha; mantendo modelo anterior:',err));
