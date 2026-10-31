@@ -70,18 +70,25 @@ document.querySelector('#jump').onclick=()=>{if(grounded){velocityY=7;grounded=f
 document.querySelector('#camera').onclick=()=>{firstPerson=!firstPerson;document.querySelector('#camera').textContent=firstPerson?'VOLTAR 3ª PESSOA':'1ª / 3ª PESSOA'};
 function update(dt){const nearCabin=Math.hypot(player.position.x-12,player.position.z-(-13))<8;interact.disabled=!nearCabin;if(insideCabin){interact.disabled=false;interact.textContent='SAIR DA CABANA'}else if(!nearCabin)interact.textContent='APROXIME-SE DA CABANA';else if(!cabinOpen)interact.textContent='ABRIR CABANA';else interact.textContent='ENTRAR NA CABANA';hunger=Math.max(0,hunger-dt*.12);if(hunger===0)document.querySelector('#health').textContent=Math.max(0,Number(document.querySelector('#health').textContent)-dt*.7).toFixed(0);for(const a of animals){a.phase+=dt*a.speed;a.group.position.x=a.homeX+Math.sin(a.phase)*5;a.group.position.z=a.homeZ+Math.cos(a.phase*.7)*4;a.group.rotation.y=Math.atan2(Math.cos(a.phase)*5,-Math.sin(a.phase*.7)*2.8)}const forward=(keys.w||keys.arrowup?1:0)-(keys.s||keys.arrowdown?1:0)-joyY,side=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joyX,s=Math.sin(yaw),c=Math.cos(yaw);const oldX=player.position.x,oldZ=player.position.z;
 const nextX=oldX+(side*c-forward*s)*6*dt,nextZ=oldZ+(side*s+forward*c)*6*dt;
-const lx=nextX-12,lz=nextZ+13,wasLz=oldZ+13;
-let blocked=false;
-// Paredes da cabana: só permite atravessar a entrada quando a porta estiver aberta.
+const oldLX=oldX-12,oldLZ=oldZ+13,newLX=nextX-12,newLZ=nextZ+13;
+const insideBounds=Math.abs(newLX)<3.72&&Math.abs(newLZ)<2.72;
+const crossedDoorIn=oldLZ>=3.05&&newLZ<3.05&&Math.abs(newLX)<.88;
+const crossedDoorOut=oldLZ<=3.05&&newLZ>3.05&&Math.abs(newLX)<.88;
+let allowMove=true;
 if(!insideCabin){
- if(Math.abs(lx)<4.35&&Math.abs(lz)<3.35){
-  const entering=wasLz>=2.75&&lz<2.75;
-  if(!(entering&&cabinOpen&&Math.abs(lx)<.9))blocked=true;
+ if(insideBounds){
+  if(cabinOpen&&crossedDoorIn){insideCabin=true}
+  else allowMove=false;
  }
 }else{
- if(Math.abs(lx)>3.45||Math.abs(lz)>2.35)blocked=true;
+ if(Math.abs(newLX)>=3.72||newLZ<=-2.72||Math.abs(newLX)>=3.72){
+  allowMove=false;
+ }else if(newLZ>2.72){
+  if(cabinOpen&&crossedDoorOut){insideCabin=false}
+  else allowMove=false;
+ }
 }
-if(!blocked){player.position.x=nextX;player.position.z=nextZ}
+if(allowMove){player.position.x=nextX;player.position.z=nextZ}
 player.position.x=THREE.MathUtils.clamp(player.position.x,-165,165);player.position.z=THREE.MathUtils.clamp(player.position.z,-165,165);if(Math.abs(forward)+Math.abs(side)>.08)player.rotation.y=Math.atan2(-s,-c);velocityY-=18*dt;player.position.y+=velocityY*dt;if(player.position.y<0){player.position.y=0;velocityY=0;grounded=true}const target=new THREE.Vector3(player.position.x,player.position.y+(firstPerson?1.8:2.2),player.position.z);if(firstPerson){camera.position.copy(target);camera.rotation.set(pitch,yaw,0,'YXZ')}else{camera.position.set(target.x+Math.sin(yaw)*7,target.y+2.1+pitch*3,target.z+Math.cos(yaw)*7);camera.lookAt(target)}}
 let last=performance.now();function animate(now){requestAnimationFrame(animate);const t=nearestTree(),b=nearestBush();collect.disabled=!t;collect.textContent=t?'COLETAR MADEIRA (+3)':'APROXIME-SE DE UMA ÁRVORE';gather.disabled=!b;gather.textContent=b?'COLETAR FRUTAS (+3)':'PROCURE ARBUSTOS';eat.disabled=berries<1||hunger>95;craft.disabled=wood<8;craft.style.opacity=wood<8?'.55':'1';const dt=Math.min((now-last)/1000,.04);last=now;update(dt);renderer.render(scene,camera)}requestAnimationFrame(animate);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});document.querySelector('#loading').style.display='none';
