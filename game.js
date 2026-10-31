@@ -581,35 +581,55 @@ for(const side of [-1,1]){
  capsuleBetween(knee,[0,0,0],[0,-.32,.015],.105,pants);
  addPart(knee,new THREE.BoxGeometry(.27,.14,.42),shoeMat,0,-.39,.12);
 }
-// Avatar humano GLB do projeto oficial Three.js (modelo animado de demonstração).
+// Avatar humano GLB: mantém o personagem de segurança visível até confirmar o modelo.
 let realisticAvatarLoaded=false,playerMixer=null,playerActions={},activePlayerAction=null;
+function avatarStatus(message){
+ let el=document.getElementById('avatarStatus');
+ if(!el){el=document.createElement('div');el.id='avatarStatus';el.style.cssText='position:fixed;left:50%;top:52px;transform:translateX(-50%);z-index:30;background:#101820dd;color:#fff;padding:8px 12px;border-radius:8px;font:12px Arial;max-width:90%;text-align:center';document.body.appendChild(el)}
+ el.textContent=message;el.style.display='block';
+}
 function playPlayerAction(name){
  const next=playerActions[name];if(!next||activePlayerAction===next)return;
  next.reset().fadeIn(.2).play();if(activePlayerAction)activePlayerAction.fadeOut(.2);activePlayerAction=next;
 }
 (async()=>{
+ avatarStatus('Carregando personagem 3D...');
  try{
   const {GLTFLoader}=await import('https://esm.sh/three@0.160.0/examples/jsm/loaders/GLTFLoader.js?bundle');
   const loader=new GLTFLoader();
-  loader.load('https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/gltf/Soldier.glb',(gltf)=>{
-   const avatar=gltf.scene;
-   avatar.updateMatrixWorld(true);
-   const bounds=new THREE.Box3().setFromObject(avatar);
-   const size=new THREE.Vector3();bounds.getSize(size);
-   const center=new THREE.Vector3();bounds.getCenter(center);
-   const scale=2.35/(size.y||1.8);
-   avatar.scale.setScalar(scale);
-   avatar.position.set(-center.x*scale,-bounds.min.y*scale,-center.z*scale);
-   avatar.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
-   player.children.forEach(child=>child.visible=false);
-   player.add(avatar);
-   playerMixer=new THREE.AnimationMixer(avatar);
-   for(const clip of gltf.animations)playerActions[clip.name]=playerMixer.clipAction(clip);
-   playPlayerAction('Idle');
-   realisticAvatarLoaded=true;
-   console.info('Avatar Soldier carregado; animações:',gltf.animations.map(a=>a.name).join(', '));
-  },undefined,error=>console.error('Falha ao carregar Soldier.glb:',error));
- }catch(error){console.error('Falha no GLTFLoader do jogador:',error)}
+  loader.load('https://threejs.org/examples/models/gltf/Soldier.glb',(gltf)=>{
+   try{
+    const avatar=gltf.scene;
+    avatar.updateMatrixWorld(true);
+    const bounds=new THREE.Box3().setFromObject(avatar);
+    const size=new THREE.Vector3();bounds.getSize(size);
+    const center=new THREE.Vector3();bounds.getCenter(center);
+    if(!Number.isFinite(size.y)||size.y<.1)throw new Error('Modelo 3D sem dimensões válidas');
+    const scale=2.35/size.y;
+    avatar.scale.setScalar(scale);
+    avatar.position.set(-center.x*scale,-bounds.min.y*scale,-center.z*scale);
+    avatar.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
+    player.add(avatar);
+    playerMixer=new THREE.AnimationMixer(avatar);
+    for(const clip of gltf.animations)playerActions[clip.name]=playerMixer.clipAction(clip);
+    playPlayerAction('Idle');
+    // Só esconde o modelo provisório depois de adicionar um modelo 3D válido.
+    player.children.forEach(child=>{if(child!==avatar)child.visible=false});
+    realisticAvatarLoaded=true;
+    avatarStatus('Personagem 3D carregado!');
+    setTimeout(()=>{const el=document.getElementById('avatarStatus');if(el)el.style.display='none'},3500);
+    console.info('Avatar carregado:',size.y,'m; animações:',gltf.animations.map(a=>a.name).join(', '));
+   }catch(error){console.error(error);avatarStatus('O modelo 3D foi recebido, mas não pôde ser exibido. Personagem provisório mantido.')}
+  },progress=>{
+   if(progress.total)avatarStatus('Baixando personagem 3D: '+Math.round(progress.loaded/progress.total*100)+'%');
+  },error=>{
+   console.error('Falha ao baixar Soldier.glb:',error);
+   avatarStatus('Não foi possível baixar o personagem 3D. O personagem provisório continua ativo.');
+  });
+ }catch(error){
+  console.error('Falha no GLTFLoader:',error);
+  avatarStatus('Falha no carregador 3D. O personagem provisório continua ativo.');
+ }
 })();
 player.position.set(0,0,0);scene.add(player);
 let yaw=0,pitch=-.12,firstPerson=false,velocityY=0,grounded=true,wood=0;const fires=[];let berries=0,hunger=100,storedWood=0,storedBerries=0;
