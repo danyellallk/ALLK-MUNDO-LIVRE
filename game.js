@@ -132,14 +132,15 @@ function makeAnimal(kind,x,z){
   oval(g,dark,side*(isCow?.09:.06),1.56,1.125,.022,.018,.012);
   oval(g,dark,side*(isCow?.19:.16),1.72,.965,.055,.065,.035);
   // Íris castanha, pupila e brilho dos olhos
-  oval(g,mat(isCow?0x493326:0x68452e,.55),side*(isCow?.205:.175),1.72,1.012,.018,.024,.009);
-  oval(g,eyeMat,side*(isCow?.205:.175),1.72,1.021,.009,.017,.006);
-  oval(g,white,side*(isCow?.214:.183),1.735,1.028,.005,.006,.004);
-  // Pálpebras suaves e contorno discreto para integrar melhor os olhos ao rosto
-  oval(g,coat,side*(isCow?.19:.16),1.765,.997,.071,.022,.026,side*.08);
-  oval(g,coat,side*(isCow?.19:.16),1.678,.997,.062,.014,.022,-side*.04);
-  // Sobrancelha baixa e arredondada, dando expressão mais natural
-  oval(g,coat,side*(isCow?.19:.16),1.795,.985,.072,.023,.028,0,0,side*.06);
+  // Olhos menores e assentados mais perto do crânio
+  oval(g,mat(isCow?0x493326:0x68452e,.55),side*(isCow?.205:.175),1.72,1.006,.015,.020,.006);
+  oval(g,eyeMat,side*(isCow?.205:.175),1.72,1.013,.007,.014,.004);
+  oval(g,white,side*(isCow?.212:.181),1.731,1.018,.0035,.0045,.0025);
+  // Pálpebras finas, sem contorno volumoso
+  oval(g,coat,side*(isCow?.19:.16),1.759,.997,.062,.016,.018,side*.08);
+  oval(g,coat,side*(isCow?.19:.16),1.684,.997,.056,.011,.016,-side*.04);
+  // Sobrancelha discreta, acompanhando a testa
+  oval(g,coat,side*(isCow?.19:.16),1.782,.987,.061,.014,.019,0,0,side*.06);
   // Bochecha sutil, sem formar uma esfera saliente
   oval(g,coat,side*(isCow?.205:.16),1.59,.91,isCow?.064:.047,.067,.061,0,0,side*.12);
  }
