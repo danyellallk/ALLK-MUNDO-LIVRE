@@ -34,6 +34,9 @@ function makeAnimal(kind,x,z){
  const neck=oval(g,coat,0,1.38,.57,isCow?.25:.18,isCow?.39:.34,isCow?.29:.24,-.32);
  const head=oval(g,coat,0,1.68,.78,isCow?.25:.205,isCow?.27:.23,isCow?.26:.22);
  const muzzleShape=oval(g,muzzle,0,1.55,.99,isCow?.22:.14,isCow?.13:.095,isCow?.17:.13);
+ // Ponte nasal e lábio superior arredondados para suavizar a transição entre testa e focinho
+ oval(g,coat,0,1.625,.91,isCow?.115:.085,.105,.12,-.22);
+ oval(g,muzzle,0,1.535,1.045,isCow?.145:.09,.052,.075);
  // Linha da boca e mandíbula inferior para dar volume ao focinho
  oval(g,muzzle,0,1.485,.965,isCow?.17:.105,.055,.105);
  const mouthMat=mat(0x38251f,.95);
