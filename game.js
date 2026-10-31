@@ -43,7 +43,7 @@ for(const x of [-2.4,2.4]){const w=new THREE.Mesh(new THREE.BoxGeometry(1.1,1.1,
 cabin.position.set(12,0,-13);scene.add(cabin);
 // Jogador humano com proporções mais naturais e roupas detalhadas
 const player=new THREE.Group();
-const skin=mat(0xb98260),shirt=mat(0x245c91),shirtDark=mat(0x173f68),pants=mat(0x303744),shoeMat=mat(0x17191d),hairMat=mat(0x29211e),eyeMat=mat(0x171717);
+const skin=mat(0xb98260,.82),shirt=mat(0x245c91,.94),shirtDark=mat(0x173f68,.9),pants=mat(0x303744,.96),shoeMat=mat(0x17191d,.78),hairMat=mat(0x29211e,.9),eyeMat=mat(0x171717,.35);
 function addPart(parent,geometry,material,x,y,z,sx=1,sy=1,sz=1){const mesh=new THREE.Mesh(geometry,material);mesh.position.set(x,y,z);mesh.scale.set(sx,sy,sz);parent.add(mesh);return mesh}
 function capsuleBetween(parent,a,b,r,material){const start=new THREE.Vector3(...a),end=new THREE.Vector3(...b),delta=end.clone().sub(start);const mesh=new THREE.Mesh(new THREE.CapsuleGeometry(r,Math.max(.01,delta.length()-r*2),5,8),material);mesh.position.copy(start.add(end).multiplyScalar(.5));mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize());parent.add(mesh);return mesh}
 // tronco, cintura e pescoço
@@ -78,6 +78,18 @@ addPart(player,new THREE.SphereGeometry(.052,14,10),skin,0,2.13,.285,.9,.72,.8);
 for(const side of [-1,1])addPart(player,new THREE.SphereGeometry(.012,8,6),mat(0x70483a),side*.026,2.105,.323);
 addPart(player,new THREE.BoxGeometry(.075,.012,.012),mat(0x633d35),0,2.075,.247);
 addPart(player,new THREE.BoxGeometry(.085,.018,.012),mat(0x8f5148),0,2.055,.246);
+// Acabamento anatômico: clavículas suaves e transição do pescoço
+for(const side of [-1,1]){
+ const clavicle=capsuleBetween(player,[0,1.82,.205],[side*.25,1.78,.19],.035,shirtDark);
+ clavicle.material=shirtDark;
+ // Pálpebras superiores discretas para dar profundidade ao olhar
+ addPart(player,new THREE.SphereGeometry(.052,14,8),skin,side*.105,2.255,.224,1.04,.28,.48);
+}
+// Queixo e maçãs do rosto com volumes suaves
+addPart(player,new THREE.SphereGeometry(.105,14,10),skin,0,2.075,.17,.95,.48,.72);
+for(const side of [-1,1]){
+ addPart(player,new THREE.SphereGeometry(.075,12,8),mat(0xc28b6c,.9),side*.15,2.12,.18,1,.72,.48);
+}
 // gola, mangas, bolso e costuras da camiseta
 addPart(player,new THREE.TorusGeometry(.145,.035,7,16),shirtDark,0,1.84,.015,1,1,.8).rotation.x=Math.PI/2;
 for(const side of [-1,1]){
@@ -134,6 +146,11 @@ for(const side of [-1,1]){
   capsuleBetween(elbow,[fx,-.47,.075],[fx,-.555-(finger===1||finger===2?.018:0),.08],.014,skin);
  }
  capsuleBetween(elbow,[side*.075,-.43,.06],[side*.105,-.50,.095],.018,skin);
+ // Unhas pequenas, mantendo os dedos discretos em escala de jogo
+ for(let nail=0;nail<4;nail++){
+  const nx=side*.015+(nail-1.5)*.035;
+  addPart(elbow,new THREE.BoxGeometry(.014,.018,.008),mat(0xd6b6a5,.75),nx,-.548,.094);
+ }
  const leg=new THREE.Group();leg.position.set(side*.19,.82,0);player.add(leg);legPivots.push(leg);
  capsuleBetween(leg,[0,0,0],[0,-.39,0],.145,pants);
  const knee=new THREE.Group();knee.position.set(0,-.39,0);leg.add(knee);kneePivots.push(knee);
