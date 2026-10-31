@@ -285,14 +285,14 @@ makeAnimal('sheep',32,24);
 makeAnimal('sheep',-28,30);
 makeAnimal('lamb',9,10);
 makeAnimal('lamb',13,13);
-makeAnimal('deer',18,38);
+makeAnimal('deer',7,12);
 const horseAnimal=animals[animals.length-1];
 horseAnimal.kind='horse';
 (async()=>{
  try{
   const {GLTFLoader}=await import('https://esm.sh/three@0.160.0/examples/jsm/loaders/GLTFLoader.js?bundle');
   const loader=new GLTFLoader();
-  loader.load('https://raw.githubusercontent.com/google/model-viewer/master/packages/shared-assets/models/Horse.glb',(gltf)=>{
+  loader.load('https://raw.githubusercontent.com/ideaguy3d/3d-model-viewer/master/examples/assets/Horse.glb',(gltf)=>{
    const model=gltf.scene;
    const bounds=new THREE.Box3().setFromObject(model);
    const dims=new THREE.Vector3();bounds.getSize(dims);
