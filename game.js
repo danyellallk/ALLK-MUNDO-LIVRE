@@ -61,6 +61,10 @@ function makeAnimal(kind,x,z){
   // Pálpebras suaves e contorno discreto para integrar melhor os olhos ao rosto
   oval(g,coat,side*(isCow?.19:.16),1.765,.997,.071,.022,.026,side*.08);
   oval(g,coat,side*(isCow?.19:.16),1.678,.997,.062,.014,.022,-side*.04);
+  // Sobrancelha baixa e arredondada, dando expressão mais natural
+  oval(g,coat,side*(isCow?.19:.16),1.795,.985,.072,.023,.028,0,0,side*.06);
+  // Volume suave nas bochechas, conectando o olho ao focinho
+  oval(g,coat,side*(isCow?.205:.16),1.59,.91,isCow?.075:.055,.085,.075,0,0,side*.12);
  }
  // Quatro pernas longas e mais finas, com joelhos e cascos pequenos
  const legs=[],knees=[];
