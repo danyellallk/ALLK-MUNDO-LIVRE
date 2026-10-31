@@ -86,6 +86,12 @@ function makeAnimal(kind,x,z){
   oval(g,patchMat,.69,1.22,.18,.035,.22,.31,.08,0,.12);
   oval(g,patchMat,-.68,.91,-.28,.032,.19,.25,-.12,0,-.1);
   oval(g,patchMat,.48,.86,-.48,.028,.14,.19,.1,0,.18);
+  // Úbere discreto e arredondado, com quatro tetos curtos sob o ventre
+  const udderMat=mat(0xc99c91,.96);
+  oval(g,udderMat,0,.62,-.18,.29,.16,.31);
+  for(const ux of [-.13,.13])for(const uz of [-.34,-.04]){
+   const teat=oval(g,udderMat,ux,.48,uz,.045,.105,.05,.12);
+  }
   for(const side of [-1,1]){
    oval(g,coat,side*.34,1.77,.7,.19,.065,.095,0,0,side*.18);
    const horn=new THREE.Mesh(new THREE.ConeGeometry(.055,.2,12),mat(0xd8c9aa));horn.position.set(side*.17,1.98,.75);horn.rotation.z=side*-.32;g.add(horn);
