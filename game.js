@@ -741,6 +741,21 @@ gather.onclick=()=>{const b=nearestBush();if(!b)return;b.visible=false;berries+=
 function updateInventory(){document.querySelector('#wood').textContent=wood;document.querySelector('#invWood').textContent=wood;document.querySelector('#fires').textContent=fires.length;document.querySelector('#invFires').textContent=fires.length;document.querySelector('#trees').textContent=trees.filter(t=>t.visible).length;document.querySelector('#berries').textContent=berries;document.querySelector('#invBerries').textContent=berries;document.querySelector('#storedWood').textContent=storedWood;document.querySelector('#storedBerries').textContent=storedBerries;document.querySelector('#hunger').textContent=Math.round(hunger)}
 bag.onclick=()=>{inventoryPanel.hidden=!inventoryPanel.hidden;bag.textContent=inventoryPanel.hidden?'🎒 INVENTÁRIO':'FECHAR INVENTÁRIO'};
 craft.onclick=()=>{if(wood<8){craft.textContent='PRECISA DE 8 MADEIRAS';setTimeout(()=>craft.textContent='CRIAR FOGUEIRA (8)',1500);return}wood-=8;const fire=new THREE.Group();const logMat=mat(0x654128);for(let i=0;i<3;i++){const log=new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,1.5,7),logMat);log.rotation.z=Math.PI/2;log.rotation.y=i*Math.PI/3;log.position.y=.15;fire.add(log)}const flame=new THREE.Mesh(new THREE.ConeGeometry(.38,1.1,7),new THREE.MeshBasicMaterial({color:0xff8a19}));flame.position.y=.8;fire.add(flame);const glow=new THREE.PointLight(0xff8a28,1.5,9);glow.position.y=1;fire.add(glow);fire.position.set(player.position.x+Math.sin(yaw)*2,0,player.position.z+Math.cos(yaw)*2);scene.add(fire);fires.push(fire);updateInventory()};collect.onclick=()=>{const t=nearestTree();if(!t)return;t.visible=false;wood+=3;updateInventory()};updateInventory();
+// Salvamento local do progresso neste aparelho.
+const saveButton=document.createElement('button'),loadButton=document.createElement('button');
+saveButton.id='saveGame';saveButton.textContent='💾 SALVAR';
+loadButton.id='loadGame';loadButton.textContent='📂 CARREGAR';
+document.querySelector('#actions').append(saveButton,loadButton);
+function saveProgress(){
+ const data={x:player.position.x,z:player.position.z,yaw,pitch,wood,berries,hunger,storedWood,storedBerries};
+ try{localStorage.setItem('allk_mundo_livre_save',JSON.stringify(data));saveButton.textContent='SALVO!';setTimeout(()=>saveButton.textContent='💾 SALVAR',1400)}catch(e){saveButton.textContent='ERRO'}
+}
+function loadProgress(){
+ try{const raw=localStorage.getItem('allk_mundo_livre_save');if(!raw){loadButton.textContent='SEM SAVE';setTimeout(()=>loadButton.textContent='📂 CARREGAR',1400);return}
+ const d=JSON.parse(raw);player.position.set(THREE.MathUtils.clamp(Number(d.x)||0,-165,165),0,THREE.MathUtils.clamp(Number(d.z)||0,-165,165));yaw=Number(d.yaw)||0;pitch=Number(d.pitch)||0;wood=Math.max(0,Number(d.wood)||0);berries=Math.max(0,Number(d.berries)||0);hunger=THREE.MathUtils.clamp(Number(d.hunger)||100,0,100);storedWood=Math.max(0,Number(d.storedWood)||0);storedBerries=Math.max(0,Number(d.storedBerries)||0);insideCabin=false;ridingHorse=false;updateInventory();loadButton.textContent='CARREGADO!';setTimeout(()=>loadButton.textContent='📂 CARREGAR',1400)
+ }catch(e){loadButton.textContent='SAVE INVÁLIDO'}
+}
+saveButton.onclick=saveProgress;loadButton.onclick=loadProgress;
 document.querySelector('#jump').onclick=()=>{if(grounded){velocityY=7;grounded=false}};
 document.querySelector('#camera').onclick=()=>{firstPerson=!firstPerson;document.querySelector('#camera').textContent=firstPerson?'VOLTAR 3ª PESSOA':'1ª / 3ª PESSOA'};
 let walkPhase=0,previousPlayerX=0,previousPlayerZ=0,running=false;
