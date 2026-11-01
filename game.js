@@ -3,8 +3,8 @@ const scene=new THREE.Scene();
 // Lista criada no início para evitar acesso antes da inicialização.
 const townsfolk=[];scene.background=new THREE.Color(0xa9cbdc);scene.fog=new THREE.Fog(0xa9c3c9,125,330);
 const camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,.1,420);
-const renderer=new THREE.WebGLRenderer({antialias:false,powerPreference:'low-power'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.35));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;document.body.appendChild(renderer.domElement);
-const hemi=new THREE.HemisphereLight(0xe5f3ff,0x596348,2.05);scene.add(hemi);const sun=new THREE.DirectionalLight(0xffe4bd,2.6);sun.position.set(-45,70,35);scene.add(sun);
+const renderer=new THREE.WebGLRenderer({antialias:false,powerPreference:'low-power'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.35));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;document.body.appendChild(renderer.domElement);
+const hemi=new THREE.HemisphereLight(0xe5f3ff,0x596348,1.85);scene.add(hemi);const sun=new THREE.DirectionalLight(0xffe4bd,2.35);sun.position.set(-45,70,35);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-95;sun.shadow.camera.right=95;sun.shadow.camera.top=95;sun.shadow.camera.bottom=-95;sun.shadow.camera.near=1;sun.shadow.camera.far=190;sun.shadow.bias=-.00018;sun.shadow.normalBias=.025;sun.shadow.radius=3;scene.add(sun);
 const mat=(color,roughness=1)=>new THREE.MeshStandardMaterial({color,roughness});
 // Texturas procedurais leves: geradas localmente, sem downloads ou serviços pagos.
 function makeSurfaceTexture(base,spots,seed=1){
@@ -76,7 +76,7 @@ function terrainHeight(x,z){
  return THREE.MathUtils.lerp(THREE.MathUtils.lerp(a,b,tx),THREE.MathUtils.lerp(c,d,tx),ty);
 }
 groundMaterial.vertexColors=true;
-const ground=new THREE.Mesh(terrainGeometry,groundMaterial);ground.rotation.x=-Math.PI/2;ground.position.y=0;scene.add(ground);
+const ground=new THREE.Mesh(terrainGeometry,groundMaterial);ground.rotation.x=-Math.PI/2;ground.position.y=0;ground.receiveShadow=true;scene.add(ground);
 // Montanhas de fundo com silhueta irregular e camadas rochosas; cenário distante, fora da área de colisão.
 function hill(x,z,sx,sy,sz,color){
  const geo=new THREE.SphereGeometry(1,18,12),p=geo.attributes.position;
@@ -876,7 +876,7 @@ draftHorse.position.set(-2.5,0,21.5);draftHorse.rotation.y=Math.PI;scene.add(dra
 let ridingHorse=false;
 const mountButton=document.querySelector('#mountHorse')||document.createElement('button');mountButton.id='mountHorse';mountButton.textContent='MONTAR CAVALO';if(!mountButton.parentNode)document.querySelector('#actions').prepend(mountButton);
 mountButton.onclick=()=>{if(ridingHorse){ridingHorse=false;player.position.y=0;draftHorse.position.set(player.position.x-Math.sin(yaw)*1.8,0,player.position.z-Math.cos(yaw)*1.8);mountButton.textContent='MONTAR CAVALO';}else if(Math.hypot(player.position.x-draftHorse.position.x,player.position.z-draftHorse.position.z)<4){ridingHorse=true;mountButton.textContent='DESCER DO CAVALO';}};
-player.position.set(0,terrainHeight(0,0),0);player.visible=true;player.scale.setScalar(1);player.traverse(o=>{o.visible=true;if(o.isMesh){o.frustumCulled=false;o.renderOrder=2}});scene.add(player);
+player.position.set(0,terrainHeight(0,0),0);player.visible=true;player.scale.setScalar(1);player.traverse(o=>{o.visible=true;if(o.isMesh){o.frustumCulled=false;o.renderOrder=2;o.castShadow=true;o.receiveShadow=true}});scene.add(player);
 let yaw=0,pitch=-.12,firstPerson=false,velocityY=0,grounded=true,wood=0;const fires=[];let berries=0,hunger=100,storedWood=0,storedBerries=0;
 const keys={};addEventListener('keydown',e=>keys[e.key.toLowerCase()]=true);addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
 const joystick=document.querySelector('#joystick'),stick=document.querySelector('#stick');let joyX=0,joyY=0,joyPointer=null;joystick.style.zIndex='8';joystick.style.touchAction='none';
