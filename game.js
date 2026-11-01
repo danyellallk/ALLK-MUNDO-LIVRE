@@ -480,6 +480,7 @@ function makeTownSign(label){
  return new THREE.MeshBasicMaterial({map:t});
 }
 const townDoors=[];
+const townFurnitureColliders=[];
 function buildOldWestBuilding(x,z,name,kind='saloon'){
  const g=new THREE.Group(),w=kind==='saloon'?13:10,d=kind==='saloon'?8:7,h=kind==='saloon'?5.2:4.4;
  const wallMat=new THREE.MeshStandardMaterial({map:makeSurfaceTexture('#765039',['#4c3022','#a77b50','#5a3928'],kind==='saloon'?811:812),roughness:1});
@@ -504,6 +505,43 @@ function buildOldWestBuilding(x,z,name,kind='saloon'){
  const rightHinge=new THREE.Group();rightHinge.position.set(.92,0,0);doorGroup.add(rightHinge);
  const rightLeaf=new THREE.Mesh(new THREE.BoxGeometry(.92,2.35,.12),doorMat);rightLeaf.position.set(-.46,1.25,0);rightHinge.add(rightLeaf);
  townDoors.push({left:leftHinge,right:rightHinge,x,z:z+d/2+.3,open:false});
+
+ // Interior mobiliado: corredor central e passagem da porta permanecem livres.
+ const furnitureBox=(ww,hh,dd,ma,xx,yy,zz)=>{
+  box(ww,hh,dd,ma,xx,yy,zz);
+  townFurnitureColliders.push({x:x+xx,z:z+zz,w:ww/2,d:dd/2});
+ };
+ const furnitureWood=mat(0x573923),furnitureTop=mat(0x805936),ironDetail=mat(0x302820);
+ if(kind==='saloon'){
+  // Balcão no fundo, afastado do corredor de entrada.
+  furnitureBox(5.2,1.05,.72,furnitureWood,0,.78,-2.65);
+  furnitureBox(5.35,.13,.84,furnitureTop,0,1.36,-2.65);
+  // Mesas laterais com pés sólidos.
+  for(const tx of [-3.65,3.65]){
+   furnitureBox(1.55,.16,1.35,furnitureTop,tx,.92,-.65);
+   for(const px of [-.58,.58])for(const pz of [-.48,.48])
+    furnitureBox(.13,.82,.13,furnitureWood,tx+px,.43,-.65+pz);
+   // Bancos junto às mesas.
+   furnitureBox(1.25,.18,.38,furnitureWood,tx,.52,.65);
+   furnitureBox(.12,.48,.12,furnitureWood,tx-.48,.25,.65);
+   furnitureBox(.12,.48,.12,furnitureWood,tx+.48,.25,.65);
+  }
+ }else{
+  // Prateleiras nas paredes laterais, sem fechar a entrada.
+  for(const side of [-1,1]){
+   furnitureBox(.48,2.0,3.2,furnitureWood,side*4.35,1.05,-.75);
+   for(const level of [.55,1.15,1.75])
+    furnitureBox(.62,.10,3.0,furnitureTop,side*4.22,level,-.75);
+  }
+  // Caixotes e balcão de atendimento no fundo.
+  furnitureBox(2.3,.95,.72,furnitureWood,0,.72,-2.55);
+  furnitureBox(2.45,.12,.82,furnitureTop,0,1.25,-2.55);
+  for(const [cx,cz] of [[-2.65,1.25],[2.65,1.25],[-2.7,-2.35],[2.7,-2.35]]){
+   furnitureBox(.82,.78,.82,furnitureTop,cx,.48,cz);
+   furnitureBox(.86,.10,.86,ironDetail,cx,.91,cz);
+  }
+ }
+
  // Varanda e pilares
  box(w+2.2,.25,2.8,townTrim,0,2.9,d/2+1.25);
  for(const xx of [-w*.43,-w*.15,w*.15,w*.43]){
@@ -976,6 +1014,11 @@ const solidBuildings=[
 for(const b of solidBuildings){
  const result=pushOutBox(nextX,nextZ,b.x,b.z,b.w,b.d,.30);
  if(result[2]){nextX=result[0];nextZ=result[1];horizontalVX*=.08;horizontalVZ*=.08;}
+}
+// Móveis internos também são sólidos: colisão alinhada às dimensões visuais.
+for(const f of townFurnitureColliders){
+ const hit=pushOutBox(nextX,nextZ,f.x,f.z,f.w,f.d,.30);
+ if(hit[2]){nextX=hit[0];nextZ=hit[1];horizontalVX*=.08;horizontalVZ*=.08;}
 }
 // Carroça: carroceria e rodas são obstáculos sólidos.
 if(!ridingHorse){
