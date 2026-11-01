@@ -273,7 +273,27 @@ function makeRoadTexture(){
  t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());return t;
 }
 const dirtTexture=makeRoadTexture();dirtTexture.repeat.set(2,18);dirtTexture.magFilter=THREE.LinearFilter;dirtTexture.minFilter=THREE.LinearMipmapLinearFilter;
-const path=new THREE.Mesh(new THREE.PlaneGeometry(7,95),new THREE.MeshStandardMaterial({map:dirtTexture,color:0xd1b184,roughness:1}));path.rotation.x=-Math.PI/2;path.position.set(7,.015,-22);scene.add(path);
+// Estrada com bordas naturais, acompanhando as ondulações reais do terreno.
+const roadPositions=[],roadUvs=[],roadIndices=[];
+const roadSegments=100;
+for(let i=0;i<=roadSegments;i++){
+ const t=i/roadSegments,z=25.5-t*95;
+ const waviness=Math.sin(t*31)*.16+Math.sin(t*73+1.4)*.09;
+ const centerX=7+Math.sin(t*8)*.32;
+ for(const side of [-1,1]){
+  const edgeNoise=waviness+Math.sin(t*47+side*1.7)*.12;
+  const x=centerX+side*(3.5+edgeNoise);
+  roadPositions.push(x,terrainHeight(x,z)+.045,z);
+  roadUvs.push(side===-1?0:1,t);
+ }
+ if(i<roadSegments){const a=i*2;roadIndices.push(a,a+1,a+2,a+1,a+3,a+2);}
+}
+const roadGeometry=new THREE.BufferGeometry();
+roadGeometry.setAttribute('position',new THREE.Float32BufferAttribute(roadPositions,3));
+roadGeometry.setAttribute('uv',new THREE.Float32BufferAttribute(roadUvs,2));
+roadGeometry.setIndex(roadIndices);roadGeometry.computeVertexNormals();
+const path=new THREE.Mesh(roadGeometry,new THREE.MeshStandardMaterial({map:dirtTexture,color:0xd1b184,roughness:1,side:THREE.DoubleSide}));
+path.receiveShadow=true;scene.add(path);
 function makeBarkTexture(){
  const c=document.createElement('canvas');c.width=256;c.height=512;const q=c.getContext('2d');
  q.fillStyle='#60402b';q.fillRect(0,0,256,512);let seed=73;
