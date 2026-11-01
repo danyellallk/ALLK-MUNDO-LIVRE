@@ -386,7 +386,7 @@ function makeAnimal(kind,x,z){
  const tailMesh=new THREE.Mesh(new THREE.CylinderGeometry(.018,.035,.38,10),isCow?coat:dark);tailMesh.position.y=-.17;tailMesh.rotation.x=-.55;tail.add(tailMesh);const tailTuft=oval(tail,isCow?dark:coat,0,-.36,-.015,isCow?.075:.065,.12,.075);
  g.scale.setScalar(isCow?.92:isLamb?.68:isSheep?.82:.84);
  g.position.set(x,0,z);scene.add(g);
- animals.push({group:g,kind,legs,knees,tail,ears,neck,head,torso,tailTuft,phase:Math.random()*6,gaitPhase:Math.random()*6,lastX:x,lastZ:z,speed:.45+Math.random()*.35,homeX:x,homeZ:z,wanderX:kind==='lamb'?1.8+Math.random()*1.2:3.5+Math.random()*3.5,wanderZ:kind==='lamb'?1.5+Math.random()*1.2:2.5+Math.random()*3.5,turnPhase:Math.random()*6.28});
+ animals.push({group:g,kind,legs,knees,tail,ears,neck,head,torso,tailTuft,phase:Math.random()*6,gaitPhase:Math.random()*6,lastX:x,lastZ:z,speed:.45+Math.random()*.35,homeX:x,homeZ:z,wanderX:kind==='lamb'?1.8+Math.random()*1.2:3.5+Math.random()*3.5,wanderZ:kind==='lamb'?1.5+Math.random()*1.2:2.5+Math.random()*3.5,turnPhase:Math.random()*6.28,friendlyUntil:0});
 }
 for(let i=0;i<5;i++)makeAnimal(i<3?'deer':'cow',(Math.random()-.5)*85+35,(Math.random()-.5)*85+25);
 // Reposiciona o rebanho para evitar que os modelos se sobreponham.
@@ -730,6 +730,9 @@ talkButton.id='talkTownsperson';talkButton.textContent='CONVERSAR';
 talkButton.style.cssText='position:fixed;left:50%;bottom:112px;transform:translateX(-50%);z-index:12;padding:13px 20px;border:2px solid #d6b36d;border-radius:10px;background:#49301f;color:#fff;font-weight:800;display:none';
 document.body.appendChild(talkButton);
 let nearbyClerk=null;
+const feedButton=document.createElement('button');feedButton.id='feedAnimal';feedButton.textContent='ALIMENTAR ANIMAL 🍓';feedButton.style.cssText='position:fixed;left:50%;bottom:166px;transform:translateX(-50%);z-index:12;padding:13px 18px;border:2px solid #9bc77b;border-radius:10px;background:#29452b;color:#fff;font-weight:800;display:none';document.body.appendChild(feedButton);
+let nearbyAnimal=null;
+feedButton.onclick=()=>{if(!nearbyAnimal||berries<1)return;berries--;nearbyAnimal.friendlyUntil=performance.now()+15000;nearbyAnimal.fleeing=false;updateInventory();feedButton.textContent='ANIMAL ALIMENTADO!';setTimeout(()=>feedButton.textContent='ALIMENTAR ANIMAL 🍓',1300);};
 talkButton.onclick=()=>{if(!nearbyClerk)return;alert(nearbyClerk.shop==='store'?'Bem-vindo ao armazém! Em breve você poderá comprar alimentos e ferramentas.':'Bem-vindo ao saloon! Descanse um pouco e converse com o pessoal da cidade.');};
 
 
@@ -944,8 +947,9 @@ function update(dt){
  const oldX=a.group.position.x,oldZ=a.group.position.z;
  const dx=oldX-player.position.x,dz=oldZ-player.position.z;
  const playerDist=Math.hypot(dx,dz);
- if(playerDist<6.5)a.fleeing=true;
+ if(playerDist<6.5&&performance.now()>a.friendlyUntil)a.fleeing=true;
  if(playerDist>10)a.fleeing=false;
+ if(performance.now()<a.friendlyUntil)a.fleeing=false;
  if(a.fleeing){
   const d=playerDist||.001;
   const fleeSpeed=a.kind==='horse'?5.2:a.kind==='deer'?4.8:a.kind==='cow'?3.4:a.kind==='lamb'?3.0:3.6;
@@ -1085,5 +1089,5 @@ player.rotation.x=runLean;
 player.rotation.z=moving?Math.sin(walkPhase*.5)*(running?.035:.018)*moveAmount:0;velocityY-=20*dt;player.position.y+=velocityY*dt;if(player.position.y<=0){player.position.y=0;if(velocityY<0)velocityY=0;grounded=true}if(ridingHorse){player.position.y=.92;draftHorse.visible=true;draftHorse.position.set(player.position.x,0,player.position.z);draftHorse.rotation.y=yaw+Math.PI;player.rotation.y=yaw;}else{player.position.y=Math.max(0,player.position.y);}
 const horseNear=Math.hypot(player.position.x-draftHorse.position.x,player.position.z-draftHorse.position.z)<4;mountButton.disabled=!ridingHorse&&!horseNear;mountButton.style.opacity=mountButton.disabled?'.5':'1';
 const target=new THREE.Vector3(player.position.x,player.position.y+(firstPerson?1.65:1.25),player.position.z);if(firstPerson){camera.position.copy(target);camera.rotation.set(pitch,yaw,0,'YXZ')}else{camera.position.set(target.x+Math.sin(yaw)*5.8,target.y+1.15+pitch*2,target.z+Math.cos(yaw)*5.8);camera.lookAt(target)}}
-let last=performance.now();function animate(now){requestAnimationFrame(animate);const townTime=now*.001;for(const n of townsfolk){if(n.stationary)continue;n.group.position.x=n.x+Math.sin(townTime*n.speed+n.phase)*.7;n.group.position.z=n.z+Math.cos(townTime*n.speed+n.phase)*.45;n.group.rotation.y=Math.sin(townTime*n.speed+n.phase)*.35;}if(playerMixer)playerMixer.update(Math.min((now-last)/1000,.04));nearbyClerk=null;let clerkDistance=3.1;for(const n of townsfolk){if(!n.stationary)continue;const d=Math.hypot(player.position.x-n.group.position.x,player.position.z-n.group.position.z);if(d<clerkDistance){clerkDistance=d;nearbyClerk={shop:n.x>-5?'store':'saloon'};}}talkButton.style.display=nearbyClerk?'block':'none';const t=nearestTree(),b=nearestBush();collect.disabled=!t;collect.textContent=t?'COLETAR MADEIRA (+3)':'APROXIME-SE DE UMA ÁRVORE';gather.disabled=!b;gather.textContent=b?'COLETAR FRUTAS (+3)':'PROCURE ARBUSTOS';eat.disabled=berries<1||hunger>95;craft.disabled=wood<8;craft.style.opacity=wood<8?'.55':'1';const dt=Math.min((now-last)/1000,.04);last=now;update(dt);renderer.render(scene,camera)}requestAnimationFrame(animate);
+let last=performance.now();function animate(now){requestAnimationFrame(animate);const townTime=now*.001;for(const n of townsfolk){if(n.stationary)continue;n.group.position.x=n.x+Math.sin(townTime*n.speed+n.phase)*.7;n.group.position.z=n.z+Math.cos(townTime*n.speed+n.phase)*.45;n.group.rotation.y=Math.sin(townTime*n.speed+n.phase)*.35;}if(playerMixer)playerMixer.update(Math.min((now-last)/1000,.04));nearbyClerk=null;let clerkDistance=3.1;for(const n of townsfolk){if(!n.stationary)continue;const d=Math.hypot(player.position.x-n.group.position.x,player.position.z-n.group.position.z);if(d<clerkDistance){clerkDistance=d;nearbyClerk={shop:n.x>-5?'store':'saloon'};}}talkButton.style.display=nearbyClerk?'block':'none';nearbyAnimal=null;let animalDistance=3.2;for(const a of animals){const d=Math.hypot(player.position.x-a.group.position.x,player.position.z-a.group.position.z);if(d<animalDistance){animalDistance=d;nearbyAnimal=a;}}feedButton.style.display=nearbyAnimal?'block':'none';feedButton.disabled=!nearbyAnimal||berries<1;feedButton.style.opacity=feedButton.disabled?'.55':'1';const t=nearestTree(),b=nearestBush();collect.disabled=!t;collect.textContent=t?'COLETAR MADEIRA (+3)':'APROXIME-SE DE UMA ÁRVORE';gather.disabled=!b;gather.textContent=b?'COLETAR FRUTAS (+3)':'PROCURE ARBUSTOS';eat.disabled=berries<1||hunger>95;craft.disabled=wood<8;craft.style.opacity=wood<8?'.55':'1';const dt=Math.min((now-last)/1000,.04);last=now;update(dt);renderer.render(scene,camera)}requestAnimationFrame(animate);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});document.querySelector('#loading').style.display='none';
