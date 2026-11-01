@@ -215,7 +215,17 @@ function makeAnimal(kind,x,z){
   const rumpWidth=1+rump*.055;
   bodyPos.setXYZ(i,x*bellyTaper*backWidth*flank*rumpWidth,y+(y<0?y*.055:0)-backFlatten,z*(1-lower*.035));
  }
+ // Micro-relevo orgânico da lã: ondulações rasas na própria malha, sem tufos esféricos.
+ if(isSheep){
+  for(let i=0;i<bodyPos.count;i++){
+   const px=bodyPos.getX(i),py=bodyPos.getY(i),pz=bodyPos.getZ(i);
+   const wave=Math.sin(px*17+py*11+pz*13)*Math.sin(py*19-pz*9+px*7);
+   const amount=wave*.009;
+   bodyPos.setXYZ(i,px+px*amount,py+py*amount,pz+pz*amount);
+  }
+ }
  torso.geometry.computeVertexNormals();
+ torso.geometry.computeBoundingSphere();
  // Peitoral integrado ao tronco, com volume gradual e parte inferior menos saliente
  const chest=oval(g,coat,0,1.095,.385,isCow?.385:.31,isCow?.285:.245,isCow?.35:.30);
  const chestPos=chest.geometry.attributes.position;
@@ -224,7 +234,17 @@ function makeAnimal(kind,x,z){
   const lower=THREE.MathUtils.clamp(-py,0,1);
   chestPos.setXYZ(vi,px*(1-lower*.075),py,pz*(1-lower*.045));
  }
+ // Continuidade da textura da lã no peito, com relevo ainda mais discreto.
+ if(isSheep){
+  for(let i=0;i<chestPos.count;i++){
+   const px=chestPos.getX(i),py=chestPos.getY(i),pz=chestPos.getZ(i);
+   const wave=Math.sin(px*15+py*12+pz*10)*Math.sin(py*17-pz*8+px*6);
+   const amount=wave*.006;
+   chestPos.setXYZ(i,px+px*amount,py+py*amount,pz+pz*amount);
+  }
+ }
  chest.geometry.computeVertexNormals();
+ chest.geometry.computeBoundingSphere();
  // Pescoço com base mais larga e topo suavemente estreito
  const neck=oval(g,coat,0,1.39,.59,isCow?.215:isSheep?.155:.16,isCow?.365:isSheep?.315:.30,isCow?.34:.29,-.43);
  const neckPos=neck.geometry.attributes.position;
