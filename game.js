@@ -555,6 +555,14 @@ const mainStreet=new THREE.Mesh(new THREE.PlaneGeometry(24,100),new THREE.MeshSt
 mainStreet.rotation.x=-Math.PI/2;mainStreet.position.set(-9,.018,8);scene.add(mainStreet);
 buildOldWestBuilding(-17,1,'THE OLD SALOON','saloon');
 buildOldWestBuilding(1,1,'GENERAL STORE','store');
+makeTownsperson(-17,0,0x65452f,0x30251c,4,true);
+makeTownsperson(1,-.15,0x526047,0x493729,5,true);
+const talkButton=document.createElement('button');
+talkButton.id='talkTownsperson';talkButton.textContent='CONVERSAR';
+talkButton.style.cssText='position:fixed;left:50%;bottom:112px;transform:translateX(-50%);z-index:12;padding:13px 20px;border:2px solid #d6b36d;border-radius:10px;background:#49301f;color:#fff;font-weight:800;display:none';
+document.body.appendChild(talkButton);
+let nearbyClerk=null;
+talkButton.onclick=()=>{if(!nearbyClerk)return;alert(nearbyClerk.shop==='store'?'Bem-vindo ao armazém! Em breve você poderá comprar alimentos e ferramentas.':'Bem-vindo ao saloon! Descanse um pouco e converse com o pessoal da cidade.');};
 
 // Jogador humano com proporções mais naturais e roupas detalhadas
 const player=new THREE.Group();
@@ -703,7 +711,7 @@ let realisticAvatarLoaded=false,playerMixer=null,playerActions={},activePlayerAc
 
 /* Moradores humanos da cidade histórica */
 const townsfolk=[];
-function makeTownsperson(x,z,coatColor,hatColor,phase=0){
+function makeTownsperson(x,z,coatColor,hatColor,phase=0,stationary=false){
  const g=new THREE.Group(),coat=mat(coatColor),pants=mat(0x34312b),skin=mat(0xc18c69),hat=mat(hatColor),boots=mat(0x29221c);
  const part=(geo,ma,px,py,pz,sx=1,sy=1,sz=1)=>{const m=new THREE.Mesh(geo,ma);m.position.set(px,py,pz);m.scale.set(sx,sy,sz);g.add(m)};
  part(new THREE.CapsuleGeometry(.23,.48,4,8),coat,0,1.25,0,1,.95,.75);
@@ -715,7 +723,7 @@ function makeTownsperson(x,z,coatColor,hatColor,phase=0){
   part(new THREE.CapsuleGeometry(.105,.46,3,7),pants,side*.115,.55,0);
   part(new THREE.BoxGeometry(.22,.13,.36),boots,side*.115,.12,.06);
  }
- g.position.set(x,0,z);scene.add(g);townsfolk.push({group:g,x,z,phase,speed:.22+phase*.025});
+ g.position.set(x,0,z);scene.add(g);townsfolk.push({group:g,x,z,phase,speed:stationary?0:.22+phase*.025,stationary});
 }
 makeTownsperson(-20,8,0x76513a,0x30271e,0);
 makeTownsperson(-13,10,0x4e5b43,0x493729,1);
@@ -1075,5 +1083,5 @@ player.rotation.x=runLean;
 player.rotation.z=moving?Math.sin(walkPhase*.5)*(running?.035:.018)*moveAmount:0;velocityY-=20*dt;player.position.y+=velocityY*dt;if(player.position.y<=0){player.position.y=0;if(velocityY<0)velocityY=0;grounded=true}if(ridingHorse){player.position.y=.92;draftHorse.visible=true;draftHorse.position.set(player.position.x,0,player.position.z);draftHorse.rotation.y=yaw+Math.PI;player.rotation.y=yaw;}else{player.position.y=Math.max(0,player.position.y);}
 const horseNear=Math.hypot(player.position.x-draftHorse.position.x,player.position.z-draftHorse.position.z)<4;mountButton.disabled=!ridingHorse&&!horseNear;mountButton.style.opacity=mountButton.disabled?'.5':'1';
 const target=new THREE.Vector3(player.position.x,player.position.y+(firstPerson?1.65:1.25),player.position.z);if(firstPerson){camera.position.copy(target);camera.rotation.set(pitch,yaw,0,'YXZ')}else{camera.position.set(target.x+Math.sin(yaw)*5.8,target.y+1.15+pitch*2,target.z+Math.cos(yaw)*5.8);camera.lookAt(target)}}
-let last=performance.now();function animate(now){requestAnimationFrame(animate);const townTime=now*.001;for(const n of townsfolk){n.group.position.x=n.x+Math.sin(townTime*n.speed+n.phase)*.7;n.group.position.z=n.z+Math.cos(townTime*n.speed+n.phase)*.45;n.group.rotation.y=Math.sin(townTime*n.speed+n.phase)*.35;}if(playerMixer)playerMixer.update(Math.min((now-last)/1000,.04));const t=nearestTree(),b=nearestBush();collect.disabled=!t;collect.textContent=t?'COLETAR MADEIRA (+3)':'APROXIME-SE DE UMA ÁRVORE';gather.disabled=!b;gather.textContent=b?'COLETAR FRUTAS (+3)':'PROCURE ARBUSTOS';eat.disabled=berries<1||hunger>95;craft.disabled=wood<8;craft.style.opacity=wood<8?'.55':'1';const dt=Math.min((now-last)/1000,.04);last=now;update(dt);renderer.render(scene,camera)}requestAnimationFrame(animate);
+let last=performance.now();function animate(now){requestAnimationFrame(animate);const townTime=now*.001;for(const n of townsfolk){if(n.stationary)continue;n.group.position.x=n.x+Math.sin(townTime*n.speed+n.phase)*.7;n.group.position.z=n.z+Math.cos(townTime*n.speed+n.phase)*.45;n.group.rotation.y=Math.sin(townTime*n.speed+n.phase)*.35;}if(playerMixer)playerMixer.update(Math.min((now-last)/1000,.04));nearbyClerk=null;let clerkDistance=3.1;for(const n of townsfolk){if(!n.stationary)continue;const d=Math.hypot(player.position.x-n.group.position.x,player.position.z-n.group.position.z);if(d<clerkDistance){clerkDistance=d;nearbyClerk={shop:n.x>-5?'store':'saloon'};}}talkButton.style.display=nearbyClerk?'block':'none';const t=nearestTree(),b=nearestBush();collect.disabled=!t;collect.textContent=t?'COLETAR MADEIRA (+3)':'APROXIME-SE DE UMA ÁRVORE';gather.disabled=!b;gather.textContent=b?'COLETAR FRUTAS (+3)':'PROCURE ARBUSTOS';eat.disabled=berries<1||hunger>95;craft.disabled=wood<8;craft.style.opacity=wood<8?'.55':'1';const dt=Math.min((now-last)/1000,.04);last=now;update(dt);renderer.render(scene,camera)}requestAnimationFrame(animate);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});document.querySelector('#loading').style.display='none';
