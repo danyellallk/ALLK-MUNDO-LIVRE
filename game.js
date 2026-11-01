@@ -62,8 +62,39 @@ function makeSurfaceTexture(base,spots,seed=1){
  tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());
  return tex;
 }
-const grassTexture=makeSurfaceTexture('#587943',['#b5bd65','#3f6735','#82a64a','#c0b66a','#554b2c','#8b9950'],171);
-grassTexture.repeat.set(18,18);
+// Textura procedural de campo realista: mistura capim, terra úmida e manchas secas.
+function makeRuggedFieldTexture(){
+ const c=document.createElement('canvas');c.width=1024;c.height=1024;
+ const q=c.getContext('2d');q.fillStyle='#596344';q.fillRect(0,0,1024,1024);
+ let seed=171;const rnd=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
+ // Manchas largas e irregulares de vegetação e solo exposto.
+ const patches=['#354a30','#718052','#8b8053','#a08b60','#4a5838','#68734a','#776344'];
+ for(let i=0;i<1450;i++){
+  const x=rnd()*1024,y=rnd()*1024,rx=3+rnd()*34,ry=2+rnd()*22;
+  q.globalAlpha=.035+rnd()*.12;q.fillStyle=patches[Math.floor(rnd()*patches.length)];
+  q.beginPath();q.ellipse(x,y,rx,ry,rnd()*Math.PI,0,Math.PI*2);q.fill();
+ }
+ // Fios curtos de capim em direções variadas, sem formar padrão repetitivo evidente.
+ const blades=['#9ba16a','#b2a875','#34472d','#718653','#c0ad78','#52623b'];
+ for(let i=0;i<17500;i++){
+  const x=rnd()*1024,y=rnd()*1024,len=2+rnd()*10;
+  q.globalAlpha=.12+rnd()*.24;q.strokeStyle=blades[Math.floor(rnd()*blades.length)];
+  q.lineWidth=.45+rnd()*.9;q.beginPath();q.moveTo(x,y);
+  q.quadraticCurveTo(x+(rnd()-.5)*4,y-len*.5,x+(rnd()-.5)*7,y-len);q.stroke();
+ }
+ // Grãos finos e pequenas folhas secas para quebrar o aspecto artificial.
+ for(let i=0;i<10500;i++){
+  const x=rnd()*1024,y=rnd()*1024;
+  q.globalAlpha=.08+rnd()*.2;q.fillStyle=rnd()>.55?'#c3ae7d':'#263b28';
+  q.fillRect(x,y,.7+rnd()*1.8,.7+rnd()*1.8);
+ }
+ q.globalAlpha=1;
+ const tex=new THREE.CanvasTexture(c);tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
+ tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());
+ return tex;
+}
+const grassTexture=makeRuggedFieldTexture();
+grassTexture.repeat.set(30,30);
 grassTexture.magFilter=THREE.LinearFilter;
 grassTexture.minFilter=THREE.LinearMipmapLinearFilter;
 // Pequenas manchas orgânicas e grãos finos para quebrar a aparência chapada do terreno.
@@ -84,8 +115,8 @@ function makeGroundDetail(){
  q.globalAlpha=1;const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;
  t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());return t;
 }
-const groundDetail=makeGroundDetail();groundDetail.repeat.set(9,9);
-const groundMaterial=new THREE.MeshStandardMaterial({map:grassTexture,bumpMap:groundDetail,bumpScale:.19,color:0xe9f1d9,roughness:1});
+const groundDetail=makeGroundDetail();groundDetail.repeat.set(12,12);
+const groundMaterial=new THREE.MeshStandardMaterial({map:grassTexture,bumpMap:groundDetail,bumpScale:.13,color:0xe9edda,roughness:1});
 // Relevo real em malha 3D. A altura é calculada uma única vez e guardada em cache.
 const TERRAIN_SIZE=360,TERRAIN_SEGMENTS=180,TERRAIN_STEP=TERRAIN_SIZE/TERRAIN_SEGMENTS;
 const TERRAIN_HALF=TERRAIN_SIZE*.5,TERRAIN_ROW=TERRAIN_SEGMENTS+1;
