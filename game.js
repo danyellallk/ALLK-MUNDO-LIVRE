@@ -177,6 +177,7 @@ for(let i=0;i<115;i++){let x=(Math.random()-.5)*220,z=(Math.random()-.5)*220;if(
  bladeGeo.computeVertexNormals();
  const grass=new THREE.InstancedMesh(bladeGeo,bladeMat,12500);
  const dummy=new THREE.Object3D();
+ const bladeColor=new THREE.Color();
  let count=0;
  for(let i=0;i<12500;i++){
   const x=(Math.random()-.5)*210,z=(Math.random()-.5)*210;
@@ -188,9 +189,13 @@ for(let i=0;i<115;i++){let x=(Math.random()-.5)*220,z=(Math.random()-.5)*220;if(
   dummy.rotation.set(0,Math.random()*Math.PI*2,0);
   const scale=.55+Math.random()*1.05;
   dummy.scale.set(scale,.65+Math.random()*.8,scale);
-  dummy.updateMatrix();grass.setMatrixAt(count++,dummy.matrix);
+  dummy.updateMatrix();grass.setMatrixAt(count,dummy.matrix);
+  bladeColor.setHSL(.235+Math.random()*.035,.32+Math.random()*.18,.29+Math.random()*.17);
+  grass.setColorAt(count,bladeColor);
+  count++;
  }
  grass.count=count;
+ if(grass.instanceColor)grass.instanceColor.needsUpdate=true;
  grass.instanceMatrix.needsUpdate=true;
  scene.add(grass);
 }
