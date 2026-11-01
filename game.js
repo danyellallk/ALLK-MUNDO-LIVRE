@@ -679,6 +679,41 @@ makeTownsperson(-13,10,0x4e5b43,0x493729,1);
 makeTownsperson(3,9,0x6d4938,0x29231e,2);
 makeTownsperson(-22,-8,0x555b68,0x473323,3);
 
+
+/* Carroça de madeira e cavalo de tração na rua da cidade */
+const wagonGroup=new THREE.Group(),wagonWheels=[];
+const wagonWood=mat(0x684329),wagonDark=mat(0x34251b),iron=mat(0x393b3a);
+function wagonBox(w,h,d,ma,x,y,z){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),ma);m.position.set(x,y,z);wagonGroup.add(m);return m}
+wagonBox(2.35,.18,3.5,wagonWood,0,1.05,0);
+wagonBox(2.15,.75,2.7,mat(0x795333),0,1.52,-.15);
+for(const side of [-1,1]){
+ for(let k=0;k<5;k++)wagonBox(.08,.68,.12,wagonDark,side*1.08,1.55,-1.18+k*.52);
+ const wheel=new THREE.Mesh(new THREE.TorusGeometry(.68,.09,8,20),wagonDark);wheel.position.set(side*1.22,.78,.15);wheel.rotation.y=Math.PI/2;wagonGroup.add(wheel);wagonWheels.push(wheel);
+ const hub=new THREE.Mesh(new THREE.CylinderGeometry(.16,.16,.22,10),iron);hub.rotation.z=Math.PI/2;hub.position.set(side*1.22,.78,.15);wagonGroup.add(hub);
+ for(let spoke=0;spoke<8;spoke++){const a=spoke*Math.PI/4;const beam=new THREE.Mesh(new THREE.BoxGeometry(.065,.065,1.18),wagonWood);beam.position.set(side*1.22,.78,.15);beam.rotation.x=a;beam.rotation.z=Math.PI/2;wagonGroup.add(beam)}
+}
+wagonBox(.12,.12,2.5,wagonDark,0,.45,2.45);
+wagonBox(.12,.12,2.5,wagonDark,0,.45,2.7);
+// Assento e toldo simples de lona
+wagonBox(1.45,.16,.72,wagonWood,0,2.05,-1.45);
+const canopy=new THREE.Mesh(new THREE.BoxGeometry(2.5,.13,2.7),mat(0xb7a17b));canopy.position.set(0,2.45,-.15);wagonGroup.add(canopy);
+wagonGroup.position.set(-2.5,0,18);wagonGroup.rotation.y=-.18;scene.add(wagonGroup);
+// Cavalo de tração com corpo, pescoço, cabeça, crina e quatro pernas
+const draftHorse=new THREE.Group(),horseBrown=mat(0x70472e),horseMane=mat(0x30221b),horseHoof=mat(0x272321);
+function horseOval(x,y,z,sx,sy,sz,ma=horseBrown){const m=new THREE.Mesh(new THREE.SphereGeometry(1,16,12),ma);m.position.set(x,y,z);m.scale.set(sx,sy,sz);draftHorse.add(m);return m}
+horseOval(0,1.22,0,.58,.42,.95);
+horseOval(0,1.58,.63,.25,.52,.29).rotation.x=-.45;
+horseOval(0,1.92,.84,.23,.31,.27);
+horseOval(0,2.22,.94,.28,.08,.12,horseMane);
+for(const side of [-1,1]){
+ horseOval(side*.14,1.27,1.02,.09,.18,.12,horseMane);
+ for(const z of [-.58,.55]){
+  const leg=new THREE.Mesh(new THREE.CylinderGeometry(.075,.055,.72,8),horseBrown);leg.position.set(side*.34,.48,z);draftHorse.add(leg);
+  const hoof=new THREE.Mesh(new THREE.CylinderGeometry(.085,.09,.13,8),horseHoof);hoof.position.set(side*.34,.12,z);draftHorse.add(hoof);
+ }
+}
+draftHorse.position.set(-2.5,0,21.5);draftHorse.rotation.y=Math.PI;scene.add(draftHorse);
+
 player.position.set(0,0,0);player.visible=true;player.scale.setScalar(1);player.traverse(o=>{o.visible=true;if(o.isMesh){o.frustumCulled=false;o.renderOrder=2}});scene.add(player);
 let yaw=0,pitch=-.12,firstPerson=false,velocityY=0,grounded=true,wood=0;const fires=[];let berries=0,hunger=100,storedWood=0,storedBerries=0;
 const keys={};addEventListener('keydown',e=>keys[e.key.toLowerCase()]=true);addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
