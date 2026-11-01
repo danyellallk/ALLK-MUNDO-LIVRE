@@ -933,8 +933,17 @@ function pushOutBox(px,pz,cx,cz,halfW,halfD,radius){
  return [px,pz+(pz<cz?-1:1)*(oz+radius),true];
 }
 const solidBuildings=[
- {x:-17,z:1,w:7.6,d:4.45},
- {x:1,z:1,w:6.1,d:4.0}
+ // Paredes laterais e fundo; frente dividida para manter a porta central livre.
+ {x:-17-6.5,z:1,w:.22,d:4.0},
+ {x:-17+6.5,z:1,w:.22,d:4.0},
+ {x:-17,z:1-4,w:6.5,d:.22},
+ {x:-17-3.9,z:1+4,w:2.6,d:.22},
+ {x:-17+3.9,z:1+4,w:2.6,d:.22},
+ {x:1-5,z:1,w:.22,d:3.5},
+ {x:1+5,z:1,w:.22,d:3.5},
+ {x:1,z:1-3.5,w:5,d:.22},
+ {x:1-3.1,z:1+3.5,w:1.9,d:.22},
+ {x:1+3.1,z:1+3.5,w:1.9,d:.22}
 ];
 for(const b of solidBuildings){
  const result=pushOutBox(nextX,nextZ,b.x,b.z,b.w,b.d,playerRadius);
