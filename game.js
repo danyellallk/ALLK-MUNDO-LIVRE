@@ -555,14 +555,6 @@ const mainStreet=new THREE.Mesh(new THREE.PlaneGeometry(24,100),new THREE.MeshSt
 mainStreet.rotation.x=-Math.PI/2;mainStreet.position.set(-9,.018,8);scene.add(mainStreet);
 buildOldWestBuilding(-17,1,'THE OLD SALOON','saloon');
 buildOldWestBuilding(1,1,'GENERAL STORE','store');
-makeTownsperson(-17,0,0x65452f,0x30251c,4,true);
-makeTownsperson(1,-.15,0x526047,0x493729,5,true);
-const talkButton=document.createElement('button');
-talkButton.id='talkTownsperson';talkButton.textContent='CONVERSAR';
-talkButton.style.cssText='position:fixed;left:50%;bottom:112px;transform:translateX(-50%);z-index:12;padding:13px 20px;border:2px solid #d6b36d;border-radius:10px;background:#49301f;color:#fff;font-weight:800;display:none';
-document.body.appendChild(talkButton);
-let nearbyClerk=null;
-talkButton.onclick=()=>{if(!nearbyClerk)return;alert(nearbyClerk.shop==='store'?'Bem-vindo ao armazém! Em breve você poderá comprar alimentos e ferramentas.':'Bem-vindo ao saloon! Descanse um pouco e converse com o pessoal da cidade.');};
 
 // Jogador humano com proporções mais naturais e roupas detalhadas
 const player=new THREE.Group();
@@ -729,6 +721,14 @@ makeTownsperson(-20,8,0x76513a,0x30271e,0);
 makeTownsperson(-13,10,0x4e5b43,0x493729,1);
 makeTownsperson(3,9,0x6d4938,0x29231e,2);
 makeTownsperson(-22,-8,0x555b68,0x473323,3);
+makeTownsperson(-17,0,0x65452f,0x30251c,4,true);
+makeTownsperson(1,-.15,0x526047,0x493729,5,true);
+const talkButton=document.createElement('button');
+talkButton.id='talkTownsperson';talkButton.textContent='CONVERSAR';
+talkButton.style.cssText='position:fixed;left:50%;bottom:112px;transform:translateX(-50%);z-index:12;padding:13px 20px;border:2px solid #d6b36d;border-radius:10px;background:#49301f;color:#fff;font-weight:800;display:none';
+document.body.appendChild(talkButton);
+let nearbyClerk=null;
+talkButton.onclick=()=>{if(!nearbyClerk)return;alert(nearbyClerk.shop==='store'?'Bem-vindo ao armazém! Em breve você poderá comprar alimentos e ferramentas.':'Bem-vindo ao saloon! Descanse um pouco e converse com o pessoal da cidade.');};
 
 
 /* Carroça de madeira e cavalo de tração na rua da cidade */
