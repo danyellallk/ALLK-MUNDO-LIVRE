@@ -47,7 +47,20 @@ function makeGroundDetail(){
 const groundDetail=makeGroundDetail();groundDetail.repeat.set(9,9);
 const groundMaterial=new THREE.MeshStandardMaterial({map:grassTexture,bumpMap:groundDetail,bumpScale:.19,color:0xe9f1d9,roughness:1});
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(360,360),groundMaterial);ground.rotation.x=-Math.PI/2;ground.position.y=-.12;scene.add(ground);
-function hill(x,z,sx,sy,sz,color){const m=new THREE.Mesh(new THREE.SphereGeometry(1,12,9),mat(color));m.position.set(x,sy*.35,z);m.scale.set(sx,sy,sz);scene.add(m)}
+// Montanhas de fundo com silhueta irregular e camadas rochosas; cenário distante, fora da área de colisão.
+function hill(x,z,sx,sy,sz,color){
+ const geo=new THREE.SphereGeometry(1,18,12),p=geo.attributes.position;
+ for(let i=0;i<p.count;i++){
+  const px=p.getX(i),py=p.getY(i),pz=p.getZ(i);
+  const ridge=1+.075*Math.sin(px*11+x*.07)*Math.cos(pz*9+z*.05)+.035*Math.sin(py*17+x*.03+z*.04);
+  p.setXYZ(i,px*ridge,py*(1+.035*Math.sin(px*8+pz*6)),pz*ridge);
+ }
+ geo.computeVertexNormals();
+ const m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color,roughness:1,flatShading:true}));
+ m.position.set(x,sy*.35,z);m.scale.set(sx,sy,sz);scene.add(m);
+ const foot=new THREE.Mesh(new THREE.SphereGeometry(1,12,8),new THREE.MeshStandardMaterial({color:0x526f4a,roughness:1}));
+ foot.position.set(x,sy*.13,z);foot.scale.set(sx*1.12,sy*.43,sz*1.12);scene.add(foot);
+}
 for(let i=0;i<22;i++){const a=i/22*Math.PI*2;hill(Math.cos(a)*145,Math.sin(a)*145,24+Math.random()*20,24+Math.random()*28,25+Math.random()*20,i%2?0x65865a:0x78946b)}
 hill(-58,18,22,18,30,0x71945e);hill(58,-42,28,22,25,0x6b8c59);hill(32,75,24,18,24,0x789767);
 const sand=new THREE.Mesh(new THREE.CircleGeometry(18,48),mat(0xc5b47a));sand.rotation.x=-Math.PI/2;sand.position.set(-28,.01,-20);scene.add(sand);
