@@ -1,8 +1,8 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
-const scene=new THREE.Scene();scene.background=new THREE.Color(0x8fc8ed);scene.fog=new THREE.Fog(0x8fc8ed,65,210);
+const scene=new THREE.Scene();scene.background=new THREE.Color(0xb99a70);scene.fog=new THREE.Fog(0xb99a70,58,185);
 const camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,.1,420);
 const renderer=new THREE.WebGLRenderer({antialias:false,powerPreference:'low-power'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.35));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;document.body.appendChild(renderer.domElement);
-const hemi=new THREE.HemisphereLight(0xd9efff,0x53633c,2.1);scene.add(hemi);const sun=new THREE.DirectionalLight(0xffedc5,2.2);sun.position.set(-45,70,35);scene.add(sun);
+const hemi=new THREE.HemisphereLight(0xe8cda5,0x493522,1.55);scene.add(hemi);const sun=new THREE.DirectionalLight(0xffc477,2.0);sun.position.set(-45,70,35);scene.add(sun);
 const mat=(color,roughness=1)=>new THREE.MeshStandardMaterial({color,roughness});
 // Texturas procedurais leves: geradas localmente, sem downloads ou serviços pagos.
 function makeSurfaceTexture(base,spots,seed=1){
@@ -20,7 +20,7 @@ function makeSurfaceTexture(base,spots,seed=1){
  tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());
  return tex;
 }
-const grassTexture=makeSurfaceTexture('#405b2b',['#b0a653','#263f20','#789744','#d0bb69','#35532a','#8b9b49'],171);
+const grassTexture=makeSurfaceTexture('#51472c',['#b0a653','#3d3522','#789044','#c0a568','#55452a','#8b8149'],171);
 grassTexture.repeat.set(18,18);
 grassTexture.magFilter=THREE.LinearFilter;
 grassTexture.minFilter=THREE.LinearMipmapLinearFilter;
@@ -43,7 +43,7 @@ function makeGroundDetail(){
  t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());return t;
 }
 const groundDetail=makeGroundDetail();groundDetail.repeat.set(9,9);
-const groundMaterial=new THREE.MeshStandardMaterial({map:grassTexture,bumpMap:groundDetail,bumpScale:.22,color:0xffffff,roughness:1});
+const groundMaterial=new THREE.MeshStandardMaterial({map:grassTexture,bumpMap:groundDetail,bumpScale:.28,color:0xd8c29a,roughness:1});
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(360,360),groundMaterial);ground.rotation.x=-Math.PI/2;ground.position.y=-.12;scene.add(ground);
 function hill(x,z,sx,sy,sz,color){const m=new THREE.Mesh(new THREE.SphereGeometry(1,12,9),mat(color));m.position.set(x,sy*.35,z);m.scale.set(sx,sy,sz);scene.add(m)}
 for(let i=0;i<22;i++){const a=i/22*Math.PI*2;hill(Math.cos(a)*145,Math.sin(a)*145,24+Math.random()*20,24+Math.random()*28,25+Math.random()*20,i%2?0x65865a:0x78946b)}
@@ -58,7 +58,7 @@ function makeWaterRipple(x,z){
  waterRipples.push({mesh:ring,life:0});
 }
 const dirtTexture=makeSurfaceTexture('#806344',['#d8bd8a','#4c3928','#b59667','#685037','#e0c99b'],291);dirtTexture.repeat.set(2,18);dirtTexture.magFilter=THREE.LinearFilter;dirtTexture.minFilter=THREE.LinearMipmapLinearFilter;
-const path=new THREE.Mesh(new THREE.PlaneGeometry(5,75),new THREE.MeshStandardMaterial({map:dirtTexture,roughness:1}));path.rotation.x=-Math.PI/2;path.position.set(7,.015,-22);scene.add(path);
+const path=new THREE.Mesh(new THREE.PlaneGeometry(7,95),new THREE.MeshStandardMaterial({map:dirtTexture,color:0xc3a477,roughness:1}));path.rotation.x=-Math.PI/2;path.position.set(7,.015,-22);scene.add(path);
 function makeBarkTexture(){
  const c=document.createElement('canvas');c.width=256;c.height=512;const q=c.getContext('2d');
  q.fillStyle='#60402b';q.fillRect(0,0,256,512);let seed=73;
@@ -466,7 +466,7 @@ const bed=new THREE.Group();const bedBase=new THREE.Mesh(new THREE.BoxGeometry(2
 const chest=new THREE.Mesh(new THREE.BoxGeometry(1.1,.8,.8),mat(0x684323));chest.position.set(-2.3,.55,-1.8);cabin.add(chest);
 const roof=new THREE.Mesh(new THREE.ConeGeometry(5.8,3.2,4),roofMat);roof.rotation.y=Math.PI/4;roof.position.y=5.7;roof.scale.set(1,1,.8);cabin.add(roof);
 const doorPivot=new THREE.Group();doorPivot.position.set(-.75,1.3,3.06);cabin.add(doorPivot);const door=new THREE.Mesh(new THREE.BoxGeometry(1.5,2.6,.12),doorMat);door.position.x=.75;doorPivot.add(door);let cabinOpen=false,insideCabin=false;
-for(const x of [-2.4,2.4]){const w=new THREE.Mesh(new THREE.BoxGeometry(1.1,1.1,.13),mat(0x9bd9e8,.2));w.position.set(x,2.6,3.08);cabin.add(w)}
+for(const x of [-2.4,2.4]){const w=new THREE.Mesh(new THREE.BoxGeometry(1.1,1.1,.13),new THREE.MeshStandardMaterial({color:0x9a6b3e,emissive:0x5b2c0d,emissiveIntensity:.28,roughness:.9}));w.position.set(x,2.6,3.08);cabin.add(w)}
 cabin.position.set(12,0,-13);scene.add(cabin);
 // Jogador humano com proporções mais naturais e roupas detalhadas
 const player=new THREE.Group();
