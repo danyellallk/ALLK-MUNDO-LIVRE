@@ -243,7 +243,36 @@ function makeWaterRipple(x,z){
  ring.rotation.x=-Math.PI/2;ring.position.set(x,.075,z);scene.add(ring);
  waterRipples.push({mesh:ring,life:0});
 }
-const dirtTexture=makeSurfaceTexture('#806344',['#d8bd8a','#4c3928','#b59667','#685037','#e0c99b'],291);dirtTexture.repeat.set(2,18);dirtTexture.magFilter=THREE.LinearFilter;dirtTexture.minFilter=THREE.LinearMipmapLinearFilter;
+// Textura de estrada de terra batida, com marcas de rodas, cascalho e variação natural.
+function makeRoadTexture(){
+ const c=document.createElement('canvas');c.width=512;c.height=512;
+ const q=c.getContext('2d');q.fillStyle='#806747';q.fillRect(0,0,512,512);
+ let seed=291;const rnd=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
+ const soil=['#b59a70','#6b5237','#92734d','#d0b58a','#59432f','#a4865b','#c3a77a'];
+ // Grãos de terra compactada e pequenas pedras.
+ for(let i=0;i<26000;i++){
+  const x=rnd()*512,y=rnd()*512,r=.35+rnd()*2.1;
+  q.globalAlpha=.08+rnd()*.22;q.fillStyle=soil[Math.floor(rnd()*soil.length)];
+  q.beginPath();q.ellipse(x,y,r*1.8,r*(.55+rnd()),rnd()*Math.PI,0,Math.PI*2);q.fill();
+ }
+ // Duas marcas de rodas suaves, interrompidas para não parecerem linhas artificiais.
+ for(const x0 of [145,367]){
+  for(let i=0;i<95;i++){
+   const y=rnd()*512,x=x0+(rnd()-.5)*18,w=2+rnd()*8;
+   q.globalAlpha=.025+rnd()*.075;q.fillStyle=rnd()>.5?'#3f3022':'#d0b58a';
+   q.beginPath();q.ellipse(x,y,w,5+rnd()*24,(rnd()-.5)*.18,0,Math.PI*2);q.fill();
+  }
+ }
+ // Pedrinhas claras e escuras espalhadas irregularmente.
+ for(let i=0;i<850;i++){
+  const x=rnd()*512,y=rnd()*512;
+  q.globalAlpha=.12+rnd()*.25;q.fillStyle=rnd()>.5?'#d8c49d':'#403629';
+  q.beginPath();q.ellipse(x,y,.7+rnd()*2.2,.5+rnd()*1.4,rnd()*Math.PI,0,Math.PI*2);q.fill();
+ }
+ q.globalAlpha=1;const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;
+ t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());return t;
+}
+const dirtTexture=makeRoadTexture();dirtTexture.repeat.set(2,18);dirtTexture.magFilter=THREE.LinearFilter;dirtTexture.minFilter=THREE.LinearMipmapLinearFilter;
 const path=new THREE.Mesh(new THREE.PlaneGeometry(7,95),new THREE.MeshStandardMaterial({map:dirtTexture,color:0xd1b184,roughness:1}));path.rotation.x=-Math.PI/2;path.position.set(7,.015,-22);scene.add(path);
 function makeBarkTexture(){
  const c=document.createElement('canvas');c.width=256;c.height=512;const q=c.getContext('2d');
