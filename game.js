@@ -714,6 +714,9 @@ for(const side of [-1,1]){
 }
 draftHorse.position.set(-2.5,0,21.5);draftHorse.rotation.y=Math.PI;scene.add(draftHorse);
 
+let ridingHorse=false;
+const mountButton=document.querySelector('#mountHorse')||document.createElement('button');mountButton.id='mountHorse';mountButton.textContent='MONTAR CAVALO';if(!mountButton.parentNode)document.querySelector('#actions').prepend(mountButton);
+mountButton.onclick=()=>{if(ridingHorse){ridingHorse=false;player.position.y=0;draftHorse.position.set(player.position.x-Math.sin(yaw)*1.8,0,player.position.z-Math.cos(yaw)*1.8);mountButton.textContent='MONTAR CAVALO';}else if(Math.hypot(player.position.x-draftHorse.position.x,player.position.z-draftHorse.position.z)<4){ridingHorse=true;mountButton.textContent='DESCER DO CAVALO';}};
 player.position.set(0,0,0);player.visible=true;player.scale.setScalar(1);player.traverse(o=>{o.visible=true;if(o.isMesh){o.frustumCulled=false;o.renderOrder=2}});scene.add(player);
 let yaw=0,pitch=-.12,firstPerson=false,velocityY=0,grounded=true,wood=0;const fires=[];let berries=0,hunger=100,storedWood=0,storedBerries=0;
 const keys={};addEventListener('keydown',e=>keys[e.key.toLowerCase()]=true);addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
@@ -886,7 +889,7 @@ function update(dt){
 // Aceleração gradual e velocidade máxima com corrida.
 const inputX=side*c-forward*s,inputZ=side*s-forward*c;
 const inputLen=Math.hypot(inputX,inputZ)||1;
-const maxSpeed=6*(running?1.6:1),accel=18;
+const maxSpeed=(ridingHorse?11:6)*(running?1.6:1),accel=ridingHorse?25:18;
 if(Math.abs(side)+Math.abs(forward)>.04){horizontalVX+=inputX/inputLen*accel*dt;horizontalVZ+=inputZ/inputLen*accel*dt;}
 else{const friction=Math.exp(-8*dt);horizontalVX*=friction;horizontalVZ*=friction;}
 const speedNow=Math.hypot(horizontalVX,horizontalVZ);
@@ -896,7 +899,7 @@ for(const obstacle of trees){if(!obstacle.visible)continue;const dx=nextX-obstac
 // Colisão contínua com animais: verifica todo o trajeto do jogador,
 // não apenas o ponto final, para evitar atravessar ao correr.
 const playerRadius=.52;
-for(const animal of animals){
+for(const animal of (ridingHorse?[]:animals)){
  const body=animal.group;
  if(!body||!body.visible)continue;
  const ax=body.position.x,az=body.position.z;
@@ -952,6 +955,8 @@ if(Math.abs(forward)+Math.abs(side)>.08)player.rotation.y=Math.atan2(-s,-c);
 const moving=distanceMoved>.002;
 const runLean=running&&moving&&!jumpPose?-.055:0;
 player.rotation.x=runLean;
-player.rotation.z=moving?Math.sin(walkPhase*.5)*(running?.035:.018)*moveAmount:0;velocityY-=20*dt;player.position.y+=velocityY*dt;if(player.position.y<=0){player.position.y=0;if(velocityY<0)velocityY=0;grounded=true}const target=new THREE.Vector3(player.position.x,player.position.y+(firstPerson?1.65:1.25),player.position.z);if(firstPerson){camera.position.copy(target);camera.rotation.set(pitch,yaw,0,'YXZ')}else{camera.position.set(target.x+Math.sin(yaw)*5.8,target.y+1.15+pitch*2,target.z+Math.cos(yaw)*5.8);camera.lookAt(target)}}
+player.rotation.z=moving?Math.sin(walkPhase*.5)*(running?.035:.018)*moveAmount:0;velocityY-=20*dt;player.position.y+=velocityY*dt;if(player.position.y<=0){player.position.y=0;if(velocityY<0)velocityY=0;grounded=true}if(ridingHorse){player.position.y=.92;draftHorse.visible=true;draftHorse.position.set(player.position.x,0,player.position.z);draftHorse.rotation.y=yaw+Math.PI;player.rotation.y=yaw;}else{player.position.y=Math.max(0,player.position.y);}
+const horseNear=Math.hypot(player.position.x-draftHorse.position.x,player.position.z-draftHorse.position.z)<4;mountButton.disabled=!ridingHorse&&!horseNear;mountButton.style.opacity=mountButton.disabled?'.5':'1';
+const target=new THREE.Vector3(player.position.x,player.position.y+(firstPerson?1.65:1.25),player.position.z);if(firstPerson){camera.position.copy(target);camera.rotation.set(pitch,yaw,0,'YXZ')}else{camera.position.set(target.x+Math.sin(yaw)*5.8,target.y+1.15+pitch*2,target.z+Math.cos(yaw)*5.8);camera.lookAt(target)}}
 let last=performance.now();function animate(now){requestAnimationFrame(animate);const townTime=now*.001;for(const n of townsfolk){n.group.position.x=n.x+Math.sin(townTime*n.speed+n.phase)*.7;n.group.position.z=n.z+Math.cos(townTime*n.speed+n.phase)*.45;n.group.rotation.y=Math.sin(townTime*n.speed+n.phase)*.35;}if(playerMixer)playerMixer.update(Math.min((now-last)/1000,.04));const t=nearestTree(),b=nearestBush();collect.disabled=!t;collect.textContent=t?'COLETAR MADEIRA (+3)':'APROXIME-SE DE UMA ÁRVORE';gather.disabled=!b;gather.textContent=b?'COLETAR FRUTAS (+3)':'PROCURE ARBUSTOS';eat.disabled=berries<1||hunger>95;craft.disabled=wood<8;craft.style.opacity=wood<8?'.55':'1';const dt=Math.min((now-last)/1000,.04);last=now;update(dt);renderer.render(scene,camera)}requestAnimationFrame(animate);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});document.querySelector('#loading').style.display='none';
