@@ -204,6 +204,7 @@ for(let i=0;i<115;i++){let x=(Math.random()-.5)*220,z=(Math.random()-.5)*220;if(
  const headMat=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.9});
  const heads=new THREE.InstancedMesh(headGeo,headMat,flowerCount);
  const flowerColors=[new THREE.Color(0xf5d76e),new THREE.Color(0xf2a6b8),new THREE.Color(0xf3eee0),new THREE.Color(0xb9a0df)];
+ let placed=0;
  for(let i=0;i<flowerCount;i++){
   const x=(Math.random()-.5)*190,z=(Math.random()-.5)*190;
   const lakeDist=Math.hypot(x+28,z+20);
@@ -212,12 +213,14 @@ for(let i=0;i<115;i++){let x=(Math.random()-.5)*220,z=(Math.random()-.5)*220;if(
   const y=terrainHeight(x,z);
   const h=.75+Math.random()*.65,lean=(Math.random()-.5)*.12;
   dummy.position.set(x,y+.12*h,z);dummy.rotation.set(0,Math.random()*Math.PI*2,lean);
-  dummy.scale.set(1,h,1);dummy.updateMatrix();stems.setMatrixAt(i,dummy.matrix);
+  dummy.scale.set(1,h,1);dummy.updateMatrix();stems.setMatrixAt(placed,dummy.matrix);
   dummy.position.set(x+lean*.35,y+.24*h,z);dummy.rotation.set(0,0,0);
   const size=.045+Math.random()*.035;dummy.scale.set(size,size*.58,size);
-  dummy.updateMatrix();heads.setMatrixAt(i,dummy.matrix);
-  heads.setColorAt(i,flowerColors[Math.floor(Math.random()*flowerColors.length)]);
+  dummy.updateMatrix();heads.setMatrixAt(placed,dummy.matrix);
+  heads.setColorAt(placed,flowerColors[Math.floor(Math.random()*flowerColors.length)]);
+  placed++;
  }
+ stems.count=placed;heads.count=placed;
  stems.instanceMatrix.needsUpdate=true;heads.instanceMatrix.needsUpdate=true;
  if(heads.instanceColor)heads.instanceColor.needsUpdate=true;
  scene.add(stems,heads);
