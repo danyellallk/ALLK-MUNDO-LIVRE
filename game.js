@@ -1,7 +1,28 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 const scene=new THREE.Scene();
 // Lista criada no início para evitar acesso antes da inicialização.
-const townsfolk=[];scene.background=new THREE.Color(0xa9cbdc);scene.fog=new THREE.Fog(0xa9c3c9,125,330);
+const townsfolk=[];scene.background=new THREE.Color(0xb9d1dc);scene.fog=new THREE.Fog(0xb9d1dc,125,330);
+// Cúpula de céu em gradiente: horizonte claro e azul mais profundo no alto.
+const skyDome=new THREE.Mesh(
+ new THREE.SphereGeometry(400,32,20),
+ new THREE.ShaderMaterial({
+  uniforms:{},
+  vertexShader:`varying float vSkyHeight;
+   void main(){vSkyHeight=normalize(position).y;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+  fragmentShader:`varying float vSkyHeight;
+   void main(){
+    float h=smoothstep(-.18,.82,vSkyHeight);
+    vec3 horizon=vec3(.78,.85,.86);
+    vec3 zenith=vec3(.27,.49,.68);
+    vec3 color=mix(horizon,zenith,h);
+    float warm=1.0-smoothstep(-.12,.22,vSkyHeight);
+    color=mix(color,vec3(.86,.78,.65),warm*.13);
+    gl_FragColor=vec4(color,1.0);
+   }`,
+  side:THREE.BackSide,depthWrite:false,depthTest:false
+ })
+);
+skyDome.renderOrder=-1000;scene.add(skyDome);
 const camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,.1,420);
 const renderer=new THREE.WebGLRenderer({antialias:false,powerPreference:'low-power'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.35));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;document.body.appendChild(renderer.domElement);
 const hemi=new THREE.HemisphereLight(0xe5f3ff,0x596348,1.85);scene.add(hemi);const sun=new THREE.DirectionalLight(0xffe4bd,2.35);sun.position.set(-45,70,35);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-95;sun.shadow.camera.right=95;sun.shadow.camera.top=95;sun.shadow.camera.bottom=-95;sun.shadow.camera.near=1;sun.shadow.camera.far=190;sun.shadow.bias=-.00018;sun.shadow.normalBias=.025;sun.shadow.radius=3;scene.add(sun);
