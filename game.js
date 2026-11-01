@@ -6,10 +6,16 @@ const townsfolk=[];scene.background=new THREE.Color(0xb9d1dc);scene.fog=new THRE
 const skyDome=new THREE.Mesh(
  new THREE.SphereGeometry(400,32,20),
  new THREE.ShaderMaterial({
-  uniforms:{},
+  uniforms:{uTime:{value:0}},
   vertexShader:`varying float vSkyHeight;varying vec3 vSkyDirection;
    void main(){vSkyDirection=normalize(position);vSkyHeight=vSkyDirection.y;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
-  fragmentShader:`varying float vSkyHeight;varying vec3 vSkyDirection;
+  fragmentShader:`uniform float uTime;varying float vSkyHeight;varying vec3 vSkyDirection;
+   float cloudHash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+   float cloudNoise(vec2 p){
+    vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);
+    return mix(mix(cloudHash(i),cloudHash(i+vec2(1.0,0.0)),f.x),
+     mix(cloudHash(i+vec2(0.0,1.0)),cloudHash(i+vec2(1.0,1.0)),f.x),f.y);
+   }
    void main(){
     float h=smoothstep(-.18,.82,vSkyHeight);
     vec3 horizon=vec3(.78,.85,.86);
@@ -20,9 +26,16 @@ const skyDome=new THREE.Mesh(
     vec3 sunDirection=normalize(vec3(-.48,.74,.37));
     float sunDot=max(dot(vSkyDirection,sunDirection),0.0);
     float halo=pow(sunDot,12.0);
-    float glow=pow(sunDot, 90.0);
+    float glow=pow(sunDot,90.0);
     color=mix(color,vec3(1.0,.82,.58),halo*.16);
     color+=vec3(1.0,.77,.48)*glow*.28;
+    vec2 cloudUV=vSkyDirection.xz/(max(vSkyHeight+.28,.16));
+    cloudUV=cloudUV*2.15+vec2(uTime*.012,uTime*.004);
+    float n=cloudNoise(cloudUV)+.38*cloudNoise(cloudUV*2.1+7.3);
+    float cloudMask=smoothstep(.67,.91,n)*smoothstep(-.12,.08,vSkyHeight);
+    float cloudLight=smoothstep(.68,.96,n);
+    vec3 cloudColor=mix(vec3(.72,.80,.83),vec3(1.0,.96,.87),cloudLight);
+    color=mix(color,cloudColor,cloudMask*.68);
     gl_FragColor=vec4(color,1.0);
    }`,
   side:THREE.BackSide,depthWrite:false,depthTest:false
@@ -1113,6 +1126,7 @@ function updateWind(dt){
 }
 
 function update(dt){
+ skyDome.material.uniforms.uTime.value+=dt;
  // Ondas pequenas e contínuas dão vida à superfície do lago.
  for(const wave of lakeWaves){
   wave.phase=(wave.phase+dt*wave.speed)% (Math.PI*2);
