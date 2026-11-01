@@ -1,10 +1,10 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 const scene=new THREE.Scene();
 // Lista criada no início para evitar acesso antes da inicialização.
-const townsfolk=[];scene.background=new THREE.Color(0x9db9c2);scene.fog=new THREE.Fog(0xb9ad8e,105,285);
+const townsfolk=[];scene.background=new THREE.Color(0xa9cbdc);scene.fog=new THREE.Fog(0xa9c3c9,125,330);
 const camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,.1,420);
-const renderer=new THREE.WebGLRenderer({antialias:false,powerPreference:'low-power'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.35));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;document.body.appendChild(renderer.domElement);
-const hemi=new THREE.HemisphereLight(0xdce8df,0x596044,1.9);scene.add(hemi);const sun=new THREE.DirectionalLight(0xffe0ad,2.25);sun.position.set(-45,70,35);scene.add(sun);
+const renderer=new THREE.WebGLRenderer({antialias:false,powerPreference:'low-power'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.35));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;document.body.appendChild(renderer.domElement);
+const hemi=new THREE.HemisphereLight(0xe5f3ff,0x596348,2.05);scene.add(hemi);const sun=new THREE.DirectionalLight(0xffe4bd,2.6);sun.position.set(-45,70,35);scene.add(sun);
 const mat=(color,roughness=1)=>new THREE.MeshStandardMaterial({color,roughness});
 // Texturas procedurais leves: geradas localmente, sem downloads ou serviços pagos.
 function makeSurfaceTexture(base,spots,seed=1){
@@ -22,7 +22,7 @@ function makeSurfaceTexture(base,spots,seed=1){
  tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());
  return tex;
 }
-const grassTexture=makeSurfaceTexture('#53653b',['#b0a653','#3d4b2c','#789044','#c0a568','#55452a','#8b8149'],171);
+const grassTexture=makeSurfaceTexture('#587943',['#b5bd65','#3f6735','#82a64a','#c0b66a','#554b2c','#8b9950'],171);
 grassTexture.repeat.set(18,18);
 grassTexture.magFilter=THREE.LinearFilter;
 grassTexture.minFilter=THREE.LinearMipmapLinearFilter;
@@ -45,13 +45,13 @@ function makeGroundDetail(){
  t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());return t;
 }
 const groundDetail=makeGroundDetail();groundDetail.repeat.set(9,9);
-const groundMaterial=new THREE.MeshStandardMaterial({map:grassTexture,bumpMap:groundDetail,bumpScale:.28,color:0xffffff,roughness:1});
+const groundMaterial=new THREE.MeshStandardMaterial({map:grassTexture,bumpMap:groundDetail,bumpScale:.19,color:0xe9f1d9,roughness:1});
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(360,360),groundMaterial);ground.rotation.x=-Math.PI/2;ground.position.y=-.12;scene.add(ground);
 function hill(x,z,sx,sy,sz,color){const m=new THREE.Mesh(new THREE.SphereGeometry(1,12,9),mat(color));m.position.set(x,sy*.35,z);m.scale.set(sx,sy,sz);scene.add(m)}
 for(let i=0;i<22;i++){const a=i/22*Math.PI*2;hill(Math.cos(a)*145,Math.sin(a)*145,24+Math.random()*20,24+Math.random()*28,25+Math.random()*20,i%2?0x65865a:0x78946b)}
 hill(-58,18,22,18,30,0x71945e);hill(58,-42,28,22,25,0x6b8c59);hill(32,75,24,18,24,0x789767);
 const sand=new THREE.Mesh(new THREE.CircleGeometry(18,48),mat(0xc5b47a));sand.rotation.x=-Math.PI/2;sand.position.set(-28,.01,-20);scene.add(sand);
-const lake=new THREE.Mesh(new THREE.CircleGeometry(15.5,48),new THREE.MeshStandardMaterial({color:0x329bc4,roughness:.25,metalness:.12}));lake.rotation.x=-Math.PI/2;lake.position.set(-28,.04,-20);scene.add(lake);
+const lake=new THREE.Mesh(new THREE.CircleGeometry(15.5,48),new THREE.MeshStandardMaterial({color:0x268db5,roughness:.19,metalness:.08}));lake.rotation.x=-Math.PI/2;lake.position.set(-28,.04,-20);scene.add(lake);
 const waterRipples=[];
 const rippleMaterial=new THREE.MeshBasicMaterial({color:0xbcefff,transparent:true,opacity:.55,side:THREE.DoubleSide,depthWrite:false});
 function makeWaterRipple(x,z){
@@ -60,7 +60,7 @@ function makeWaterRipple(x,z){
  waterRipples.push({mesh:ring,life:0});
 }
 const dirtTexture=makeSurfaceTexture('#806344',['#d8bd8a','#4c3928','#b59667','#685037','#e0c99b'],291);dirtTexture.repeat.set(2,18);dirtTexture.magFilter=THREE.LinearFilter;dirtTexture.minFilter=THREE.LinearMipmapLinearFilter;
-const path=new THREE.Mesh(new THREE.PlaneGeometry(7,95),new THREE.MeshStandardMaterial({map:dirtTexture,color:0xc3a477,roughness:1}));path.rotation.x=-Math.PI/2;path.position.set(7,.015,-22);scene.add(path);
+const path=new THREE.Mesh(new THREE.PlaneGeometry(7,95),new THREE.MeshStandardMaterial({map:dirtTexture,color:0xd1b184,roughness:1}));path.rotation.x=-Math.PI/2;path.position.set(7,.015,-22);scene.add(path);
 function makeBarkTexture(){
  const c=document.createElement('canvas');c.width=256;c.height=512;const q=c.getContext('2d');
  q.fillStyle='#60402b';q.fillRect(0,0,256,512);let seed=73;
