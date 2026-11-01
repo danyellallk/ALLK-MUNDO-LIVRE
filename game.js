@@ -79,17 +79,24 @@ groundMaterial.vertexColors=true;
 const ground=new THREE.Mesh(terrainGeometry,groundMaterial);ground.rotation.x=-Math.PI/2;ground.position.y=0;ground.receiveShadow=true;scene.add(ground);
 // Montanhas de fundo com silhueta irregular e camadas rochosas; cenário distante, fora da área de colisão.
 function hill(x,z,sx,sy,sz,color){
- const geo=new THREE.SphereGeometry(1,18,12),p=geo.attributes.position;
+ const geo=new THREE.SphereGeometry(1,24,16),p=geo.attributes.position;
+ const hillColors=new Float32Array(p.count*3),baseColor=new THREE.Color(color),stoneColor=new THREE.Color(0xaaa397),shadowStone=new THREE.Color(0x77766e),mixedColor=new THREE.Color();
  for(let i=0;i<p.count;i++){
   const px=p.getX(i),py=p.getY(i),pz=p.getZ(i);
-  const ridge=1+.075*Math.sin(px*11+x*.07)*Math.cos(pz*9+z*.05)+.035*Math.sin(py*17+x*.03+z*.04);
-  p.setXYZ(i,px*ridge,py*(1+.035*Math.sin(px*8+pz*6)),pz*ridge);
+  const ridge=1+.085*Math.sin(px*11+x*.07)*Math.cos(pz*9+z*.05)+.04*Math.sin(py*17+x*.03+z*.04);
+  const detail=Math.sin(px*23+pz*17+x*.13)*Math.sin(py*19+pz*13+z*.11);
+  p.setXYZ(i,px*ridge,py*(1+.045*Math.sin(px*8+pz*6)),pz*ridge);
+  const exposed=THREE.MathUtils.smoothstep(py+detail*.10,.20,.78);
+  mixedColor.copy(baseColor).lerp(stoneColor,exposed*.78);
+  mixedColor.lerp(shadowStone,Math.max(0,detail)*.10);
+  hillColors[i*3]=mixedColor.r;hillColors[i*3+1]=mixedColor.g;hillColors[i*3+2]=mixedColor.b;
  }
+ geo.setAttribute('color',new THREE.Float32BufferAttribute(hillColors,3));
  geo.computeVertexNormals();
- const m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color,roughness:1,flatShading:true}));
- m.position.set(x,terrainHeight(x,z)+sy*.35,z);m.scale.set(sx,sy,sz);scene.add(m);
- const foot=new THREE.Mesh(new THREE.SphereGeometry(1,12,8),new THREE.MeshStandardMaterial({color:0x526f4a,roughness:1}));
- foot.position.set(x,terrainHeight(x,z)+sy*.13,z);foot.scale.set(sx*1.12,sy*.43,sz*1.12);scene.add(foot);
+ const m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:1,flatShading:true}));
+ m.position.set(x,terrainHeight(x,z)+sy*.35,z);m.scale.set(sx,sy,sz);m.receiveShadow=true;scene.add(m);
+ const foot=new THREE.Mesh(new THREE.SphereGeometry(1,14,10),new THREE.MeshStandardMaterial({color:0x526f4a,roughness:1}));
+ foot.position.set(x,terrainHeight(x,z)+sy*.13,z);foot.scale.set(sx*1.12,sy*.43,sz*1.12);foot.receiveShadow=true;scene.add(foot);
 }
 for(let i=0;i<22;i++){const a=i/22*Math.PI*2;hill(Math.cos(a)*145,Math.sin(a)*145,24+Math.random()*20,24+Math.random()*28,25+Math.random()*20,i%2?0x65865a:0x78946b)}
 hill(-58,18,22,18,30,0x71945e);hill(58,-42,28,22,25,0x6b8c59);hill(32,75,24,18,24,0x789767);
