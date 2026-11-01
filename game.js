@@ -116,8 +116,19 @@ for(let k=0;k<230;k++){
 }
 waterCtx.globalAlpha=1;
 const waterTexture=new THREE.CanvasTexture(waterCanvas);waterTexture.colorSpace=THREE.SRGBColorSpace;
-const lakeMaterial=new THREE.MeshStandardMaterial({map:waterTexture,color:0xffffff,roughness:.2,metalness:.06});
+waterTexture.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
+const lakeMaterial=new THREE.MeshStandardMaterial({map:waterTexture,color:0xe5f8ff,roughness:.16,metalness:.12});
 const lake=new THREE.Mesh(new THREE.CircleGeometry(15.5,64),lakeMaterial);lake.rotation.x=-Math.PI/2;lake.position.set(-28,.04,-20);scene.add(lake);
+const lakeWaveMaterial=new THREE.MeshBasicMaterial({color:0xc8f4ff,transparent:true,opacity:.22,side:THREE.DoubleSide,depthWrite:false});
+const lakeWaves=[];
+for(let i=0;i<9;i++){
+ const wave=new THREE.Mesh(new THREE.RingGeometry(.28,.36,32),lakeWaveMaterial.clone());
+ wave.rotation.x=-Math.PI/2;
+ const angle=i*2.399,dist=2.2+(i%3)*3.1;
+ wave.position.set(-28+Math.cos(angle)*dist,.065+i*.0005,-20+Math.sin(angle)*dist);
+ scene.add(wave);
+ lakeWaves.push({mesh:wave,phase:i*.83,speed:.45+(i%4)*.12});
+}
 const waterRipples=[];
 const rippleMaterial=new THREE.MeshBasicMaterial({color:0xbcefff,transparent:true,opacity:.55,side:THREE.DoubleSide,depthWrite:false});
 function makeWaterRipple(x,z){
@@ -1025,6 +1036,13 @@ function updateWind(dt){
 }
 
 function update(dt){
+ // Ondas pequenas e contínuas dão vida à superfície do lago.
+ for(const wave of lakeWaves){
+  wave.phase=(wave.phase+dt*wave.speed)% (Math.PI*2);
+  const pulse=.75+Math.sin(wave.phase)*.25;
+  wave.mesh.scale.setScalar(.8+(.5+Math.sin(wave.phase))*.42);
+  wave.mesh.material.opacity=.10+pulse*.13;
+ }
  // Água: ondulações que se expandem e desaparecem.
  for(let ri=waterRipples.length-1;ri>=0;ri--){const ripple=waterRipples[ri];ripple.life+=dt;const k=ripple.life/.9;ripple.mesh.scale.setScalar(.25+k*3.8);ripple.mesh.material.opacity=Math.max(0,.55*(1-k));if(k>=1){scene.remove(ripple.mesh);ripple.mesh.material.dispose();waterRipples.splice(ri,1);}}
  const lakeDistance=Math.hypot(player.position.x+28,player.position.z+20);
