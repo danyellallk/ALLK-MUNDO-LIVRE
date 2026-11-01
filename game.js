@@ -309,8 +309,20 @@ function makeLeafTexture(){
  q.globalAlpha=1;const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t;
 }
 const barkTexture=makeBarkTexture(),leafTexture=makeLeafTexture();
-const trees=[],trunkMat=new THREE.MeshStandardMaterial({map:barkTexture,roughness:1}),leafMat=new THREE.MeshStandardMaterial({map:leafTexture,roughness:1});
+const trees=[],trunkMat=new THREE.MeshStandardMaterial({map:barkTexture,roughness:1}),leafMat=new THREE.MeshStandardMaterial({map:leafTexture,roughness:1,vertexColors:true});
 const canopyGeo=new THREE.SphereGeometry(1,14,11);
+// Variação de tons nas folhas para quebrar o verde uniforme das copas.
+{
+ const p=canopyGeo.attributes.position,colors=[];
+ const tint=new THREE.Color();
+ for(let i=0;i<p.count;i++){
+  const x=p.getX(i),y=p.getY(i),z=p.getZ(i);
+  const variation=.82+.13*(.5+.5*Math.sin(x*13+y*9+z*17))+.08*(.5+.5*Math.cos(y*21-z*11));
+  tint.setRGB(variation*(.88+.12*y),variation,variation*(.84+.16*x));
+  colors.push(tint.r,tint.g,tint.b);
+ }
+ canopyGeo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+}
 function tree(x,z,s=1){
  const g=new THREE.Group();
  const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.18*s,.34*s,2.7*s,10,5),trunkMat);trunk.position.y=1.35*s;trunk.castShadow=true;trunk.receiveShadow=true;g.add(trunk);
