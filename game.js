@@ -490,6 +490,30 @@ function buildOldWestBuilding(x,z,name,kind='saloon'){
  box(w,h,d,wallMat,0,h/2,0);
  box(w+.65,.35,d+.65,townRoof,0,h+.12,0);
  box(w+.8,.28,.48,townTrim,0,h+.45,d/2+.12);
+ // Acabamento artesanal: tábuas, cantoneiras e lanternas da fachada.
+ const plankMat=new THREE.MeshStandardMaterial({color:0x9a704b,roughness:1});
+ const darkPlank=new THREE.MeshStandardMaterial({color:0x4b3021,roughness:1});
+ // Faixas horizontais nas laterais, integradas ao volume já sólido do edifício.
+ for(const side of [-1,1]){
+  for(const yy of [.42,.88,1.34,1.80,2.26,2.72,3.18,3.64,4.10]){
+   const board=new THREE.Mesh(new THREE.BoxGeometry(.045,.055,d-.18),yy%2?plankMat:darkPlank);
+   board.position.set(side*(w/2+.018),yy,0);g.add(board);
+  }
+  const corner=new THREE.Mesh(new THREE.BoxGeometry(.16,h+.12,.18),townTrim);
+  corner.position.set(side*(w/2+.035),h/2, d/2-.08);g.add(corner);
+ }
+ // Rodapé e testeira frontal dão profundidade sem bloquear portas ou janelas.
+ box(w-.25,.16,.10,townTrim,0,.20,d/2+.09);
+ box(w+.25,.18,.16,plankMat,0,h-.12,d/2+.13);
+ // Lanternas decorativas fixadas na fachada (sem collider independente).
+ const lampMat=new THREE.MeshStandardMaterial({color:0xffd18a,emissive:0xff9b38,emissiveIntensity:.75,roughness:.35});
+ for(const lx of [-w*.39,w*.39]){
+  box(.22,.42,.22,townTrim,lx,3.15,d/2+.34);
+  const glow=new THREE.Mesh(new THREE.BoxGeometry(.14,.25,.14),lampMat);
+  glow.position.set(lx,3.15,d/2+.47);g.add(glow);
+  const cap=new THREE.Mesh(new THREE.ConeGeometry(.18,.13,4),townRoof);
+  cap.position.set(lx,3.38,d/2+.47);cap.rotation.y=Math.PI/4;g.add(cap);
+ }
  // Telhado inclinado em duas águas
  const roof=new THREE.Mesh(new THREE.ConeGeometry(w*.78,2.5,4),townRoof);roof.rotation.y=Math.PI/4;roof.scale.z=d*.78/2.5;roof.position.set(0,h+1.25,0);g.add(roof);
  // Fachada com janelas e molduras
