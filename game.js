@@ -919,6 +919,43 @@ for(const animal of (ridingHorse?[]:animals)){
   horizontalVX*=.06;horizontalVZ*=.06;
  }
 }
+
+// Colisão física da cidade: saloon, armazém, varanda, carroça e moradores.
+// Caixas usam limites no plano X/Z; o jogador é tratado como um círculo.
+function pushOutBox(px,pz,cx,cz,halfW,halfD,radius){
+ const qx=THREE.MathUtils.clamp(px,cx-halfW,cx+halfW);
+ const qz=THREE.MathUtils.clamp(pz,cz-halfD,cz+halfD);
+ let dx=px-qx,dz=pz-qz,d=Math.hypot(dx,dz);
+ if(d>=radius)return [px,pz,false];
+ if(d>.001)return [qx+dx/d*radius,qz+dz/d*radius,true];
+ const ox=halfW-Math.abs(px-cx),oz=halfD-Math.abs(pz-cz);
+ if(ox<oz)return [px+(px<cx?-1:1)*(ox+radius),pz,true];
+ return [px,pz+(pz<cz?-1:1)*(oz+radius),true];
+}
+const solidBuildings=[
+ {x:-17,z:1,w:7.6,d:4.45},
+ {x:1,z:1,w:6.1,d:4.0}
+];
+for(const b of solidBuildings){
+ const result=pushOutBox(nextX,nextZ,b.x,b.z,b.w,b.d,playerRadius);
+ if(result[2]){nextX=result[0];nextZ=result[1];horizontalVX*=.08;horizontalVZ*=.08;}
+}
+// Carroça: carroceria e rodas são obstáculos sólidos.
+if(!ridingHorse){
+ const wagonHit=pushOutBox(nextX,nextZ,wagonGroup.position.x,wagonGroup.position.z,1.55,2.05,playerRadius);
+ if(wagonHit[2]){nextX=wagonHit[0];nextZ=wagonHit[1];horizontalVX*=.08;horizontalVZ*=.08;}
+ const horseDist=Math.hypot(nextX-draftHorse.position.x,nextZ-draftHorse.position.z);
+ if(draftHorse.visible&&horseDist<1.45+playerRadius){
+  const dx=nextX-draftHorse.position.x,dz=nextZ-draftHorse.position.z,d=horseDist||.001;
+  nextX=draftHorse.position.x+dx/d*(1.45+playerRadius);nextZ=draftHorse.position.z+dz/d*(1.45+playerRadius);
+  horizontalVX*=.08;horizontalVZ*=.08;
+ }
+}
+// Moradores também impedem que o jogador atravesse seus corpos.
+for(const resident of townsfolk){
+ const dx=nextX-resident.group.position.x,dz=nextZ-resident.group.position.z,d=Math.hypot(dx,dz),min=playerRadius+.42;
+ if(d<min){const n=d||.001;nextX=resident.group.position.x+dx/n*min;nextZ=resident.group.position.z+dz/n*min;horizontalVX*=.08;horizontalVZ*=.08;}
+}
 const oldLX=oldX-12,oldLZ=oldZ+13,newLX=nextX-12,newLZ=nextZ+13;
 const insideBounds=Math.abs(newLX)<3.72&&Math.abs(newLZ)<2.72;
 const crossedDoorIn=oldLZ>=3.05&&newLZ<3.05&&Math.abs(newLX)<.88;
