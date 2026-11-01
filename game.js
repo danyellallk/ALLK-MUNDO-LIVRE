@@ -51,7 +51,23 @@ function hill(x,z,sx,sy,sz,color){const m=new THREE.Mesh(new THREE.SphereGeometr
 for(let i=0;i<22;i++){const a=i/22*Math.PI*2;hill(Math.cos(a)*145,Math.sin(a)*145,24+Math.random()*20,24+Math.random()*28,25+Math.random()*20,i%2?0x65865a:0x78946b)}
 hill(-58,18,22,18,30,0x71945e);hill(58,-42,28,22,25,0x6b8c59);hill(32,75,24,18,24,0x789767);
 const sand=new THREE.Mesh(new THREE.CircleGeometry(18,48),mat(0xc5b47a));sand.rotation.x=-Math.PI/2;sand.position.set(-28,.01,-20);scene.add(sand);
-const lake=new THREE.Mesh(new THREE.CircleGeometry(15.5,48),new THREE.MeshStandardMaterial({color:0x268db5,roughness:.19,metalness:.08}));lake.rotation.x=-Math.PI/2;lake.position.set(-28,.04,-20);scene.add(lake);
+// Superfície do lago com textura procedural de ondulações, sem dependência externa.
+const waterCanvas=document.createElement('canvas');waterCanvas.width=512;waterCanvas.height=512;
+const waterCtx=waterCanvas.getContext('2d');
+const waterGradient=waterCtx.createRadialGradient(256,256,25,256,256,270);
+waterGradient.addColorStop(0,'#4aa9c5');waterGradient.addColorStop(.62,'#268db5');waterGradient.addColorStop(1,'#176b91');
+waterCtx.fillStyle=waterGradient;waterCtx.fillRect(0,0,512,512);
+let waterSeed=4401;const waterRand=()=>{waterSeed=(waterSeed*1664525+1013904223)>>>0;return waterSeed/4294967296};
+for(let k=0;k<230;k++){
+ const x=waterRand()*512,y=waterRand()*512,len=8+waterRand()*46;
+ waterCtx.globalAlpha=.08+waterRand()*.2;waterCtx.strokeStyle=waterRand()>.5?'#d2f6f2':'#124f79';
+ waterCtx.lineWidth=.7+waterRand()*2.2;waterCtx.beginPath();
+ waterCtx.moveTo(x,y);waterCtx.quadraticCurveTo(x+len*.5,y-3-waterRand()*5,x+len,y+waterRand()*3);waterCtx.stroke();
+}
+waterCtx.globalAlpha=1;
+const waterTexture=new THREE.CanvasTexture(waterCanvas);waterTexture.colorSpace=THREE.SRGBColorSpace;
+const lakeMaterial=new THREE.MeshStandardMaterial({map:waterTexture,color:0xffffff,roughness:.2,metalness:.06});
+const lake=new THREE.Mesh(new THREE.CircleGeometry(15.5,64),lakeMaterial);lake.rotation.x=-Math.PI/2;lake.position.set(-28,.04,-20);scene.add(lake);
 const waterRipples=[];
 const rippleMaterial=new THREE.MeshBasicMaterial({color:0xbcefff,transparent:true,opacity:.55,side:THREE.DoubleSide,depthWrite:false});
 function makeWaterRipple(x,z){
