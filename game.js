@@ -1171,13 +1171,17 @@ if(Math.abs(forward)+Math.abs(side)>.08)player.rotation.y=Math.atan2(-s,-c);
 const moving=distanceMoved>.002;
 const runLean=running&&moving&&!jumpPose?-.055:0;
 // Inclina o corpo suavemente conforme a inclinação real do terreno.
-const slopeSample=.55;
+const slopeSample=1.1;
 const slopeX=(terrainHeight(player.position.x+slopeSample,player.position.z)-terrainHeight(player.position.x-slopeSample,player.position.z))/(2*slopeSample);
 const slopeZ=(terrainHeight(player.position.x,player.position.z+slopeSample)-terrainHeight(player.position.x,player.position.z-slopeSample))/(2*slopeSample);
-const groundTiltX=grounded?THREE.MathUtils.clamp(-Math.atan(slopeZ)*.82,-.42,.42):0;
-const groundTiltZ=grounded?THREE.MathUtils.clamp(Math.atan(slopeX)*.82,-.42,.42):0;
-player.rotation.x=runLean+groundTiltX;
-player.rotation.z=groundTiltZ+(moving?Math.sin(walkPhase*.5)*(running?.025:.012)*moveAmount:0);
+// Limita a inclinação para evitar que o boneco tombe em encostas irregulares.
+const groundTiltX=grounded?THREE.MathUtils.clamp(-Math.atan(slopeZ)*.48,-.22,.22):0;
+const groundTiltZ=grounded?THREE.MathUtils.clamp(Math.atan(slopeX)*.48,-.22,.22):0;
+const targetTiltX=runLean+groundTiltX;
+const targetTiltZ=groundTiltZ+(moving?Math.sin(walkPhase*.5)*(running?.018:.008)*moveAmount:0);
+const tiltBlend=1-Math.exp(-Math.max(0,dt)*7);
+player.rotation.x=THREE.MathUtils.lerp(player.rotation.x,targetTiltX,tiltBlend);
+player.rotation.z=THREE.MathUtils.lerp(player.rotation.z,targetTiltZ,tiltBlend);
 const floorY=terrainHeight(player.position.x,player.position.z)-.03;velocityY-=20*dt;player.position.y+=velocityY*dt;if(player.position.y<=floorY){player.position.y=floorY;if(velocityY<0)velocityY=0;grounded=true}else{grounded=false}if(ridingHorse){player.position.y=floorY+.92;draftHorse.visible=true;draftHorse.position.set(player.position.x,floorY,player.position.z);draftHorse.rotation.y=yaw+Math.PI;player.rotation.y=yaw;}else{player.position.y=Math.max(floorY,player.position.y);}
 const horseNear=Math.hypot(player.position.x-draftHorse.position.x,player.position.z-draftHorse.position.z)<4;mountButton.disabled=!ridingHorse&&!horseNear;mountButton.style.opacity=mountButton.disabled?'.5':'1';
 const target=new THREE.Vector3(player.position.x,player.position.y+(firstPerson?1.65:1.25),player.position.z);if(firstPerson){camera.position.copy(target);camera.rotation.set(pitch,yaw,0,'YXZ')}else{camera.position.set(target.x+Math.sin(yaw)*5.8,target.y+1.15+pitch*2,target.z+Math.cos(yaw)*5.8);camera.lookAt(target)}}
