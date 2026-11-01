@@ -946,12 +946,12 @@ const solidBuildings=[
  {x:1+3.1,z:1+3.5,w:1.9,d:.22}
 ];
 for(const b of solidBuildings){
- const result=pushOutBox(nextX,nextZ,b.x,b.z,b.w,b.d,playerRadius);
+ const result=pushOutBox(nextX,nextZ,b.x,b.z,b.w,b.d,.30);
  if(result[2]){nextX=result[0];nextZ=result[1];horizontalVX*=.08;horizontalVZ*=.08;}
 }
 // Carroça: carroceria e rodas são obstáculos sólidos.
 if(!ridingHorse){
- const wagonHit=pushOutBox(nextX,nextZ,wagonGroup.position.x,wagonGroup.position.z,1.55,2.05,playerRadius);
+ const wagonHit=pushOutBox(nextX,nextZ,wagonGroup.position.x,wagonGroup.position.z,1.55,2.05,.34);
  if(wagonHit[2]){nextX=wagonHit[0];nextZ=wagonHit[1];horizontalVX*=.08;horizontalVZ*=.08;}
  const horseDist=Math.hypot(nextX-draftHorse.position.x,nextZ-draftHorse.position.z);
  if(draftHorse.visible&&horseDist<1.45+playerRadius){
