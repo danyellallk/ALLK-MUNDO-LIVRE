@@ -139,10 +139,10 @@ const trees=[],trunkMat=new THREE.MeshStandardMaterial({map:barkTexture,roughnes
 const canopyGeo=new THREE.SphereGeometry(1,14,11);
 function tree(x,z,s=1){
  const g=new THREE.Group();
- const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.18*s,.34*s,2.7*s,10,5),trunkMat);trunk.position.y=1.35*s;g.add(trunk);
- for(let k=0;k<3;k++){const branch=new THREE.Mesh(new THREE.CylinderGeometry(.045*s,.10*s,.9*s,7),trunkMat);branch.position.set((k-1)*.23*s,2.15*s,.12*s);branch.rotation.z=(k-1)*-.55;g.add(branch)}
+ const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.18*s,.34*s,2.7*s,10,5),trunkMat);trunk.position.y=1.35*s;trunk.castShadow=true;trunk.receiveShadow=true;g.add(trunk);
+ for(let k=0;k<3;k++){const branch=new THREE.Mesh(new THREE.CylinderGeometry(.045*s,.10*s,.9*s,7),trunkMat);branch.position.set((k-1)*.23*s,2.15*s,.12*s);branch.rotation.z=(k-1)*-.55;branch.castShadow=true;g.add(branch)}
  const clusters=[[-.55,3.05,0,.92],[.48,3.15,.12,1.02],[0,3.75,-.12,.95],[.02,2.85,.62,.82]];
- for(const [cx,cy,cz,r] of clusters){const crown=new THREE.Mesh(canopyGeo,leafMat);crown.position.set(cx*s,cy*s,cz*s);crown.scale.set(r*s,r*.82*s,r*s);g.add(crown)}
+ for(const [cx,cy,cz,r] of clusters){const crown=new THREE.Mesh(canopyGeo,leafMat);crown.position.set(cx*s,cy*s,cz*s);crown.scale.set(r*s,r*.82*s,r*s);crown.receiveShadow=true;g.add(crown)}
  g.position.set(x,terrainHeight(x,z),z);g.userData.windPhase=Math.random()*Math.PI*2;g.userData.windStrength=.012+Math.random()*.012;scene.add(g);trees.push(g)
 }
 for(let i=0;i<115;i++){let x=(Math.random()-.5)*220,z=(Math.random()-.5)*220;if(Math.hypot(x,z)>13&&!(x<-8&&x>-49&&z<-1&&z>-39))tree(x,z,.65+Math.random()*.8)}
@@ -181,7 +181,7 @@ const rocks=[];
 for(let i=0;i<38;i++){
  const rock=new THREE.Mesh(new THREE.DodecahedronGeometry(.7+Math.random()*.8,0),mat(0x858b88));
  const rx=(Math.random()-.5)*190,rz=(Math.random()-.5)*190;rock.position.set(rx,terrainHeight(rx,rz)+.35,rz);
- rock.scale.y=.65;rock.rotation.set(Math.random()*.3,Math.random()*Math.PI,Math.random()*.3);
+ rock.scale.y=.65;rock.castShadow=true;rock.receiveShadow=true;rock.rotation.set(Math.random()*.3,Math.random()*Math.PI,Math.random()*.3);
  rock.userData={vx:0,vz:0,radius:.72+rock.scale.x*.45};
  scene.add(rock);rocks.push(rock);
 }
