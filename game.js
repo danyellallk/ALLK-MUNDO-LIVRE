@@ -156,9 +156,13 @@ for(let k=0;k<230;k++){
 }
 waterCtx.globalAlpha=1;
 const waterTexture=new THREE.CanvasTexture(waterCanvas);waterTexture.colorSpace=THREE.SRGBColorSpace;
-waterTexture.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
-const lakeMaterial=new THREE.MeshStandardMaterial({map:waterTexture,color:0xe5f8ff,roughness:.16,metalness:.12});
-const lake=new THREE.Mesh(new THREE.CircleGeometry(15.5,64),lakeMaterial);lake.rotation.x=-Math.PI/2;lake.position.set(-28,.04,-20);scene.add(lake);
+waterTexture.wrapS=waterTexture.wrapT=THREE.RepeatWrapping;waterTexture.repeat.set(1.15,1.15);
+waterTexture.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());
+// Material translúcido deixa a margem rasa aparecer sob a tonalidade azul-esverdeada.
+const lakeMaterial=new THREE.MeshStandardMaterial({map:waterTexture,color:0xd5f5f5,transparent:true,opacity:.88,roughness:.12,metalness:.06,depthWrite:false});
+const lake=new THREE.Mesh(new THREE.CircleGeometry(15.5,64),lakeMaterial);lake.rotation.x=-Math.PI/2;lake.position.set(-28,.04,-20);lake.renderOrder=2;scene.add(lake);
+const lakeShore=new THREE.Mesh(new THREE.RingGeometry(14.9,15.65,64),new THREE.MeshBasicMaterial({color:0xc2e7d9,transparent:true,opacity:.18,side:THREE.DoubleSide,depthWrite:false}));
+lakeShore.rotation.x=-Math.PI/2;lakeShore.position.set(-28,.045,-20);lakeShore.renderOrder=3;scene.add(lakeShore);
 const lakeWaveMaterial=new THREE.MeshBasicMaterial({color:0xc8f4ff,transparent:true,opacity:.22,side:THREE.DoubleSide,depthWrite:false});
 const lakeWaves=[];
 for(let i=0;i<9;i++){
@@ -1127,6 +1131,8 @@ function updateWind(dt){
 
 function update(dt){
  skyDome.material.uniforms.uTime.value+=dt;
+ waterTexture.offset.x=(waterTexture.offset.x+dt*.0018)%1;
+ waterTexture.offset.y=(waterTexture.offset.y+dt*.0007)%1;
  // Ondas pequenas e contínuas dão vida à superfície do lago.
  for(const wave of lakeWaves){
   wave.phase=(wave.phase+dt*wave.speed)% (Math.PI*2);
