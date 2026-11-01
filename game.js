@@ -479,6 +479,7 @@ function makeTownSign(label){
  const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;
  return new THREE.MeshBasicMaterial({map:t});
 }
+const townDoors=[];
 function buildOldWestBuilding(x,z,name,kind='saloon'){
  const g=new THREE.Group(),w=kind==='saloon'?13:10,d=kind==='saloon'?8:7,h=kind==='saloon'?5.2:4.4;
  const wallMat=new THREE.MeshStandardMaterial({map:makeSurfaceTexture('#765039',['#4c3022','#a77b50','#5a3928'],kind==='saloon'?811:812),roughness:1});
@@ -495,10 +496,14 @@ function buildOldWestBuilding(x,z,name,kind='saloon'){
   box(2.35,.16,.22,townTrim,xx,3.72,d/2+.2);
   box(.14,1.9,.2,townTrim,xx,2.75,d/2+.25);
  }
- // Porta dupla central
- box(2.25,2.55,.2,townTrim,0,1.28,d/2+.18);
- box(.92,2.35,.12,mat(0x805331),-.48,1.25,d/2+.3);
- box(.92,2.35,.12,mat(0x805331),.48,1.25,d/2+.3);
+ // Porta dupla articulada: cada folha gira em torno da dobradiça.
+ const doorGroup=new THREE.Group();doorGroup.position.set(0,0,d/2+.3);g.add(doorGroup);
+ const doorMat=mat(0x805331);
+ const leftHinge=new THREE.Group();leftHinge.position.set(-.92,0,0);doorGroup.add(leftHinge);
+ const leftLeaf=new THREE.Mesh(new THREE.BoxGeometry(.92,2.35,.12),doorMat);leftLeaf.position.set(.46,1.25,0);leftHinge.add(leftLeaf);
+ const rightHinge=new THREE.Group();rightHinge.position.set(.92,0,0);doorGroup.add(rightHinge);
+ const rightLeaf=new THREE.Mesh(new THREE.BoxGeometry(.92,2.35,.12),doorMat);rightLeaf.position.set(-.46,1.25,0);rightHinge.add(rightLeaf);
+ townDoors.push({left:leftHinge,right:rightHinge,x,z:z+d/2+.3,open:false});
  // Varanda e pilares
  box(w+2.2,.25,2.8,townTrim,0,2.9,d/2+1.25);
  for(const xx of [-w*.43,-w*.15,w*.15,w*.43]){
@@ -756,6 +761,14 @@ function loadProgress(){
  }catch(e){loadButton.textContent='SAVE INVÁLIDO'}
 }
 saveButton.onclick=saveProgress;loadButton.onclick=loadProgress;
+const doorButton=document.createElement('button');doorButton.textContent='🚪 ABRIR / FECHAR PORTA';document.querySelector('#actions').append(doorButton);
+doorButton.onclick=()=>{
+ let nearest=null,best=6;
+ for(const door of townDoors){const dist=Math.hypot(player.position.x-door.x,player.position.z-door.z);if(dist<best){best=dist;nearest=door}}
+ if(!nearest){doorButton.textContent='CHEGUE PERTO DE UMA PORTA';setTimeout(()=>doorButton.textContent='🚪 ABRIR / FECHAR PORTA',1400);return}
+ nearest.open=!nearest.open;nearest.left.rotation.y=nearest.open?-1.18:0;nearest.right.rotation.y=nearest.open?1.18:0;
+ doorButton.textContent=nearest.open?'PORTA ABERTA':'PORTA FECHADA';setTimeout(()=>doorButton.textContent='🚪 ABRIR / FECHAR PORTA',1200);
+};
 document.querySelector('#jump').onclick=()=>{if(grounded){velocityY=7;grounded=false}};
 document.querySelector('#camera').onclick=()=>{firstPerson=!firstPerson;document.querySelector('#camera').textContent=firstPerson?'VOLTAR 3ª PESSOA':'1ª / 3ª PESSOA'};
 let walkPhase=0,previousPlayerX=0,previousPlayerZ=0,running=false;
