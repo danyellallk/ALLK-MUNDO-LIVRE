@@ -468,6 +468,51 @@ const roof=new THREE.Mesh(new THREE.ConeGeometry(5.8,3.2,4),roofMat);roof.rotati
 const doorPivot=new THREE.Group();doorPivot.position.set(-.75,1.3,3.06);cabin.add(doorPivot);const door=new THREE.Mesh(new THREE.BoxGeometry(1.5,2.6,.12),doorMat);door.position.x=.75;doorPivot.add(door);let cabinOpen=false,insideCabin=false;
 for(const x of [-2.4,2.4]){const w=new THREE.Mesh(new THREE.BoxGeometry(1.1,1.1,.13),new THREE.MeshStandardMaterial({color:0x9a6b3e,emissive:0x5b2c0d,emissiveIntensity:.28,roughness:.9}));w.position.set(x,2.6,3.08);cabin.add(w)}
 cabin.position.set(12,0,-13);scene.add(cabin);
+
+/* Cidade histórica de 1870: rua principal e saloon */
+const townWood=mat(0x765039),townTrim=mat(0x3b2920),townRoof=mat(0x40342b),townGlass=mat(0x52616a,.35);
+function makeTownSign(label){
+ const c=document.createElement('canvas');c.width=512;c.height=128;
+ const q=c.getContext('2d');q.fillStyle='#3a2418';q.fillRect(0,0,512,128);
+ q.strokeStyle='#d2ad68';q.lineWidth=9;q.strokeRect(8,8,496,112);
+ q.fillStyle='#f1d49a';q.font='bold 58px Georgia';q.textAlign='center';q.textBaseline='middle';q.fillText(label,256,66);
+ const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;
+ return new THREE.MeshBasicMaterial({map:t});
+}
+function buildOldWestBuilding(x,z,name,kind='saloon'){
+ const g=new THREE.Group(),w=kind==='saloon'?13:10,d=kind==='saloon'?8:7,h=kind==='saloon'?5.2:4.4;
+ const wallMat=new THREE.MeshStandardMaterial({map:makeSurfaceTexture('#765039',['#4c3022','#a77b50','#5a3928'],kind==='saloon'?811:812),roughness:1});
+ const box=(ww,hh,dd,ma,xx,yy,zz)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(ww,hh,dd),ma);m.position.set(xx,yy,zz);g.add(m);return m};
+ box(w,h,d,wallMat,0,h/2,0);
+ box(w+.65,.35,d+.65,townRoof,0,h+.12,0);
+ box(w+.8,.28,.48,townTrim,0,h+.45,d/2+.12);
+ // Telhado inclinado em duas águas
+ const roof=new THREE.Mesh(new THREE.ConeGeometry(w*.78,2.5,4),townRoof);roof.rotation.y=Math.PI/4;roof.scale.z=d*.78/2.5;roof.position.set(0,h+1.25,0);g.add(roof);
+ // Fachada com janelas e molduras
+ for(const xx of [-w*.29,w*.29]){
+  box(2.15,1.85,.18,townTrim,xx,2.75,d/2+.12);
+  box(1.78,1.48,.08,townGlass,xx,2.75,d/2+.23);
+  box(2.35,.16,.22,townTrim,xx,3.72,d/2+.2);
+  box(.14,1.9,.2,townTrim,xx,2.75,d/2+.25);
+ }
+ // Porta dupla central
+ box(2.25,2.55,.2,townTrim,0,1.28,d/2+.18);
+ box(.92,2.35,.12,mat(0x805331),-.48,1.25,d/2+.3);
+ box(.92,2.35,.12,mat(0x805331),.48,1.25,d/2+.3);
+ // Varanda e pilares
+ box(w+2.2,.25,2.8,townTrim,0,2.9,d/2+1.25);
+ for(const xx of [-w*.43,-w*.15,w*.15,w*.43]){
+  const post=new THREE.Mesh(new THREE.CylinderGeometry(.13,.16,3.0,8),townTrim);post.position.set(xx,1.48,d/2+2.35);g.add(post);
+ }
+ box(w+2.4,.22,.22,townTrim,0,3.05,d/2+2.35);
+ const sign=new THREE.Mesh(new THREE.PlaneGeometry(w*.7,1.35),makeTownSign(name));sign.position.set(0,h-.55,d/2+.27);g.add(sign);
+ g.position.set(x,0,z);scene.add(g);return g;
+}
+const mainStreet=new THREE.Mesh(new THREE.PlaneGeometry(24,100),new THREE.MeshStandardMaterial({map:dirtTexture,color:0xb28d60,roughness:1}));
+mainStreet.rotation.x=-Math.PI/2;mainStreet.position.set(-9,.018,8);scene.add(mainStreet);
+buildOldWestBuilding(-17,1,'THE OLD SALOON','saloon');
+buildOldWestBuilding(1,1,'GENERAL STORE','store');
+
 // Jogador humano com proporções mais naturais e roupas detalhadas
 const player=new THREE.Group();
 // Materiais com microtextura para pele, tecido e cabelo, gerados localmente.
