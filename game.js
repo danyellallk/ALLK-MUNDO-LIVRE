@@ -1,8 +1,8 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
-const scene=new THREE.Scene();scene.background=new THREE.Color(0xb99a70);scene.fog=new THREE.Fog(0xb99a70,58,185);
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x9db9c2);scene.fog=new THREE.Fog(0xb9ad8e,105,285);
 const camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,.1,420);
 const renderer=new THREE.WebGLRenderer({antialias:false,powerPreference:'low-power'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.35));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;document.body.appendChild(renderer.domElement);
-const hemi=new THREE.HemisphereLight(0xe8cda5,0x493522,1.55);scene.add(hemi);const sun=new THREE.DirectionalLight(0xffc477,2.0);sun.position.set(-45,70,35);scene.add(sun);
+const hemi=new THREE.HemisphereLight(0xdce8df,0x596044,1.9);scene.add(hemi);const sun=new THREE.DirectionalLight(0xffe0ad,2.25);sun.position.set(-45,70,35);scene.add(sun);
 const mat=(color,roughness=1)=>new THREE.MeshStandardMaterial({color,roughness});
 // Texturas procedurais leves: geradas localmente, sem downloads ou serviços pagos.
 function makeSurfaceTexture(base,spots,seed=1){
@@ -20,7 +20,7 @@ function makeSurfaceTexture(base,spots,seed=1){
  tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());
  return tex;
 }
-const grassTexture=makeSurfaceTexture('#51472c',['#b0a653','#3d3522','#789044','#c0a568','#55452a','#8b8149'],171);
+const grassTexture=makeSurfaceTexture('#53653b',['#b0a653','#3d4b2c','#789044','#c0a568','#55452a','#8b8149'],171);
 grassTexture.repeat.set(18,18);
 grassTexture.magFilter=THREE.LinearFilter;
 grassTexture.minFilter=THREE.LinearMipmapLinearFilter;
@@ -43,7 +43,7 @@ function makeGroundDetail(){
  t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());return t;
 }
 const groundDetail=makeGroundDetail();groundDetail.repeat.set(9,9);
-const groundMaterial=new THREE.MeshStandardMaterial({map:grassTexture,bumpMap:groundDetail,bumpScale:.28,color:0xd8c29a,roughness:1});
+const groundMaterial=new THREE.MeshStandardMaterial({map:grassTexture,bumpMap:groundDetail,bumpScale:.28,color:0xffffff,roughness:1});
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(360,360),groundMaterial);ground.rotation.x=-Math.PI/2;ground.position.y=-.12;scene.add(ground);
 function hill(x,z,sx,sy,sz,color){const m=new THREE.Mesh(new THREE.SphereGeometry(1,12,9),mat(color));m.position.set(x,sy*.35,z);m.scale.set(sx,sy,sz);scene.add(m)}
 for(let i=0;i<22;i++){const a=i/22*Math.PI*2;hill(Math.cos(a)*145,Math.sin(a)*145,24+Math.random()*20,24+Math.random()*28,25+Math.random()*20,i%2?0x65865a:0x78946b)}
@@ -615,7 +615,7 @@ let realisticAvatarLoaded=false,playerMixer=null,playerActions={},activePlayerAc
 player.position.set(0,0,0);player.visible=true;player.scale.setScalar(1);player.traverse(o=>{o.visible=true;if(o.isMesh){o.frustumCulled=false;o.renderOrder=2}});scene.add(player);
 let yaw=0,pitch=-.12,firstPerson=false,velocityY=0,grounded=true,wood=0;const fires=[];let berries=0,hunger=100,storedWood=0,storedBerries=0;
 const keys={};addEventListener('keydown',e=>keys[e.key.toLowerCase()]=true);addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
-const joystick=document.querySelector('#joystick'),stick=document.querySelector('#stick');let joyX=0,joyY=0,joyPointer=null;
+const joystick=document.querySelector('#joystick'),stick=document.querySelector('#stick');let joyX=0,joyY=0,joyPointer=null;joystick.style.zIndex='8';joystick.style.touchAction='none';
 joystick.addEventListener('pointerdown',e=>{joyPointer=e.pointerId;joystick.setPointerCapture(e.pointerId);moveJoy(e)});joystick.addEventListener('pointermove',e=>{if(e.pointerId===joyPointer)moveJoy(e)});
 function moveJoy(e){const r=joystick.getBoundingClientRect(),dx=e.clientX-r.left-r.width/2,dy=e.clientY-r.top-r.height/2,len=Math.hypot(dx,dy),k=Math.min(1,48/(len||1));joyX=dx*k/48;joyY=dy*k/48;stick.style.transform=`translate(${joyX*38}px,${joyY*38}px)`}
 function resetJoy(){joyX=joyY=0;joyPointer=null;stick.style.transform='translate(0,0)'}joystick.addEventListener('pointerup',resetJoy);joystick.addEventListener('pointercancel',resetJoy);
