@@ -70,7 +70,7 @@ for(let i=0;i<terrainPositions.count;i++){
 }
 terrainGeometry.setAttribute('color',new THREE.Float32BufferAttribute(terrainColors,3));terrainGeometry.computeVertexNormals();
 function terrainHeight(x,z){
- const gx=THREE.MathUtils.clamp((x+TERRAIN_HALF)/TERRAIN_STEP,0,TERRAIN_SEGMENTS),gy=THREE.MathUtils.clamp((TERRAIN_HALF-z)/TERRAIN_STEP,0,TERRAIN_SEGMENTS);
+ const gx=THREE.MathUtils.clamp((x+TERRAIN_HALF)/TERRAIN_STEP,0,TERRAIN_SEGMENTS),gy=THREE.MathUtils.clamp((z+TERRAIN_HALF)/TERRAIN_STEP,0,TERRAIN_SEGMENTS);
  const x0=Math.floor(gx),y0=Math.floor(gy),x1=Math.min(TERRAIN_SEGMENTS,x0+1),y1=Math.min(TERRAIN_SEGMENTS,y0+1),tx=gx-x0,ty=gy-y0;
  const a=terrainHeights[y0*TERRAIN_ROW+x0],b=terrainHeights[y0*TERRAIN_ROW+x1],c=terrainHeights[y1*TERRAIN_ROW+x0],d=terrainHeights[y1*TERRAIN_ROW+x1];
  return THREE.MathUtils.lerp(THREE.MathUtils.lerp(a,b,tx),THREE.MathUtils.lerp(c,d,tx),ty);
