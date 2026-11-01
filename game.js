@@ -194,6 +194,34 @@ for(let i=0;i<115;i++){let x=(Math.random()-.5)*220,z=(Math.random()-.5)*220;if(
  grass.instanceMatrix.needsUpdate=true;
  scene.add(grass);
 }
+// Flores silvestres instanciadas: cor e altura variadas sem criar centenas de objetos individuais.
+{
+ const flowerCount=280,dummy=new THREE.Object3D();
+ const stemGeo=new THREE.CylinderGeometry(.012,.018,.24,5);
+ const stemMat=new THREE.MeshStandardMaterial({color:0x527b36,roughness:1});
+ const stems=new THREE.InstancedMesh(stemGeo,stemMat,flowerCount);
+ const headGeo=new THREE.SphereGeometry(1,7,6);
+ const headMat=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.9});
+ const heads=new THREE.InstancedMesh(headGeo,headMat,flowerCount);
+ const flowerColors=[new THREE.Color(0xf5d76e),new THREE.Color(0xf2a6b8),new THREE.Color(0xf3eee0),new THREE.Color(0xb9a0df)];
+ for(let i=0;i<flowerCount;i++){
+  const x=(Math.random()-.5)*190,z=(Math.random()-.5)*190;
+  const lakeDist=Math.hypot(x+28,z+20);
+  const pathZone=Math.abs(x-7)<4.2&&z>-62&&z<18;
+  if(lakeDist<19||pathZone)continue;
+  const y=terrainHeight(x,z);
+  const h=.75+Math.random()*.65,lean=(Math.random()-.5)*.12;
+  dummy.position.set(x,y+.12*h,z);dummy.rotation.set(0,Math.random()*Math.PI*2,lean);
+  dummy.scale.set(1,h,1);dummy.updateMatrix();stems.setMatrixAt(i,dummy.matrix);
+  dummy.position.set(x+lean*.35,y+.24*h,z);dummy.rotation.set(0,0,0);
+  const size=.045+Math.random()*.035;dummy.scale.set(size,size*.58,size);
+  dummy.updateMatrix();heads.setMatrixAt(i,dummy.matrix);
+  heads.setColorAt(i,flowerColors[Math.floor(Math.random()*flowerColors.length)]);
+ }
+ stems.instanceMatrix.needsUpdate=true;heads.instanceMatrix.needsUpdate=true;
+ if(heads.instanceColor)heads.instanceColor.needsUpdate=true;
+ scene.add(stems,heads);
+}
 // Pedras físicas: podem ser empurradas pelo jogador e desaceleram no terreno.
 const rocks=[];
 for(let i=0;i<38;i++){
