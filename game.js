@@ -158,9 +158,23 @@ const canopyGeo=new THREE.SphereGeometry(1,14,11);
 function tree(x,z,s=1){
  const g=new THREE.Group();
  const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.18*s,.34*s,2.7*s,10,5),trunkMat);trunk.position.y=1.35*s;trunk.castShadow=true;trunk.receiveShadow=true;g.add(trunk);
- for(let k=0;k<3;k++){const branch=new THREE.Mesh(new THREE.CylinderGeometry(.045*s,.10*s,.9*s,7),trunkMat);branch.position.set((k-1)*.23*s,2.15*s,.12*s);branch.rotation.z=(k-1)*-.55;branch.castShadow=true;g.add(branch)}
- const clusters=[[-.55,3.05,0,.92],[.48,3.15,.12,1.02],[0,3.75,-.12,.95],[.02,2.85,.62,.82]];
- for(const [cx,cy,cz,r] of clusters){const crown=new THREE.Mesh(canopyGeo,leafMat);crown.position.set(cx*s,cy*s,cz*s);crown.scale.set(r*s,r*.82*s,r*s);crown.receiveShadow=true;g.add(crown)}
+ for(let k=0;k<5;k++){
+  const side=k-2;
+  const branch=new THREE.Mesh(new THREE.CylinderGeometry(.035*s,.095*s,.88*s,7),trunkMat);
+  branch.position.set(side*.19*s,2.05*s,(k%2===0?.2:-.18)*s);
+  branch.rotation.z=side*.28;branch.rotation.x=(k%2===0?-.22:.22);
+  branch.castShadow=true;g.add(branch);
+ }
+ // Copas sobrepostas em alturas diferentes criam uma silhueta mais cheia e irregular.
+ const clusters=[[-.62,3.02,0,.88],[.52,3.12,.12,.98],[0,3.78,-.12,.94],[-.12,2.82,.62,.78],[.72,3.55,-.48,.72],[-.78,3.52,-.42,.76],[.08,3.22,-.72,.74]];
+ for(let ci=0;ci<clusters.length;ci++){
+  const [cx,cy,cz,r]=clusters[ci];
+  const crown=new THREE.Mesh(canopyGeo,leafMat);
+  crown.position.set(cx*s,cy*s,cz*s);
+  const irregular=ci%2===0?1.08:.94;
+  crown.scale.set(r*s*irregular,r*.82*s,r*s*(2-irregular));
+  crown.rotation.y=ci*.73;crown.receiveShadow=true;g.add(crown);
+ }
  g.position.set(x,terrainHeight(x,z),z);g.userData.windPhase=Math.random()*Math.PI*2;g.userData.windStrength=.012+Math.random()*.012;scene.add(g);trees.push(g)
 }
 for(let i=0;i<115;i++){let x=(Math.random()-.5)*220,z=(Math.random()-.5)*220;if(Math.hypot(x,z)>13&&!(x<-8&&x>-49&&z<-1&&z>-39))tree(x,z,.65+Math.random()*.8)}
