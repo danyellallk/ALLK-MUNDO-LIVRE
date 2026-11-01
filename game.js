@@ -7,9 +7,9 @@ const skyDome=new THREE.Mesh(
  new THREE.SphereGeometry(400,32,20),
  new THREE.ShaderMaterial({
   uniforms:{},
-  vertexShader:`varying float vSkyHeight;
-   void main(){vSkyHeight=normalize(position).y;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
-  fragmentShader:`varying float vSkyHeight;
+  vertexShader:`varying float vSkyHeight;varying vec3 vSkyDirection;
+   void main(){vSkyDirection=normalize(position);vSkyHeight=vSkyDirection.y;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+  fragmentShader:`varying float vSkyHeight;varying vec3 vSkyDirection;
    void main(){
     float h=smoothstep(-.18,.82,vSkyHeight);
     vec3 horizon=vec3(.78,.85,.86);
@@ -17,6 +17,12 @@ const skyDome=new THREE.Mesh(
     vec3 color=mix(horizon,zenith,h);
     float warm=1.0-smoothstep(-.12,.22,vSkyHeight);
     color=mix(color,vec3(.86,.78,.65),warm*.13);
+    vec3 sunDirection=normalize(vec3(-.48,.74,.37));
+    float sunDot=max(dot(vSkyDirection,sunDirection),0.0);
+    float halo=pow(sunDot,12.0);
+    float glow=pow(sunDot, 90.0);
+    color=mix(color,vec3(1.0,.82,.58),halo*.16);
+    color+=vec3(1.0,.77,.48)*glow*.28;
     gl_FragColor=vec4(color,1.0);
    }`,
   side:THREE.BackSide,depthWrite:false,depthTest:false
