@@ -979,7 +979,7 @@ if(!insideCabin){
  if(Math.abs(newLX)>=3.72||newLZ<=-2.72||Math.abs(newLX)>=3.72){
   allowMove=false;
  }else if(newLZ>2.72){
-  if(cabinOpen&&crossedDoorOut){insideCabin=false}
+  if(crossedDoorOut){insideCabin=false}
   else allowMove=false;
  }
 }
