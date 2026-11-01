@@ -657,6 +657,28 @@ for(const side of [-1,1]){
 // Mantém o personagem humano procedural detalhado; remove o modelo Soldier com aparência robótica.
 let realisticAvatarLoaded=false,playerMixer=null,playerActions={},activePlayerAction=null;
 
+
+/* Moradores humanos da cidade histórica */
+const townsfolk=[];
+function makeTownsperson(x,z,coatColor,hatColor,phase=0){
+ const g=new THREE.Group(),coat=mat(coatColor),pants=mat(0x34312b),skin=mat(0xc18c69),hat=mat(hatColor),boots=mat(0x29221c);
+ const part=(geo,ma,px,py,pz,sx=1,sy=1,sz=1)=>{const m=new THREE.Mesh(geo,ma);m.position.set(px,py,pz);m.scale.set(sx,sy,sz);g.add(m)};
+ part(new THREE.CapsuleGeometry(.23,.48,4,8),coat,0,1.25,0,1,.95,.75);
+ part(new THREE.SphereGeometry(.18,12,10),skin,0,1.82,.015,.95,1.08,.9);
+ part(new THREE.CylinderGeometry(.2,.22,.1,12),hat,0,2.02,0,1.5,1,1.2);
+ part(new THREE.CylinderGeometry(.13,.15,.2,12),hat,0,2.14,0);
+ for(const side of [-1,1]){
+  part(new THREE.CapsuleGeometry(.09,.42,3,7),coat,side*.28,1.28,0);
+  part(new THREE.CapsuleGeometry(.105,.46,3,7),pants,side*.115,.55,0);
+  part(new THREE.BoxGeometry(.22,.13,.36),boots,side*.115,.12,.06);
+ }
+ g.position.set(x,0,z);scene.add(g);townsfolk.push({group:g,x,z,phase,speed:.22+phase*.025});
+}
+makeTownsperson(-20,8,0x76513a,0x30271e,0);
+makeTownsperson(-13,10,0x4e5b43,0x493729,1);
+makeTownsperson(3,9,0x6d4938,0x29231e,2);
+makeTownsperson(-22,-8,0x555b68,0x473323,3);
+
 player.position.set(0,0,0);player.visible=true;player.scale.setScalar(1);player.traverse(o=>{o.visible=true;if(o.isMesh){o.frustumCulled=false;o.renderOrder=2}});scene.add(player);
 let yaw=0,pitch=-.12,firstPerson=false,velocityY=0,grounded=true,wood=0;const fires=[];let berries=0,hunger=100,storedWood=0,storedBerries=0;
 const keys={};addEventListener('keydown',e=>keys[e.key.toLowerCase()]=true);addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
@@ -896,5 +918,5 @@ const moving=distanceMoved>.002;
 const runLean=running&&moving&&!jumpPose?-.055:0;
 player.rotation.x=runLean;
 player.rotation.z=moving?Math.sin(walkPhase*.5)*(running?.035:.018)*moveAmount:0;velocityY-=20*dt;player.position.y+=velocityY*dt;if(player.position.y<=0){player.position.y=0;if(velocityY<0)velocityY=0;grounded=true}const target=new THREE.Vector3(player.position.x,player.position.y+(firstPerson?1.65:1.25),player.position.z);if(firstPerson){camera.position.copy(target);camera.rotation.set(pitch,yaw,0,'YXZ')}else{camera.position.set(target.x+Math.sin(yaw)*5.8,target.y+1.15+pitch*2,target.z+Math.cos(yaw)*5.8);camera.lookAt(target)}}
-let last=performance.now();function animate(now){requestAnimationFrame(animate);if(playerMixer)playerMixer.update(Math.min((now-last)/1000,.04));const t=nearestTree(),b=nearestBush();collect.disabled=!t;collect.textContent=t?'COLETAR MADEIRA (+3)':'APROXIME-SE DE UMA ÁRVORE';gather.disabled=!b;gather.textContent=b?'COLETAR FRUTAS (+3)':'PROCURE ARBUSTOS';eat.disabled=berries<1||hunger>95;craft.disabled=wood<8;craft.style.opacity=wood<8?'.55':'1';const dt=Math.min((now-last)/1000,.04);last=now;update(dt);renderer.render(scene,camera)}requestAnimationFrame(animate);
+let last=performance.now();function animate(now){requestAnimationFrame(animate);const townTime=now*.001;for(const n of townsfolk){n.group.position.x=n.x+Math.sin(townTime*n.speed+n.phase)*.7;n.group.position.z=n.z+Math.cos(townTime*n.speed+n.phase)*.45;n.group.rotation.y=Math.sin(townTime*n.speed+n.phase)*.35;}if(playerMixer)playerMixer.update(Math.min((now-last)/1000,.04));const t=nearestTree(),b=nearestBush();collect.disabled=!t;collect.textContent=t?'COLETAR MADEIRA (+3)':'APROXIME-SE DE UMA ÁRVORE';gather.disabled=!b;gather.textContent=b?'COLETAR FRUTAS (+3)':'PROCURE ARBUSTOS';eat.disabled=berries<1||hunger>95;craft.disabled=wood<8;craft.style.opacity=wood<8?'.55':'1';const dt=Math.min((now-last)/1000,.04);last=now;update(dt);renderer.render(scene,camera)}requestAnimationFrame(animate);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});document.querySelector('#loading').style.display='none';
