@@ -1,5 +1,7 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
-const scene=new THREE.Scene();scene.background=new THREE.Color(0x9db9c2);scene.fog=new THREE.Fog(0xb9ad8e,105,285);
+const scene=new THREE.Scene();
+// Lista criada no início para evitar acesso antes da inicialização.
+const townsfolk=[];scene.background=new THREE.Color(0x9db9c2);scene.fog=new THREE.Fog(0xb9ad8e,105,285);
 const camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,.1,420);
 const renderer=new THREE.WebGLRenderer({antialias:false,powerPreference:'low-power'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.35));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;document.body.appendChild(renderer.domElement);
 const hemi=new THREE.HemisphereLight(0xdce8df,0x596044,1.9);scene.add(hemi);const sun=new THREE.DirectionalLight(0xffe0ad,2.25);sun.position.set(-45,70,35);scene.add(sun);
@@ -702,7 +704,7 @@ let realisticAvatarLoaded=false,playerMixer=null,playerActions={},activePlayerAc
 
 
 /* Moradores humanos da cidade histórica */
-const townsfolk=[];
+
 function makeTownsperson(x,z,coatColor,hatColor,phase=0,stationary=false){
  const g=new THREE.Group(),coat=mat(coatColor),pants=mat(0x34312b),skin=mat(0xc18c69),hat=mat(hatColor),boots=mat(0x29221c);
  const part=(geo,ma,px,py,pz,sx=1,sy=1,sz=1)=>{const m=new THREE.Mesh(geo,ma);m.position.set(px,py,pz);m.scale.set(sx,sy,sz);g.add(m)};
