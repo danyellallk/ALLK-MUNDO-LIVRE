@@ -46,7 +46,37 @@ function makeGroundDetail(){
 }
 const groundDetail=makeGroundDetail();groundDetail.repeat.set(9,9);
 const groundMaterial=new THREE.MeshStandardMaterial({map:grassTexture,bumpMap:groundDetail,bumpScale:.19,color:0xe9f1d9,roughness:1});
-const ground=new THREE.Mesh(new THREE.PlaneGeometry(360,360),groundMaterial);ground.rotation.x=-Math.PI/2;ground.position.y=-.12;scene.add(ground);
+// Relevo real em malha 3D. A altura é calculada uma única vez e guardada em cache.
+const TERRAIN_SIZE=360,TERRAIN_SEGMENTS=180,TERRAIN_STEP=TERRAIN_SIZE/TERRAIN_SEGMENTS;
+const TERRAIN_HALF=TERRAIN_SIZE*.5,TERRAIN_ROW=TERRAIN_SEGMENTS+1;
+const terrainHeights=new Float32Array(TERRAIN_ROW*TERRAIN_ROW);
+function rawTerrainHeight(x,z){
+ const edge=THREE.MathUtils.smoothstep(Math.hypot(x,z),48,82);
+ const peaks=[[-102,-88,25,26,35],[-60,-125,18,24,28],[8,-132,23,30,34],[88,-105,27,32,30],[130,-35,20,27,34],[-128,30,23,30,35],[-88,112,20,34,30],[5,132,19,32,30],[105,100,25,34,30]];
+ let h=0;
+ for(const [cx,cz,amp,wx,wz] of peaks){const dx=(x-cx)/wx,dz=(z-cz)/wz;h+=amp*Math.exp(-(dx*dx+dz*dz));}
+ const rolling=(Math.sin(x*.045+z*.021)+Math.cos(z*.052-x*.018))*.8;
+ const ridges=2.2*Math.max(0,Math.sin(x*.035+z*.018))*Math.exp(-Math.pow((z-x*.22)/95,2));
+ return Math.max(0,(h+rolling+ridges)*edge);
+}
+const terrainGeometry=new THREE.PlaneGeometry(TERRAIN_SIZE,TERRAIN_SIZE,TERRAIN_SEGMENTS,TERRAIN_SEGMENTS);
+const terrainPositions=terrainGeometry.attributes.position,terrainColors=new Float32Array(terrainPositions.count*3);
+const terrainLow=new THREE.Color(0xffffff),terrainHigh=new THREE.Color(0x8c826f),terrainTint=new THREE.Color();
+for(let i=0;i<terrainPositions.count;i++){
+ const x=terrainPositions.getX(i),z=-terrainPositions.getY(i),h=rawTerrainHeight(x,z);
+ terrainHeights[i]=h;terrainPositions.setZ(i,h);
+ terrainTint.copy(terrainLow).lerp(terrainHigh,THREE.MathUtils.smoothstep(h,5,25));
+ terrainColors[i*3]=terrainTint.r;terrainColors[i*3+1]=terrainTint.g;terrainColors[i*3+2]=terrainTint.b;
+}
+terrainGeometry.setAttribute('color',new THREE.Float32BufferAttribute(terrainColors,3));terrainGeometry.computeVertexNormals();
+function terrainHeight(x,z){
+ const gx=THREE.MathUtils.clamp((x+TERRAIN_HALF)/TERRAIN_STEP,0,TERRAIN_SEGMENTS),gy=THREE.MathUtils.clamp((TERRAIN_HALF-z)/TERRAIN_STEP,0,TERRAIN_SEGMENTS);
+ const x0=Math.floor(gx),y0=Math.floor(gy),x1=Math.min(TERRAIN_SEGMENTS,x0+1),y1=Math.min(TERRAIN_SEGMENTS,y0+1),tx=gx-x0,ty=gy-y0;
+ const a=terrainHeights[y0*TERRAIN_ROW+x0],b=terrainHeights[y0*TERRAIN_ROW+x1],c=terrainHeights[y1*TERRAIN_ROW+x0],d=terrainHeights[y1*TERRAIN_ROW+x1];
+ return THREE.MathUtils.lerp(THREE.MathUtils.lerp(a,b,tx),THREE.MathUtils.lerp(c,d,tx),ty);
+}
+groundMaterial.vertexColors=true;
+const ground=new THREE.Mesh(terrainGeometry,groundMaterial);ground.rotation.x=-Math.PI/2;ground.position.y=-.12;scene.add(ground);
 // Montanhas de fundo com silhueta irregular e camadas rochosas; cenário distante, fora da área de colisão.
 function hill(x,z,sx,sy,sz,color){
  const geo=new THREE.SphereGeometry(1,18,12),p=geo.attributes.position;
@@ -57,9 +87,9 @@ function hill(x,z,sx,sy,sz,color){
  }
  geo.computeVertexNormals();
  const m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color,roughness:1,flatShading:true}));
- m.position.set(x,sy*.35,z);m.scale.set(sx,sy,sz);scene.add(m);
+ m.position.set(x,terrainHeight(x,z)+sy*.35,z);m.scale.set(sx,sy,sz);scene.add(m);
  const foot=new THREE.Mesh(new THREE.SphereGeometry(1,12,8),new THREE.MeshStandardMaterial({color:0x526f4a,roughness:1}));
- foot.position.set(x,sy*.13,z);foot.scale.set(sx*1.12,sy*.43,sz*1.12);scene.add(foot);
+ foot.position.set(x,terrainHeight(x,z)+sy*.13,z);foot.scale.set(sx*1.12,sy*.43,sz*1.12);scene.add(foot);
 }
 for(let i=0;i<22;i++){const a=i/22*Math.PI*2;hill(Math.cos(a)*145,Math.sin(a)*145,24+Math.random()*20,24+Math.random()*28,25+Math.random()*20,i%2?0x65865a:0x78946b)}
 hill(-58,18,22,18,30,0x71945e);hill(58,-42,28,22,25,0x6b8c59);hill(32,75,24,18,24,0x789767);
@@ -113,7 +143,7 @@ function tree(x,z,s=1){
  for(let k=0;k<3;k++){const branch=new THREE.Mesh(new THREE.CylinderGeometry(.045*s,.10*s,.9*s,7),trunkMat);branch.position.set((k-1)*.23*s,2.15*s,.12*s);branch.rotation.z=(k-1)*-.55;g.add(branch)}
  const clusters=[[-.55,3.05,0,.92],[.48,3.15,.12,1.02],[0,3.75,-.12,.95],[.02,2.85,.62,.82]];
  for(const [cx,cy,cz,r] of clusters){const crown=new THREE.Mesh(canopyGeo,leafMat);crown.position.set(cx*s,cy*s,cz*s);crown.scale.set(r*s,r*.82*s,r*s);g.add(crown)}
- g.position.set(x,0,z);g.userData.windPhase=Math.random()*Math.PI*2;g.userData.windStrength=.012+Math.random()*.012;scene.add(g);trees.push(g)
+ g.position.set(x,terrainHeight(x,z),z);g.userData.windPhase=Math.random()*Math.PI*2;g.userData.windStrength=.012+Math.random()*.012;scene.add(g);trees.push(g)
 }
 for(let i=0;i<115;i++){let x=(Math.random()-.5)*220,z=(Math.random()-.5)*220;if(Math.hypot(x,z)>13&&!(x<-8&&x>-49&&z<-1&&z>-39))tree(x,z,.65+Math.random()*.8)}
 // Grama 3D: milhares de folhas finas em pequenos tufos, desenhadas em uma única chamada por instância.
@@ -136,7 +166,7 @@ for(let i=0;i<115;i++){let x=(Math.random()-.5)*220,z=(Math.random()-.5)*220;if(
   const pathZone=Math.abs(x-7)<3.8&&z>-61&&z<17;
   const sandZone=lakeDist<18.8;
   if(lakeDist<16.2||pathZone||sandZone)continue;
-  dummy.position.set(x,.015,z);
+  dummy.position.set(x,terrainHeight(x,z)+.015,z);
   dummy.rotation.set(0,Math.random()*Math.PI*2,0);
   const scale=.55+Math.random()*1.05;
   dummy.scale.set(scale,.65+Math.random()*.8,scale);
@@ -150,7 +180,7 @@ for(let i=0;i<115;i++){let x=(Math.random()-.5)*220,z=(Math.random()-.5)*220;if(
 const rocks=[];
 for(let i=0;i<38;i++){
  const rock=new THREE.Mesh(new THREE.DodecahedronGeometry(.7+Math.random()*.8,0),mat(0x858b88));
- rock.position.set((Math.random()-.5)*190,.35,(Math.random()-.5)*190);
+ const rx=(Math.random()-.5)*190,rz=(Math.random()-.5)*190;rock.position.set(rx,terrainHeight(rx,rz)+.35,rz);
  rock.scale.y=.65;rock.rotation.set(Math.random()*.3,Math.random()*Math.PI,Math.random()*.3);
  rock.userData={vx:0,vz:0,radius:.72+rock.scale.x*.45};
  scene.add(rock);rocks.push(rock);
@@ -158,7 +188,7 @@ for(let i=0;i<38;i++){
 
 // Arbustos de frutas silvestres
 const berryBushes=[];
-for(let i=0;i<16;i++){const bush=new THREE.Group();const green=mat(0x356d35),red=mat(0xc93636);const leaves=new THREE.Mesh(new THREE.SphereGeometry(1.05,8,7),green);leaves.scale.set(1.2,.7,.9);leaves.position.y=.8;bush.add(leaves);for(let k=0;k<5;k++){const fruit=new THREE.Mesh(new THREE.SphereGeometry(.13,7,6),red);fruit.position.set(Math.cos(k*1.25)*.7,1+Math.sin(k*1.25)*.25,Math.sin(k*1.25)*.65);bush.add(fruit)}bush.position.set((Math.random()-.5)*90,0,(Math.random()-.5)*90);bush.userData.windPhase=Math.random()*Math.PI*2;scene.add(bush);berryBushes.push(bush)}
+for(let i=0;i<16;i++){const bush=new THREE.Group();const green=mat(0x356d35),red=mat(0xc93636);const leaves=new THREE.Mesh(new THREE.SphereGeometry(1.05,8,7),green);leaves.scale.set(1.2,.7,.9);leaves.position.y=.8;bush.add(leaves);for(let k=0;k<5;k++){const fruit=new THREE.Mesh(new THREE.SphereGeometry(.13,7,6),red);fruit.position.set(Math.cos(k*1.25)*.7,1+Math.sin(k*1.25)*.25,Math.sin(k*1.25)*.65);bush.add(fruit)}const bx=(Math.random()-.5)*90,bz=(Math.random()-.5)*90;bush.position.set(bx,terrainHeight(bx,bz),bz);bush.userData.windPhase=Math.random()*Math.PI*2;scene.add(bush);berryBushes.push(bush)}
 // Animais simples que passeiam pelo vale
 const animals=[];
 function makeAnimal(kind,x,z){
@@ -414,7 +444,7 @@ function makeAnimal(kind,x,z){
  const tail=new THREE.Group();tail.position.set(0,1.17,-.84);g.add(tail);
  const tailMesh=new THREE.Mesh(new THREE.CylinderGeometry(.018,.035,.38,10),isCow?coat:dark);tailMesh.position.y=-.17;tailMesh.rotation.x=-.55;tail.add(tailMesh);const tailTuft=oval(tail,isCow?dark:coat,0,-.36,-.015,isCow?.075:.065,.12,.075);
  g.scale.setScalar(isCow?.92:isLamb?.68:isSheep?.82:.84);
- g.position.set(x,0,z);scene.add(g);
+ g.position.set(x,terrainHeight(x,z),z);scene.add(g);
  animals.push({group:g,kind,legs,knees,tail,ears,neck,head,torso,tailTuft,phase:Math.random()*6,gaitPhase:Math.random()*6,lastX:x,lastZ:z,speed:.45+Math.random()*.35,homeX:x,homeZ:z,wanderX:kind==='lamb'?1.8+Math.random()*1.2:3.5+Math.random()*3.5,wanderZ:kind==='lamb'?1.5+Math.random()*1.2:2.5+Math.random()*3.5,turnPhase:Math.random()*6.28,friendlyUntil:0});
 }
 for(let i=0;i<5;i++)makeAnimal(i<3?'deer':'cow',(Math.random()-.5)*85+35,(Math.random()-.5)*85+25);
@@ -826,7 +856,7 @@ draftHorse.position.set(-2.5,0,21.5);draftHorse.rotation.y=Math.PI;scene.add(dra
 let ridingHorse=false;
 const mountButton=document.querySelector('#mountHorse')||document.createElement('button');mountButton.id='mountHorse';mountButton.textContent='MONTAR CAVALO';if(!mountButton.parentNode)document.querySelector('#actions').prepend(mountButton);
 mountButton.onclick=()=>{if(ridingHorse){ridingHorse=false;player.position.y=0;draftHorse.position.set(player.position.x-Math.sin(yaw)*1.8,0,player.position.z-Math.cos(yaw)*1.8);mountButton.textContent='MONTAR CAVALO';}else if(Math.hypot(player.position.x-draftHorse.position.x,player.position.z-draftHorse.position.z)<4){ridingHorse=true;mountButton.textContent='DESCER DO CAVALO';}};
-player.position.set(0,0,0);player.visible=true;player.scale.setScalar(1);player.traverse(o=>{o.visible=true;if(o.isMesh){o.frustumCulled=false;o.renderOrder=2}});scene.add(player);
+player.position.set(0,terrainHeight(0,0),0);player.visible=true;player.scale.setScalar(1);player.traverse(o=>{o.visible=true;if(o.isMesh){o.frustumCulled=false;o.renderOrder=2}});scene.add(player);
 let yaw=0,pitch=-.12,firstPerson=false,velocityY=0,grounded=true,wood=0;const fires=[];let berries=0,hunger=100,storedWood=0,storedBerries=0;
 const keys={};addEventListener('keydown',e=>keys[e.key.toLowerCase()]=true);addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
 const joystick=document.querySelector('#joystick'),stick=document.querySelector('#stick');let joyX=0,joyY=0,joyPointer=null;joystick.style.zIndex='8';joystick.style.touchAction='none';
@@ -837,9 +867,9 @@ let lookPointer=null,lastX=0,lastY=0;renderer.domElement.addEventListener('point
 renderer.domElement.addEventListener('pointermove',e=>{if(e.pointerId!==lookPointer)return;yaw-=(e.clientX-lastX)*.005;pitch=THREE.MathUtils.clamp(pitch+(e.clientY-lastY)*.003,-.7,.45);lastX=e.clientX;lastY=e.clientY});renderer.domElement.addEventListener('pointerup',()=>lookPointer=null);
 function nearestTree(){let best=null,bestD=3.8;for(const t of trees){if(!t.visible)continue;const d=Math.hypot(t.position.x-player.position.x,t.position.z-player.position.z);if(d<bestD){best=t;bestD=d}}return best}
 const interact=document.querySelector('#interact');interact.onclick=()=>{
-if(insideCabin){insideCabin=false;player.position.set(12,0,-8.2);interact.textContent='ABRIR CABANA';return}
+if(insideCabin){insideCabin=false;player.position.set(12,terrainHeight(12,-8.2),-8.2);interact.textContent='ABRIR CABANA';return}
 if(!cabinOpen){cabinOpen=true;doorPivot.rotation.y=-1.35;interact.textContent='ENTRAR NA CABANA';return}
-insideCabin=true;player.position.set(12,0,-11);interact.textContent='SAIR DA CABANA';
+insideCabin=true;player.position.set(12,terrainHeight(12,-11),-11);interact.textContent='SAIR DA CABANA';
 };
 const storeButton=document.querySelector('#storeChest'),takeButton=document.querySelector('#takeChest');
 storeButton.onclick=()=>{storedWood+=wood;storedBerries+=berries;wood=0;berries=0;updateInventory()};
@@ -861,7 +891,7 @@ function saveProgress(){
 }
 function loadProgress(){
  try{const raw=localStorage.getItem('allk_mundo_livre_save');if(!raw){loadButton.textContent='SEM SAVE';setTimeout(()=>loadButton.textContent='📂 CARREGAR',1400);return}
- const d=JSON.parse(raw);player.position.set(THREE.MathUtils.clamp(Number(d.x)||0,-165,165),0,THREE.MathUtils.clamp(Number(d.z)||0,-165,165));yaw=Number(d.yaw)||0;pitch=Number(d.pitch)||0;wood=Math.max(0,Number(d.wood)||0);berries=Math.max(0,Number(d.berries)||0);hunger=THREE.MathUtils.clamp(Number(d.hunger)||100,0,100);storedWood=Math.max(0,Number(d.storedWood)||0);storedBerries=Math.max(0,Number(d.storedBerries)||0);insideCabin=false;ridingHorse=false;updateInventory();loadButton.textContent='CARREGADO!';setTimeout(()=>loadButton.textContent='📂 CARREGAR',1400)
+ const d=JSON.parse(raw);const savedX=THREE.MathUtils.clamp(Number(d.x)||0,-165,165),savedZ=THREE.MathUtils.clamp(Number(d.z)||0,-165,165);player.position.set(savedX,terrainHeight(savedX,savedZ),savedZ);yaw=Number(d.yaw)||0;pitch=Number(d.pitch)||0;wood=Math.max(0,Number(d.wood)||0);berries=Math.max(0,Number(d.berries)||0);hunger=THREE.MathUtils.clamp(Number(d.hunger)||100,0,100);storedWood=Math.max(0,Number(d.storedWood)||0);storedBerries=Math.max(0,Number(d.storedBerries)||0);insideCabin=false;ridingHorse=false;updateInventory();loadButton.textContent='CARREGADO!';setTimeout(()=>loadButton.textContent='📂 CARREGAR',1400)
  }catch(e){loadButton.textContent='SAVE INVÁLIDO'}
 }
 saveButton.onclick=saveProgress;loadButton.onclick=loadProgress;
@@ -990,7 +1020,7 @@ function update(dt){
    rock.userData.vx+=nx*2.8*dt;rock.userData.vz+=nz*2.8*dt;
    player.position.x-=nx*(minDist-dist)*.35;player.position.z-=nz*(minDist-dist)*.35;
   }
-  rock.position.x+=rock.userData.vx*dt;rock.position.z+=rock.userData.vz*dt;
+  rock.position.x+=rock.userData.vx*dt;rock.position.z+=rock.userData.vz*dt;rock.position.y=terrainHeight(rock.position.x,rock.position.z)+.35;
   const drag=Math.exp(-2.7*dt);rock.userData.vx*=drag;rock.userData.vz*=drag;
   rock.rotation.z+=rock.userData.vx*dt*.35;rock.rotation.x-=rock.userData.vz*dt*.35;
  }
@@ -1018,7 +1048,7 @@ function update(dt){
  }
  const travel=Math.hypot(a.group.position.x-oldX,a.group.position.z-oldZ);
  a.gaitPhase+=travel*4.2;
- Math.hypot(a.group.position.x-oldX,a.group.position.z-oldZ);a.gaitPhase+=travel*4.2;const moving=travel>0.0005;const gait=a.fleeing?1:(moving?1:.12);const wander=a.fleeing?1:(Math.sin(a.phase*.22+a.turnPhase)>.82?.28:1);a.group.rotation.y=Math.atan2(Math.cos(a.phase)*a.wanderX,-Math.sin(a.phase*.7)*a.wanderZ);for(let j=0;j<a.legs.length;j++){const front=j%2===0?1:-1;const side=j<2?1:-1;const stride=Math.sin(a.gaitPhase+front*Math.PI*.5+(side<0?Math.PI:0))*gait*wander;a.legs[j].rotation.x=stride*.42;if(a.knees){a.knees[j].rotation.x=Math.max(0,-stride)*.46;a.knees[j].rotation.z=Math.sin(a.gaitPhase+front*Math.PI*.5+(side<0?Math.PI:0))*.018}}if(a.tail){a.tail.rotation.x=Math.sin(a.phase*2.2)*.24;a.tail.rotation.z=Math.sin(a.phase*1.35+1.2)*.18}if(a.tailTuft)a.tailTuft.rotation.z=Math.sin(a.phase*2.2+.6)*.12;if(a.torso){a.torso.scale.y=(a.kind==='cow'?.385:.325)*(1+Math.sin(a.phase*1.8)*.009);a.torso.position.y=1.015+Math.sin(a.phase*1.8)*.007}if(a.ears){a.ears[0].rotation.z=Math.sin(a.phase*1.7)*.08-.12;a.ears[1].rotation.z=-Math.sin(a.phase*1.5+1)*.08+.12}const graze=Math.pow(Math.max(0,Math.sin(a.phase*.32)),8);if(a.neck){a.neck.rotation.x=-.32+Math.sin(a.phase*1.4)*.065+graze*.32;a.neck.rotation.z=Math.sin(a.phase*.9)*.075}if(a.head){a.head.rotation.x=Math.sin(a.phase*1.4+.5)*.09-graze*.22;a.head.rotation.y=Math.sin(a.phase*.8)*.055;a.head.rotation.z=Math.sin(a.phase*1.1+.7)*.085}if(a.ears){a.ears[0].rotation.x=Math.sin(a.phase*2.1)*.16;a.ears[0].rotation.z=-.32+Math.sin(a.phase*1.7)*.12;a.ears[1].rotation.x=Math.sin(a.phase*1.8+1)*.16;a.ears[1].rotation.z=.32-Math.sin(a.phase*1.5+.8)*.12}if(a.kind==='sheep'||a.kind==='lamb'){const nibble=Math.pow(Math.max(0,Math.sin(a.phase*.42+1.1)),10);a.head.rotation.x+=nibble*.28;a.neck.rotation.x+=nibble*.22;a.ears[0].rotation.z+=Math.sin(a.phase*2.4)*.10;a.ears[1].rotation.z+=Math.sin(a.phase*2.1+1)*.10;a.tail.rotation.x=Math.sin(a.phase*3.1)*.32;a.tail.rotation.z=Math.sin(a.phase*2.3)*.22;const playerDist=Math.hypot(a.group.position.x-player.position.x,a.group.position.z-player.position.z);if(playerDist<4){a.head.rotation.y+=Math.sin(a.phase*5)*.16;a.ears[0].rotation.z-=.12;a.ears[1].rotation.z+=.12;}}a.group.position.y=.085;if(a.realisticModel){a.realisticModel.position.y=a.modelBaseY+Math.abs(Math.sin(a.gaitPhase*1.8))*.018}}const forward=(keys.w||keys.arrowup?1:0)-(keys.s||keys.arrowdown?1:0)-joyY,side=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joyX,s=Math.sin(yaw),c=Math.cos(yaw);const oldX=player.position.x,oldZ=player.position.z;
+ Math.hypot(a.group.position.x-oldX,a.group.position.z-oldZ);a.gaitPhase+=travel*4.2;const moving=travel>0.0005;const gait=a.fleeing?1:(moving?1:.12);const wander=a.fleeing?1:(Math.sin(a.phase*.22+a.turnPhase)>.82?.28:1);a.group.rotation.y=Math.atan2(Math.cos(a.phase)*a.wanderX,-Math.sin(a.phase*.7)*a.wanderZ);for(let j=0;j<a.legs.length;j++){const front=j%2===0?1:-1;const side=j<2?1:-1;const stride=Math.sin(a.gaitPhase+front*Math.PI*.5+(side<0?Math.PI:0))*gait*wander;a.legs[j].rotation.x=stride*.42;if(a.knees){a.knees[j].rotation.x=Math.max(0,-stride)*.46;a.knees[j].rotation.z=Math.sin(a.gaitPhase+front*Math.PI*.5+(side<0?Math.PI:0))*.018}}if(a.tail){a.tail.rotation.x=Math.sin(a.phase*2.2)*.24;a.tail.rotation.z=Math.sin(a.phase*1.35+1.2)*.18}if(a.tailTuft)a.tailTuft.rotation.z=Math.sin(a.phase*2.2+.6)*.12;if(a.torso){a.torso.scale.y=(a.kind==='cow'?.385:.325)*(1+Math.sin(a.phase*1.8)*.009);a.torso.position.y=1.015+Math.sin(a.phase*1.8)*.007}if(a.ears){a.ears[0].rotation.z=Math.sin(a.phase*1.7)*.08-.12;a.ears[1].rotation.z=-Math.sin(a.phase*1.5+1)*.08+.12}const graze=Math.pow(Math.max(0,Math.sin(a.phase*.32)),8);if(a.neck){a.neck.rotation.x=-.32+Math.sin(a.phase*1.4)*.065+graze*.32;a.neck.rotation.z=Math.sin(a.phase*.9)*.075}if(a.head){a.head.rotation.x=Math.sin(a.phase*1.4+.5)*.09-graze*.22;a.head.rotation.y=Math.sin(a.phase*.8)*.055;a.head.rotation.z=Math.sin(a.phase*1.1+.7)*.085}if(a.ears){a.ears[0].rotation.x=Math.sin(a.phase*2.1)*.16;a.ears[0].rotation.z=-.32+Math.sin(a.phase*1.7)*.12;a.ears[1].rotation.x=Math.sin(a.phase*1.8+1)*.16;a.ears[1].rotation.z=.32-Math.sin(a.phase*1.5+.8)*.12}if(a.kind==='sheep'||a.kind==='lamb'){const nibble=Math.pow(Math.max(0,Math.sin(a.phase*.42+1.1)),10);a.head.rotation.x+=nibble*.28;a.neck.rotation.x+=nibble*.22;a.ears[0].rotation.z+=Math.sin(a.phase*2.4)*.10;a.ears[1].rotation.z+=Math.sin(a.phase*2.1+1)*.10;a.tail.rotation.x=Math.sin(a.phase*3.1)*.32;a.tail.rotation.z=Math.sin(a.phase*2.3)*.22;const playerDist=Math.hypot(a.group.position.x-player.position.x,a.group.position.z-player.position.z);if(playerDist<4){a.head.rotation.y+=Math.sin(a.phase*5)*.16;a.ears[0].rotation.z-=.12;a.ears[1].rotation.z+=.12;}}a.group.position.y=terrainHeight(a.group.position.x,a.group.position.z)+.085;if(a.realisticModel){a.realisticModel.position.y=a.modelBaseY+Math.abs(Math.sin(a.gaitPhase*1.8))*.018}}const forward=(keys.w||keys.arrowup?1:0)-(keys.s||keys.arrowdown?1:0)-joyY,side=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joyX,s=Math.sin(yaw),c=Math.cos(yaw);const oldX=player.position.x,oldZ=player.position.z;
 // Aceleração gradual e velocidade máxima com corrida.
 const inputX=side*c-forward*s,inputZ=side*s-forward*c;
 const inputLen=Math.hypot(inputX,inputZ)||1;
@@ -1121,6 +1151,8 @@ if(!insideCabin){
   else allowMove=false;
  }
 }
+const slopeRun=Math.hypot(nextX-oldX,nextZ-oldZ),slopeRise=Math.abs(terrainHeight(nextX,nextZ)-terrainHeight(oldX,oldZ));
+if(!insideCabin&&slopeRun>.0001&&slopeRise>slopeRun*1.05+.18){allowMove=false;horizontalVX*=.12;horizontalVZ*=.12;}
 if(allowMove){player.position.x=nextX;player.position.z=nextZ}else{horizontalVX*=.12;horizontalVZ*=.12}
 player.position.x=THREE.MathUtils.clamp(player.position.x,-165,165);player.position.z=THREE.MathUtils.clamp(player.position.z,-165,165);const distanceMoved=Math.hypot(player.position.x-oldX,player.position.z-oldZ);
 if(inWater){horizontalVX*=.985;horizontalVZ*=.985;}
@@ -1139,7 +1171,7 @@ if(Math.abs(forward)+Math.abs(side)>.08)player.rotation.y=Math.atan2(-s,-c);
 const moving=distanceMoved>.002;
 const runLean=running&&moving&&!jumpPose?-.055:0;
 player.rotation.x=runLean;
-player.rotation.z=moving?Math.sin(walkPhase*.5)*(running?.035:.018)*moveAmount:0;velocityY-=20*dt;player.position.y+=velocityY*dt;if(player.position.y<=0){player.position.y=0;if(velocityY<0)velocityY=0;grounded=true}if(ridingHorse){player.position.y=.92;draftHorse.visible=true;draftHorse.position.set(player.position.x,0,player.position.z);draftHorse.rotation.y=yaw+Math.PI;player.rotation.y=yaw;}else{player.position.y=Math.max(0,player.position.y);}
+player.rotation.z=moving?Math.sin(walkPhase*.5)*(running?.035:.018)*moveAmount:0;const floorY=terrainHeight(player.position.x,player.position.z);velocityY-=20*dt;player.position.y+=velocityY*dt;if(player.position.y<=floorY){player.position.y=floorY;if(velocityY<0)velocityY=0;grounded=true}else{grounded=false}if(ridingHorse){player.position.y=floorY+.92;draftHorse.visible=true;draftHorse.position.set(player.position.x,floorY,player.position.z);draftHorse.rotation.y=yaw+Math.PI;player.rotation.y=yaw;}else{player.position.y=Math.max(floorY,player.position.y);}
 const horseNear=Math.hypot(player.position.x-draftHorse.position.x,player.position.z-draftHorse.position.z)<4;mountButton.disabled=!ridingHorse&&!horseNear;mountButton.style.opacity=mountButton.disabled?'.5':'1';
 const target=new THREE.Vector3(player.position.x,player.position.y+(firstPerson?1.65:1.25),player.position.z);if(firstPerson){camera.position.copy(target);camera.rotation.set(pitch,yaw,0,'YXZ')}else{camera.position.set(target.x+Math.sin(yaw)*5.8,target.y+1.15+pitch*2,target.z+Math.cos(yaw)*5.8);camera.lookAt(target)}}
 let last=performance.now();function animate(now){requestAnimationFrame(animate);const townTime=now*.001;for(const n of townsfolk){if(n.stationary)continue;n.group.position.x=n.x+Math.sin(townTime*n.speed+n.phase)*.7;n.group.position.z=n.z+Math.cos(townTime*n.speed+n.phase)*.45;n.group.rotation.y=Math.sin(townTime*n.speed+n.phase)*.35;}if(playerMixer)playerMixer.update(Math.min((now-last)/1000,.04));nearbyClerk=null;let clerkDistance=3.1;for(const n of townsfolk){if(!n.stationary)continue;const d=Math.hypot(player.position.x-n.group.position.x,player.position.z-n.group.position.z);if(d<clerkDistance){clerkDistance=d;nearbyClerk={shop:n.x>-5?'store':'saloon'};}}talkButton.style.display=nearbyClerk?'block':'none';nearbyAnimal=null;let animalDistance=3.2;for(const a of animals){const d=Math.hypot(player.position.x-a.group.position.x,player.position.z-a.group.position.z);if(d<animalDistance){animalDistance=d;nearbyAnimal=a;}}feedButton.style.display=nearbyAnimal?'block':'none';feedButton.disabled=!nearbyAnimal||berries<1;feedButton.style.opacity=feedButton.disabled?'.55':'1';const t=nearestTree(),b=nearestBush();collect.disabled=!t;collect.textContent=t?'COLETAR MADEIRA (+3)':'APROXIME-SE DE UMA ÁRVORE';gather.disabled=!b;gather.textContent=b?'COLETAR FRUTAS (+3)':'PROCURE ARBUSTOS';eat.disabled=berries<1||hunger>95;craft.disabled=wood<8;craft.style.opacity=wood<8?'.55':'1';const dt=Math.min((now-last)/1000,.04);last=now;update(dt);renderer.render(scene,camera)}requestAnimationFrame(animate);
