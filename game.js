@@ -165,10 +165,10 @@ const lakeShore=new THREE.Mesh(new THREE.RingGeometry(14.9,15.65,64),new THREE.M
 lakeShore.rotation.x=-Math.PI/2;lakeShore.position.set(-28,.045,-20);lakeShore.renderOrder=3;scene.add(lakeShore);
  // Pequeno rio sinuoso descendo das colinas até o lago. A malha acompanha o relevo existente.
  const riverCurve=new THREE.CatmullRomCurve3([
-  new THREE.Vector3(-66,0,34),new THREE.Vector3(-51,0,24),
-  new THREE.Vector3(-38,0,14),new THREE.Vector3(-25,0,6),
-  new THREE.Vector3(-15,0,-5),new THREE.Vector3(-18,0,-17),
-  new THREE.Vector3(-27,0,-20)
+  new THREE.Vector3(-12,0,22),new THREE.Vector3(-7,0,14),
+  new THREE.Vector3(-5,0,6),new THREE.Vector3(-9,0,-2),
+  new THREE.Vector3(-17,0,-10),new THREE.Vector3(-25,0,-17),
+  new THREE.Vector3(-28,0,-20)
  ]);
  function makeRiverRibbon(innerWidth,outerWidth,material,yOffset){
   const segments=190,positions=[],indices=[];
@@ -187,12 +187,13 @@ lakeShore.rotation.x=-Math.PI/2;lakeShore.position.set(-28,.045,-20);lakeShore.r
   geo.setIndex(indices);geo.computeVertexNormals();
   const mesh=new THREE.Mesh(geo,material);mesh.receiveShadow=true;mesh.renderOrder=1;scene.add(mesh);return mesh;
  }
- const riverBankMaterial=new THREE.MeshStandardMaterial({color:0xc8b486,roughness:1,side:THREE.DoubleSide});
- const riverWaterMaterial=new THREE.MeshStandardMaterial({map:waterTexture,color:0xbde9e9,roughness:.16,metalness:.02,transparent:true,opacity:.98,depthWrite:false,side:THREE.DoubleSide});
- makeRiverRibbon(2.25,3.8,riverBankMaterial,.12);
- makeRiverRibbon(-2.25,-3.8,riverBankMaterial,.12);
- const river=makeRiverRibbon(-2.1,2.1,riverWaterMaterial,.2);
- river.renderOrder=2;
+ const riverBankMaterial=new THREE.MeshBasicMaterial({color:0xcbb486,side:THREE.DoubleSide});
+ const riverWaterMaterial=new THREE.MeshBasicMaterial({color:0x35b8d0,side:THREE.DoubleSide});
+ // Faixas elevadas levemente para evitar que o terreno cubra a água por sobreposição.
+ makeRiverRibbon(2.5,4.1,riverBankMaterial,.48);
+ makeRiverRibbon(-2.5,-4.1,riverBankMaterial,.48);
+ const river=makeRiverRibbon(-2.35,2.35,riverWaterMaterial,.62);
+ river.renderOrder=4;
 
 const lakeWaveMaterial=new THREE.MeshBasicMaterial({color:0xc8f4ff,transparent:true,opacity:.22,side:THREE.DoubleSide,depthWrite:false});
 const lakeWaves=[];
