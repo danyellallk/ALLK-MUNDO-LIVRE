@@ -129,6 +129,26 @@ for (const side of [-1,1]) {
 makeMesh(head,new THREE.CylinderGeometry(.19,.2,.12,16),hatMat,[0,.34,0]);
 makeMesh(head,new THREE.CylinderGeometry(.31,.31,.035,20),hatMat,[0,.27,0]);
 makeMesh(head,new THREE.BoxGeometry(.18,.035,.018),detailMat,[0,.3,-.195]);
+// Detalhes de época: cabelo, costeletas, barba curta e lenço no pescoço.
+const hairMat = new THREE.MeshStandardMaterial({color:0x241b16, roughness:1});
+const beardMat = new THREE.MeshStandardMaterial({color:0x34251d, roughness:1});
+makeMesh(head,new THREE.SphereGeometry(.205,14,10),hairMat,[0,.205,.015],[1,.48,1]);
+for (const side of [-1,1]) {
+  makeMesh(head,new THREE.BoxGeometry(.055,.17,.075),hairMat,[side*.19,.005,.015]);
+  makeMesh(head,new THREE.CapsuleGeometry(.045,.095,4,8),beardMat,[side*.105,-.105,-.145]);
+}
+makeMesh(head,new THREE.ConeGeometry(.115,.16,12),beardMat,[0,-.17,-.12],[1,.75,.7]);
+const scarfMat = new THREE.MeshStandardMaterial({color:0x873c2d, roughness:1});
+makeMesh(torso,new THREE.CylinderGeometry(.125,.14,.105,12),scarfMat,[0,.64,0]);
+makeMesh(torso,new THREE.BoxGeometry(.09,.23,.035),scarfMat,[0,.48,-.205]);
+// Botões do colete e costuras simples.
+for (let i=0;i<4;i++) makeMesh(torso,new THREE.SphereGeometry(.018,8,6),detailMat,[0,.39-i*.12,-.229]);
+const beltMat = new THREE.MeshStandardMaterial({color:0x211912, roughness:1});
+makeMesh(torso,new THREE.BoxGeometry(.48,.075,.34),beltMat,[0,-.12,0]);
+makeMesh(torso,new THREE.BoxGeometry(.085,.085,.025),detailMat,[.08,-.12,-.18]);
+// Bolsa lateral de couro presa ao cinto.
+makeMesh(torso,new THREE.BoxGeometry(.14,.18,.11),leather,[.24,-.08,.015]);
+makeMesh(torso,new THREE.BoxGeometry(.15,.035,.12),vest,[.24,.015,.015]);
 
 const legs=[];
 for (const side of [-1,1]) {
@@ -178,8 +198,9 @@ humanLoader.load(
         }
       }
     });
+    human.visible = false;
     player.add(human);
-    fallbackAvatar.visible = false;
+    fallbackAvatar.visible = true;
     if (gltf.animations && gltf.animations.length) {
       humanMixer = new THREE.AnimationMixer(human);
       const walkClip = gltf.animations.find((clip) => /walk/i.test(clip.name)) || gltf.animations[0];
