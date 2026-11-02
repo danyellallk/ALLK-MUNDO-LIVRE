@@ -914,6 +914,8 @@ scene.add(player);
 // O avatar procedural fica como reserva caso a conexão falhe.
 let humanMixer = null;
 let humanWalkAction = null;
+let humanRunAction = null;
+let activeHumanAction = null;
 const humanLoader = new GLTFLoader();
 humanLoader.load(
   'https://grab3d.com/dl/man-base-character-rigged/man-base-character-rigged.glb',
@@ -942,10 +944,14 @@ humanLoader.load(
       humanMixer = new THREE.AnimationMixer(human);
       const walkClip = gltf.animations.find((clip) => /walk/i.test(clip.name)) || gltf.animations[0];
       humanWalkAction = humanMixer.clipAction(walkClip);
+      const runClip = gltf.animations.find((clip) => /run|sprint/i.test(clip.name));
+      if (runClip) humanRunAction = humanMixer.clipAction(runClip);
+      activeHumanAction = humanWalkAction;
       humanWalkAction.play();
       humanWalkAction.paused = true;
       humanWalkAction.time = 0;
-      console.info('Animação preparada:', walkClip.name);
+      if (humanRunAction) { humanRunAction.play(); humanRunAction.paused = true; humanRunAction.time = 0; }
+      console.info('Animações preparadas:', walkClip.name, runClip?.name || 'sem animação de corrida');
     }
     console.info('Modelo humano 3D carregado:', gltf.animations.length, 'animações. Fonte CC0 Innerscene/MakeHuman.');
   },
@@ -956,6 +962,15 @@ humanLoader.load(
 const move = { x: 0, y: 0 };
 let yaw = 0, pitch = .22, lookId = null, lastX = 0, lastY = 0;
 const joy = document.querySelector('#joystick'), knob = document.querySelector('#knob');
+const sprintButton = document.querySelector('#sprint');
+let sprintHeld = false;
+function setSprint(value){sprintHeld=value; if(sprintButton)sprintButton.classList.toggle('active',value);}
+if(sprintButton){
+  sprintButton.addEventListener('pointerdown',e=>{unlockFootstepAudio();setSprint(true);sprintButton.setPointerCapture(e.pointerId);e.preventDefault();});
+  sprintButton.addEventListener('pointerup',()=>setSprint(false));
+  sprintButton.addEventListener('pointercancel',()=>setSprint(false));
+  sprintButton.addEventListener('lostpointercapture',()=>setSprint(false));
+}
 
 // Passos procedurais: áudio leve de terra/cascalho, sem arquivos externos.
 let footstepAudio=null, footstepNoise=null, footstepClock=0;
@@ -1044,7 +1059,6 @@ function frame() {
       frameTimeTotal=0;frameSamples=0;
     }
   }
-  if (humanMixer && humanWalkAction && !humanWalkAction.paused) humanMixer.update(dt);
   // Controles corrigidos: joystick para cima = avançar; direita = mover à direita.
   let forward = -move.y;
   let side = move.x;
@@ -1054,8 +1068,18 @@ function frame() {
   if (keys.d || keys.arrowright) side += 1;
   const len = Math.hypot(forward, side);
   const walking = len > 0.08;
+  const running = walking && (sprintHeld || keys.shift);
   let actuallyMoving=false;
-  if (humanWalkAction) humanWalkAction.paused = !walking;
+  const desiredHumanAction = running && humanRunAction ? humanRunAction : humanWalkAction;
+  if (desiredHumanAction && desiredHumanAction !== activeHumanAction) {
+    if (activeHumanAction) { activeHumanAction.paused = true; activeHumanAction.time = 0; }
+    desiredHumanAction.reset(); desiredHumanAction.paused = !walking; desiredHumanAction.play();
+    activeHumanAction = desiredHumanAction;
+  }
+  if (humanWalkAction) humanWalkAction.paused = !walking || (running && !!humanRunAction);
+  if (humanRunAction) humanRunAction.paused = !walking || !running;
+  if (humanMixer) humanMixer.timeScale = running ? 1.12 : 1;
+
   if (walking) {
     const magnitude = Math.max(1, len);
     forward /= magnitude;
@@ -1064,8 +1088,8 @@ function frame() {
     const dx = -Math.sin(yaw) * forward + Math.cos(yaw) * side;
     const dz = -Math.cos(yaw) * forward - Math.sin(yaw) * side;
     const next = resolve(
-      player.position.x + dx * 5.2 * dt,
-      player.position.z + dz * 5.2 * dt
+      player.position.x + dx * (running ? 8.4 : 5.2) * dt,
+      player.position.z + dz * (running ? 8.4 : 5.2) * dt
     );
     actuallyMoving = Math.hypot(next.x-player.position.x,next.z-player.position.z) > .005;
     player.position.x = next.x;
@@ -1075,7 +1099,7 @@ function frame() {
   }
   if(actuallyMoving){
     // O som dispara a cada meia passada da mesma fase usada para animar as pernas.
-    gaitPhase += dt * 8.5;
+    gaitPhase += dt * (running ? 13.2 : 8.5);
     const stepIndex = Math.floor(gaitPhase / Math.PI);
     if(stepIndex > previousStepIndex){ playFootstep(); previousStepIndex = stepIndex; }
   } else {
@@ -1083,14 +1107,14 @@ function frame() {
     previousStepIndex = 0;
   }
   const walkTime = gaitPhase;
-  const stride = walking ? Math.sin(walkTime) : 0;
+  const stride = walking ? Math.sin(walkTime) * (running ? 1.22 : 1) : 0;
   for (let i=0;i<2;i++) {
-    legs[i].hip.rotation.x = stride * .48 * (i===0?1:-1);
-    legs[i].knee.rotation.x = walking ? Math.max(0,Math.sin(walkTime+(i===0?0:Math.PI)))*.55 : 0;
-    arms[i].shoulder.rotation.x = -stride * .34 * (i===0?1:-1);
+    legs[i].hip.rotation.x = stride * (running ? .68 : .48) * (i===0?1:-1);
+    legs[i].knee.rotation.x = walking ? Math.max(0,Math.sin(walkTime+(i===0?0:Math.PI)))*(running ? .82 : .55) : 0;
+    arms[i].shoulder.rotation.x = -stride * (running ? .52 : .34) * (i===0?1:-1);
     arms[i].elbow.rotation.x = -.12 + Math.max(0,stride*(i===0?1:-1))*.18;
   }
-  torso.position.y = 1.42 + (walking ? Math.abs(Math.sin(walkTime*2))*.025 : Math.sin(clock.elapsedTime*1.7)*.008);
+  torso.position.y = 1.42 + (walking ? Math.abs(Math.sin(walkTime*2))*(running ? .045 : .025) : Math.sin(clock.elapsedTime*1.7)*.008);
   player.position.y=heightAt(player.position.x,player.position.z);
   const target=new THREE.Vector3(player.position.x,player.position.y+1.35,player.position.z);
   const distance=7.2, horizontal=Math.cos(pitch)*distance;
