@@ -123,10 +123,10 @@ for(let i=0;i<pebbleMeshes.length;i++){
 function makeGrassClump() {
   const positions=[], colors=[], indices=[];
   const palette=[0x526f32,0x66823a,0x789447,0x8da34e,0x9aa85a,0x49652f];
-  for(let blade=0;blade<15;blade++){
+  for(let blade=0;blade<12;blade++){
     const angle=rand()*Math.PI*2;
     const height=.22+rand()*.42;
-    const width=.008+rand()*.006;
+    const width=.0014+rand()*.001;
     const lean=.06+rand()*.16;
     const bx=Math.cos(angle)*(.015+rand()*.12);
     const bz=Math.sin(angle)*(.015+rand()*.12);
@@ -310,10 +310,10 @@ for(let i=0;i<flowerMeshes.length;i++){
 // Camada de vegetação rasteira: folhas curtas e largas para dar continuidade ao solo.
 function makeLowGrassGeo() {
   const positions=[], indices=[];
-  for(let b=0;b<7;b++){
-    const a=b*Math.PI*2/7+rand()*.35;
+  for(let b=0;b<5;b++){
+    const a=b*Math.PI*2/5+rand()*.35;
     const dx=Math.cos(a), dz=Math.sin(a), sx=-dz, sz=dx;
-    const h=.10+rand()*.13, w=.025+rand()*.018;
+    const h=.10+rand()*.13, w=.0015+rand()*.0013;
     const bx=Math.cos(a)*rand()*.055, bz=Math.sin(a)*rand()*.055;
     const first=positions.length/3;
     for(let k=0;k<3;k++){
