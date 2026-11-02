@@ -159,6 +159,64 @@ for (let i = 0; i < 85; i++) {
   obstacles.push({ x, z, radius: size * .85 });
 }
 
+ 
+// Arbustos nativos e moitas baixas para quebrar a repetição das árvores.
+const bushGeo=new THREE.IcosahedronGeometry(1,2);
+const bushMats=[0x405d2d,0x56763a,0x718b43,0x3d572c].map(color=>new THREE.MeshStandardMaterial({color,roughness:1}));
+const bushCount=260;
+const bushMeshes=bushMats.map(mat=>{
+  const mesh=new THREE.InstancedMesh(bushGeo,mat,bushCount*3);
+  mesh.instanceMatrix.setUsage(THREE.StaticDrawUsage);
+  return mesh;
+});
+const bushDummy=new THREE.Object3D();
+let bushIndex=0;
+for(let i=0;i<bushCount;i++){
+  const x=(rand()-.5)*270,z=(rand()-.5)*270;
+  if(Math.hypot(x,z)<15) continue;
+  const y=heightAt(x,z), size=.45+rand()*.8;
+  for(let k=0;k<3;k++){
+    bushDummy.position.set(x+(rand()-.5)*size*.8,y+size*(.28+rand()*.18),z+(rand()-.5)*size*.8);
+    bushDummy.rotation.set(rand()*.3,rand()*Math.PI*2,rand()*.3);
+    bushDummy.scale.set(size*(.55+rand()*.35),size*(.42+rand()*.3),size*(.55+rand()*.35));
+    bushDummy.updateMatrix();
+    bushMeshes[Math.floor(rand()*bushMeshes.length)].setMatrixAt(bushIndex++,bushDummy.matrix);
+  }
+  obstacles.push({x,z,radius:size*.62});
+}
+for(const mesh of bushMeshes){
+  mesh.count=bushIndex;
+  mesh.computeBoundingSphere();
+  mesh.castShadow=true;
+  mesh.receiveShadow=true;
+  scene.add(mesh);
+}
+
+// Pequenas flores silvestres espalhadas em manchas pelo campo.
+const flowerGeo=new THREE.SphereGeometry(.045,6,5);
+const flowerMats=[0xf0e5c4,0xe4c85b,0xd9a2a0].map(color=>new THREE.MeshStandardMaterial({color,roughness:.9}));
+const flowerMeshes=flowerMats.map(mat=>new THREE.InstancedMesh(flowerGeo,mat,520));
+const flowerDummy=new THREE.Object3D();
+const flowerCounts=[0,0,0];
+for(let i=0;i<520;i++){
+  const x=(rand()-.5)*280,z=(rand()-.5)*280;
+  if(Math.hypot(x,z)<11) continue;
+  const patch=Math.sin(x*.12+z*.07)*Math.cos(z*.1-x*.04);
+  if(patch<-.1) continue;
+  const y=heightAt(x,z)+.18;
+  const type=Math.floor(rand()*3), size=.65+rand()*.75;
+  flowerDummy.position.set(x,y,z);
+  flowerDummy.rotation.set(0,rand()*Math.PI*2,0);
+  flowerDummy.scale.setScalar(size);
+  flowerDummy.updateMatrix();
+  flowerMeshes[type].setMatrixAt(flowerCounts[type]++,flowerDummy.matrix);
+}
+for(let i=0;i<flowerMeshes.length;i++){
+  flowerMeshes[i].count=flowerCounts[i];
+  flowerMeshes[i].computeBoundingSphere();
+  scene.add(flowerMeshes[i]);
+}
+
 // Personagem humano aprimorado, com roupa de viajante do século XIX e articulações animáveis.
 const player = new THREE.Group();
 const fallbackAvatar = new THREE.Group();
