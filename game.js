@@ -253,7 +253,7 @@ function frame() {
     player.position.x = next.x;
     player.position.z = next.z;
     // O rosto do personagem aponta para a direção em que está caminhando.
-    player.rotation.y = Math.atan2(-dx, -dz);
+    player.rotation.y = Math.atan2(dx, dz);
   }
   const walkTime = clock.elapsedTime * 8.5;
   const stride = walking ? Math.sin(walkTime) : 0;
