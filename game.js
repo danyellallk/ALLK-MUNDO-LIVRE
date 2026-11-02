@@ -7,7 +7,8 @@ scene.fog = new THREE.Fog(0xb7d1dc, 95, 310);
 
 const camera = new THREE.PerspectiveCamera(62, innerWidth / innerHeight, 0.1, 700);
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 1.6));
+// Qualidade alta adaptativa: até 2,25x a densidade nativa, limitada para proteger o Android.
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2.25));
 renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -19,7 +20,7 @@ scene.add(new THREE.HemisphereLight(0xdcecff, 0x66513a, 1.25));
 const sun = new THREE.DirectionalLight(0xffe1b5, 2.1);
 sun.position.set(-65, 100, 45);
 sun.castShadow = true;
-sun.shadow.mapSize.set(1536, 1536);
+sun.shadow.mapSize.set(2048, 2048);
 sun.shadow.camera.left = -95; sun.shadow.camera.right = 95;
 sun.shadow.camera.top = 95; sun.shadow.camera.bottom = -95;
 sun.shadow.camera.far = 260;
@@ -92,6 +93,7 @@ for (let i = 0; i < 85; i++) {
 // Personagem humano aprimorado, com roupa de viajante do século XIX e articulações animáveis.
 const player = new THREE.Group();
 const fallbackAvatar = new THREE.Group();
+fallbackAvatar.visible = false;
 player.add(fallbackAvatar);
 const skin = new THREE.MeshStandardMaterial({ color: 0xa96f4d, roughness: .92 });
 const coat = new THREE.MeshStandardMaterial({ color: 0x514234, roughness: 1 });
@@ -156,10 +158,10 @@ scene.add(player);
 let humanMixer = null;
 const humanLoader = new GLTFLoader();
 humanLoader.load(
-  'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/CesiumMan/glTF-Binary/CesiumMan.glb',
+  'https://grab3d.com/dl/man-base-character-rigged/man-base-character-rigged.glb',
   (gltf) => {
     const human = gltf.scene;
-    human.name = 'ALLK_HUMAN_3D';
+    human.name = 'ALLK_HUMAN_4K_BASE';
     const bounds = new THREE.Box3().setFromObject(human);
     const size = bounds.getSize(new THREE.Vector3());
     const scale = 1.78 / Math.max(size.y, 0.001);
@@ -180,12 +182,14 @@ humanLoader.load(
     fallbackAvatar.visible = false;
     if (gltf.animations && gltf.animations.length) {
       humanMixer = new THREE.AnimationMixer(human);
-      humanMixer.clipAction(gltf.animations[0]).play();
+      const walkClip = gltf.animations.find((clip) => /walk/i.test(clip.name)) || gltf.animations[0];
+      humanMixer.clipAction(walkClip).play();
+      console.info('Animação ativa:', walkClip.name);
     }
     console.info('Modelo humano 3D carregado:', gltf.animations.length, 'animações');
   },
   undefined,
-  (error) => console.warn('Não foi possível carregar o modelo humano 3D; usando personagem reserva.', error)
+  (error) => { fallbackAvatar.visible = true; console.warn('Modelo humano 3D indisponível; usando personagem reserva.', error); }
 );
 
 const move = { x: 0, y: 0 };
