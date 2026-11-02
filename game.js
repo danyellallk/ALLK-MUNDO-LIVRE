@@ -146,10 +146,34 @@ for(let i=0;i<22;i++){
   if(Math.hypot(x,z)<16) continue;
   terrainPits.push({x,z,r:.8+rand()*1.5,d:.12+rand()*.22});
 }
+// Ruído fractal suave inspirado nas técnicas de terreno procedural do projeto
+// THREE.Terrain (MIT). Implementação adaptada para manter o heightAt único do jogo,
+// de modo que chão, objetos e colisões continuem consultando a mesma altura.
+function terrainHash(ix, iz) {
+  const n = Math.sin(ix * 127.1 + iz * 311.7 + 781.23) * 43758.5453;
+  return (n - Math.floor(n)) * 2 - 1;
+}
+function smoothTerrainNoise(x, z) {
+  const ix = Math.floor(x), iz = Math.floor(z);
+  const fx = x - ix, fz = z - iz;
+  const ux = fx * fx * (3 - 2 * fx);
+  const uz = fz * fz * (3 - 2 * fz);
+  const a = terrainHash(ix, iz), b = terrainHash(ix + 1, iz);
+  const c = terrainHash(ix, iz + 1), d = terrainHash(ix + 1, iz + 1);
+  const ab = a + (b - a) * ux;
+  const cd = c + (d - c) * ux;
+  return ab + (cd - ab) * uz;
+}
+function terrainFractal(x, z) {
+  return smoothTerrainNoise(x * .045, z * .045) * .62
+    + smoothTerrainNoise(x * .105 + 17, z * .105 - 9) * .22
+    + smoothTerrainNoise(x * .22 - 31, z * .22 + 23) * .07;
+}
 function heightAt(x, z) {
   const broad = Math.sin(x * .018 + .7) * 3.8 + Math.cos(z * .021 - .4) * 3.2;
   const hills = Math.sin((x + z) * .012) * 2.5 + Math.cos((x - z) * .015) * 1.8;
   const detail = Math.sin(x * .065) * Math.cos(z * .058) * .55;
+  const naturalRelief = terrainFractal(x, z);
   let depressions=0;
   for(const pit of terrainPits){
     const d=Math.hypot(x-pit.x,z-pit.z)/pit.r;
@@ -159,7 +183,7 @@ function heightAt(x, z) {
       depressions+=pit.d*(bowl-.16*rim);
     }
   }
-  return broad + hills + detail - depressions;
+  return broad + hills + detail + naturalRelief - depressions;
 }
 const groundGeo = new THREE.PlaneGeometry(320, 320, 150, 150);
 groundGeo.rotateX(-Math.PI / 2);
