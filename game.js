@@ -53,27 +53,61 @@ const ground = new THREE.Mesh(groundGeo, new THREE.MeshStandardMaterial({ vertex
 ground.receiveShadow = true;
 scene.add(ground);
 
-// Vegetação mais visível, distribuída em tufos instanciados para manter bom desempenho no Android.
-const grassGeo = new THREE.ConeGeometry(.12, 1.05, 4);
-grassGeo.translate(0, .525, 0);
-const grassMat = new THREE.MeshStandardMaterial({color:0x9aaa58, roughness:1, side:THREE.DoubleSide});
-const grassField = new THREE.InstancedMesh(grassGeo, grassMat, 9000);
+// Grama natural: cada tufo é formado por lâminas curvas e finas, com alturas e tons variados.
+function makeGrassClump() {
+  const positions=[], colors=[];
+  const greenPalette=[0x526f32,0x6f8d3d,0x8da64c,0x9eaa55,0x42652f];
+  for(let blade=0;blade<7;blade++){
+    const angle=rand()*Math.PI*2;
+    const height=.32+rand()*.62;
+    const width=.025+rand()*.025;
+    const lean=.08+rand()*.18;
+    const bx=Math.cos(angle)*(rand()*.13), bz=Math.sin(angle)*(rand()*.13);
+    const dx=Math.cos(angle), dz=Math.sin(angle);
+    const sideX=-dz*width, sideZ=dx*width;
+    const bendX=dx*lean, bendZ=dz*lean;
+    const base=[bx,0,bz];
+    const mid=[bx+bendX*.38,height*.56,bz+bendZ*.38];
+    const tip=[bx+bendX,height,bz+bendZ];
+    const v=[
+      base[0]-sideX,base[1],base[2]-sideZ, base[0]+sideX,base[1],base[2]+sideZ,
+      mid[0]-sideX*.58,mid[1],mid[2]-sideZ*.58,
+      mid[0]+sideX*.58,mid[1],mid[2]+sideZ*.58,
+      tip[0],tip[1],tip[2]
+    ];
+    positions.push(...v);
+    const col=new THREE.Color(greenPalette[Math.floor(rand()*greenPalette.length)]);
+    for(let j=0;j<5;j++) colors.push(col.r,col.g,col.b);
+  }
+  const indices=[];
+  for(let i=0;i<7;i++){
+    const n=i*5;
+    indices.push(n,n+1,n+2,n+1,n+3,n+2,n+2,n+3,n+4);
+  }
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+  geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+  geo.setIndex(indices);
+  geo.computeVertexNormals();
+  return geo;
+}
+const grassGeo=makeGrassClump();
+const grassMat=new THREE.MeshStandardMaterial({vertexColors:true,side:THREE.DoubleSide,roughness:1});
+const grassField=new THREE.InstancedMesh(grassGeo,grassMat,7600);
 grassField.instanceMatrix.setUsage(THREE.StaticDrawUsage);
-const grassDummy = new THREE.Object3D();
-const grassColor = new THREE.Color();
-for (let i=0;i<9000;i++) {
-  const gx=(rand()-.5)*292, gz=(rand()-.5)*292;
-  const scale=.9+rand()*1.8;
-  grassDummy.position.set(gx,heightAt(gx,gz)+.09,gz);
-  grassDummy.rotation.set((rand()-.5)*.12,rand()*Math.PI*2,(rand()-.5)*.12);
-  grassDummy.scale.set(scale,scale,scale);
+const grassDummy=new THREE.Object3D();
+for(let i=0;i<7600;i++){
+  const gx=(rand()-.5)*286, gz=(rand()-.5)*286;
+  if(Math.hypot(gx,gz)<9) continue;
+  const scale=.8+rand()*1.25;
+  grassDummy.position.set(gx,heightAt(gx,gz)+.035,gz);
+  grassDummy.rotation.set(0,rand()*Math.PI*2,0);
+  grassDummy.scale.set(scale,.85+rand()*.55,scale);
   grassDummy.updateMatrix();
   grassField.setMatrixAt(i,grassDummy.matrix);
-  grassColor.setHSL(.19+rand()*.075,.38+rand()*.2,.34+rand()*.16);
-  grassField.setColorAt(i,grassColor);
 }
 grassField.computeBoundingSphere();
-grassField.frustumCulled = true;
+grassField.frustumCulled=true;
 scene.add(grassField);
 
 const obstacles = [];
