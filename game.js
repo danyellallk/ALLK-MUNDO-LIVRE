@@ -43,8 +43,10 @@ const c = new THREE.Color();
 for (let i = 0; i < p.count; i++) {
   const x = p.getX(i), z = p.getZ(i), y = heightAt(x, z);
   p.setY(i, y);
-  const shade = .88 + .1 * Math.sin(x * .08 + z * .03) + .04 * Math.cos(z * .12);
-  c.set(0x71834a).multiplyScalar(shade);
+  const patch = Math.sin(x*.11+Math.cos(z*.07))*Math.cos(z*.09-x*.035);
+  const grain = Math.sin(x*1.7+z*.8)*Math.cos(z*1.35-x*.6)*.018;
+  const shade = .82 + .12*patch + grain;
+  c.set(patch>.35 ? 0x849653 : 0x687e43).multiplyScalar(shade);
   colors.push(c.r, c.g, c.b);
 }
 groundGeo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
@@ -98,19 +100,24 @@ function makeGrassClump() {
 }
 const grassGeo=makeGrassClump();
 const grassMat=new THREE.MeshStandardMaterial({vertexColors:true,side:THREE.DoubleSide,roughness:1});
-const grassField=new THREE.InstancedMesh(grassGeo,grassMat,10500);
+const grassField=new THREE.InstancedMesh(grassGeo,grassMat,14500);
 grassField.instanceMatrix.setUsage(THREE.StaticDrawUsage);
 const grassDummy=new THREE.Object3D();
-for(let i=0;i<10500;i++){
+let grassCount=0;
+for(let i=0;i<14500;i++){
   const gx=(rand()-.5)*286, gz=(rand()-.5)*286;
   if(Math.hypot(gx,gz)<9) continue;
-  const scale=.85+rand()*.9;
+  // Manchas de capim: áreas mais cheias alternadas com pequenas clareiras naturais.
+  const patch=(Math.sin(gx*.075+Math.cos(gz*.06))*Math.cos(gz*.082+gx*.025)+1)*.5;
+  if(rand()>.28+patch*.68) continue;
+  const scale=.78+rand()*.82;
   grassDummy.position.set(gx,heightAt(gx,gz)+.025,gz);
-  grassDummy.rotation.set(0,rand()*Math.PI*2,0);
-  grassDummy.scale.set(scale,.9+rand()*.35,scale);
+  grassDummy.rotation.set((rand()-.5)*.08,rand()*Math.PI*2,(rand()-.5)*.08);
+  grassDummy.scale.set(scale,.82+rand()*.42,scale);
   grassDummy.updateMatrix();
-  grassField.setMatrixAt(i,grassDummy.matrix);
+  grassField.setMatrixAt(grassCount++,grassDummy.matrix);
 }
+grassField.count=grassCount;
 grassField.computeBoundingSphere();
 grassField.frustumCulled=true;
 scene.add(grassField);
