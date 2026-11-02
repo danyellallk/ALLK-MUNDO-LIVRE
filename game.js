@@ -156,7 +156,7 @@ for(let i=0;i<190;i++){
   for(let k=0;k<crownParts;k++){
     const angle=rand()*Math.PI*2;
     const ring=k<6;
-    const radius=(ring?.85:.35)*scale;
+    const radius=(ring ? 0.85 : 0.35)*scale;
     const crown=new THREE.Mesh(leafGeo,leafMats[Math.floor(rand()*leafMats.length)]);
     crown.position.set(Math.cos(angle)*radius,(3.55+rand()*1.25)*scale,Math.sin(angle)*radius);
     crown.scale.set((.72+rand()*.48)*scale,(.65+rand()*.5)*scale,(.72+rand()*.48)*scale);
