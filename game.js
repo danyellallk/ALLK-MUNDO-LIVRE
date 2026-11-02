@@ -456,6 +456,65 @@ for(let i=0;i<95;i++){
 }
 fallenBranches.computeBoundingSphere();fallenBranches.receiveShadow=true;scene.add(fallenBranches);
 
+// V45_VISIBLE_GROUND_DETAILS: detalhes maiores e concentrados também perto do ponto inicial.
+// Buracos rasos visíveis: disco de terra escura e borda irregular sobre o relevo.
+const visibleHolePositions=[[-15,-12],[-23,8],[18,-18],[27,13],[-34,-25],[38,-31],[-42,22],[12,35],[49,8],[-8,48],[58,-12],[-55,-8]];
+const holeGeo=new THREE.CircleGeometry(1,20);
+const holeMat=new THREE.MeshStandardMaterial({color:0x34271b,roughness:1,side:THREE.DoubleSide});
+const holeRimGeo=new THREE.TorusGeometry(1,.12,5,20);
+const holeRimMat=new THREE.MeshStandardMaterial({color:0x806747,roughness:1});
+for(const [hx,hz] of visibleHolePositions){
+  if(trailDistance(hx,hz)<7) continue;
+  const radius=1.25+rand()*1.15;
+  const hole=new THREE.Mesh(holeGeo,holeMat);
+  hole.rotation.x=-Math.PI/2;hole.scale.set(radius,radius*.72,1);
+  hole.position.set(hx,heightAt(hx,hz)+.085,hz);scene.add(hole);
+  const rim=new THREE.Mesh(holeRimGeo,holeRimMat);
+  rim.rotation.x=Math.PI/2;rim.scale.set(radius,radius*.72,1);
+  rim.position.set(hx,heightAt(hx,hz)+.11,hz);scene.add(rim);
+}
+// Pedras maiores, com silhueta evidente e parcialmente apoiadas no chão.
+const visibleRockMats=[0x77746b,0x8d8372,0x5f625c].map(color=>new THREE.MeshStandardMaterial({color,roughness:1,flatShading:true}));
+for(let i=0;i<24;i++){
+  const angle=rand()*Math.PI*2,dist=17+rand()*48;
+  const x=Math.cos(angle)*dist,z=Math.sin(angle)*dist;
+  if(trailDistance(x,z)<6) continue;
+  const size=.55+rand()*.95;
+  const rock=new THREE.Mesh(new THREE.IcosahedronGeometry(1,1),visibleRockMats[i%3]);
+  rock.position.set(x,heightAt(x,z)+size*.34,z);
+  rock.scale.set(size*1.25,size*.72,size);
+  rock.rotation.set(rand()*.4,rand()*Math.PI*2,rand()*.4);
+  rock.castShadow=true;rock.receiveShadow=true;scene.add(rock);
+  obstacles.push({x,z,radius:size*.8});
+}
+// Folhas maiores em pequenos grupos próximos ao início, para que sejam fáceis de enxergar.
+const visibleLeafMats=[0x80643a,0xa07a45,0x58643a,0x9a8959].map(color=>new THREE.MeshStandardMaterial({color,roughness:1,side:THREE.DoubleSide}));
+for(let group=0;group<18;group++){
+  const angle=rand()*Math.PI*2,dist=13+rand()*43;
+  const cx=Math.cos(angle)*dist,cz=Math.sin(angle)*dist;
+  if(trailDistance(cx,cz)<7) continue;
+  for(let j=0;j<7;j++){
+    const x=cx+(rand()-.5)*2.8,z=cz+(rand()-.5)*2.8;
+    const leaf=new THREE.Mesh(new THREE.PlaneGeometry(.42+rand()*.34,.18+rand()*.17),visibleLeafMats[Math.floor(rand()*visibleLeafMats.length)]);
+    leaf.rotation.set(-Math.PI/2+(rand()-.5)*.08,rand()*Math.PI*2,(rand()-.5)*.08);
+    leaf.position.set(x,heightAt(x,z)+.10,z);scene.add(leaf);
+  }
+}
+// Pequenas plantas de folhas largas, em touceiras bem definidas.
+const plantMat=new THREE.MeshStandardMaterial({color:0x486b35,roughness:1,side:THREE.DoubleSide});
+for(let group=0;group<22;group++){
+  const angle=rand()*Math.PI*2,dist=16+rand()*52;
+  const x=Math.cos(angle)*dist,z=Math.sin(angle)*dist;
+  if(trailDistance(x,z)<6) continue;
+  for(let leaf=0;leaf<5;leaf++){
+    const a=leaf*Math.PI*2/5+rand()*.25;
+    const blade=new THREE.Mesh(new THREE.ConeGeometry(.18,.9,5),plantMat);
+    blade.position.set(x+Math.cos(a)*.24,heightAt(x,z)+.36,z+Math.sin(a)*.24);
+    blade.rotation.set(Math.cos(a)*.48,a,Math.sin(a)*-.48);
+    blade.scale.set(.72,1,.72);scene.add(blade);
+  }
+}
+
 // Arbustos nativos e moitas baixas para quebrar a repetição das árvores.
 const bushGeo=new THREE.IcosahedronGeometry(1,2);
 const bushMats=[0x405d2d,0x56763a,0x718b43,0x3d572c].map(color=>new THREE.MeshStandardMaterial({color,roughness:1}));
