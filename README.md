@@ -21,3 +21,7 @@ O protagonista usa o modelo humano `Man Base Mesh` do Grab3D, com malha anatômi
 
 ## Qualidade gráfica
 Renderização adaptativa de alta densidade (até 2,25x a densidade de pixels do dispositivo), com sombras em 2048 px. A resolução efetiva e o desempenho dependem da tela, GPU, navegador e memória do aparelho; isso não garante saída nativa 4K em todos os celulares.
+
+## Referências de código aberto
+- O relevo procedural usa uma implementação própria de ruído fractal suave, adaptada ao sistema de altura único do jogo. A técnica foi estudada a partir do projeto [THREE.Terrain](https://github.com/IceCreamYou/THREE.Terrain), distribuído sob licença MIT. Não foi incorporado o pacote inteiro; o código do jogo foi adaptado para preservar a compatibilidade com as colisões e os objetos existentes.
+- Referência visual e técnica adicional: [The Wild Between](https://github.com/anandin/the-wild-between), também MIT. Seus modelos/arquivos de natureza têm licença CC0 conforme os avisos do próprio repositório; nenhum desses arquivos foi importado nesta alteração.
