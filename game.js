@@ -81,6 +81,10 @@ const sunDisc = new THREE.Mesh(
 sunDisc.position.copy(sun.position).normalize().multiplyScalar(360);
 scene.add(sunDisc);
 
+const clamp = THREE.MathUtils.clamp;
+let seed = 78123;
+function rand() { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; }
+
 // Nuvens altas e suaves para dar profundidade ao céu sem pesar no celular.
 const cloudGroup=new THREE.Group();
 const cloudGeometry=new THREE.SphereGeometry(1,10,7);
@@ -105,10 +109,6 @@ for(let i=0;i<11;i++){
   cloudGroup.add(cloud);
 }
 scene.add(cloudGroup);
-
-const clamp = THREE.MathUtils.clamp;
-let seed = 78123;
-function rand() { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; }
 // Pequenas depressões naturais no terreno, com bordas suaves e irregulares.
 const terrainPits=[];
 for(let i=0;i<22;i++){
