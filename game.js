@@ -88,23 +88,62 @@ for (let i = 0; i < 85; i++) {
   obstacles.push({ x, z, radius: size * .85 });
 }
 
-// Protagonista provisório: corpo humanoide modular. Será substituído por modelo humano detalhado.
+// Personagem humano aprimorado, com roupa de viajante do século XIX e articulações animáveis.
 const player = new THREE.Group();
-const skin = new THREE.MeshStandardMaterial({ color: 0xb9825d, roughness: .9 });
-const shirt = new THREE.MeshStandardMaterial({ color: 0x6b4933, roughness: 1 });
-const pants = new THREE.MeshStandardMaterial({ color: 0x343b3b, roughness: 1 });
-const boots = new THREE.MeshStandardMaterial({ color: 0x241d18, roughness: 1 });
-function part(geo, mat, x, y, z, sx=1, sy=1, sz=1) {
-  const m = new THREE.Mesh(geo, mat); m.position.set(x,y,z); m.scale.set(sx,sy,sz); m.castShadow = true; player.add(m); return m;
+const skin = new THREE.MeshStandardMaterial({ color: 0xa96f4d, roughness: .92 });
+const coat = new THREE.MeshStandardMaterial({ color: 0x514234, roughness: 1 });
+const vest = new THREE.MeshStandardMaterial({ color: 0x8a6a45, roughness: .95 });
+const trousers = new THREE.MeshStandardMaterial({ color: 0x343633, roughness: 1 });
+const leather = new THREE.MeshStandardMaterial({ color: 0x30251d, roughness: .95 });
+const hatMat = new THREE.MeshStandardMaterial({ color: 0x30271f, roughness: .9 });
+const detailMat = new THREE.MeshStandardMaterial({ color: 0xc1a16b, metalness: .25, roughness: .65 });
+function makeMesh(parent, geo, mat, pos, scale) {
+  const m = new THREE.Mesh(geo, mat);
+  m.position.set(...pos);
+  if (scale) m.scale.set(...scale);
+  m.castShadow = true; m.receiveShadow = true; parent.add(m);
+  return m;
 }
-part(new THREE.CapsuleGeometry(.34,.55,5,8), shirt, 0,1.15,0,.9,1, .58);
-part(new THREE.SphereGeometry(.23,12,10), skin, 0,1.82,0, .9,1.15,.9);
-part(new THREE.CylinderGeometry(.095,.12,.72,8), pants,-.17,.48,0);
-part(new THREE.CylinderGeometry(.095,.12,.72,8), pants,.17,.48,0);
-part(new THREE.BoxGeometry(.22,.14,.4), boots,-.17,.1,.07);
-part(new THREE.BoxGeometry(.22,.14,.4), boots,.17,.1,.07);
-part(new THREE.CylinderGeometry(.085,.11,.68,8), shirt,-.43,1.18,0);
-part(new THREE.CylinderGeometry(.085,.11,.68,8), shirt,.43,1.18,0);
+const torso = new THREE.Group();
+torso.position.y = 1.05;
+player.add(torso);
+makeMesh(torso,new THREE.CapsuleGeometry(.34,.55,6,12),coat,[0,.22,0],[.92,1,.62]);
+makeMesh(torso,new THREE.BoxGeometry(.42,.55,.035),vest,[0,.22,-.205]);
+makeMesh(torso,new THREE.CylinderGeometry(.115,.13,.16,12),leather,[0,-.17,0]);
+makeMesh(torso,new THREE.BoxGeometry(.09,.12,.035),detailMat,[0,-.17,-.09]);
+const neck = makeMesh(torso,new THREE.CylinderGeometry(.105,.12,.18,12),skin,[0,.67,0]);
+const head = new THREE.Group(); head.position.set(0,.82,0); torso.add(head);
+makeMesh(head,new THREE.SphereGeometry(.235,16,14),skin,[0,.08,0],[.88,1.13,.9]);
+// Nariz, orelhas e olhos dão volume ao rosto sem depender de texturas externas.
+makeMesh(head,new THREE.SphereGeometry(.055,10,8),skin,[0,.06,-.205],[.7,1,.8]);
+for (const side of [-1,1]) {
+  makeMesh(head,new THREE.SphereGeometry(.055,10,8),skin,[side*.205,.08,0],[.55,.9,.7]);
+  makeMesh(head,new THREE.SphereGeometry(.025,8,6),new THREE.MeshStandardMaterial({color:0x28231f}),[side*.085,.12,-.198],[1,1,.5]);
+}
+// Chapéu de aba larga, visual de viajante do período.
+makeMesh(head,new THREE.CylinderGeometry(.19,.2,.12,16),hatMat,[0,.34,0]);
+makeMesh(head,new THREE.CylinderGeometry(.31,.31,.035,20),hatMat,[0,.27,0]);
+makeMesh(head,new THREE.BoxGeometry(.18,.035,.018),detailMat,[0,.3,-.195]);
+
+const legs=[];
+for (const side of [-1,1]) {
+  const hip = new THREE.Group(); hip.position.set(side*.17,-.13,0); torso.add(hip);
+  makeMesh(hip,new THREE.CapsuleGeometry(.105,.48,5,9),trousers,[0,-.31,0],[1,1,.95]);
+  const knee = new THREE.Group(); knee.position.set(0,-.59,0); hip.add(knee);
+  makeMesh(knee,new THREE.CapsuleGeometry(.095,.39,5,9),trousers,[0,-.23,0]);
+  makeMesh(knee,new THREE.CylinderGeometry(.105,.13,.2,10),leather,[0,-.51,-.035]);
+  makeMesh(knee,new THREE.BoxGeometry(.22,.13,.38),leather,[0,-.62,-.09]);
+  legs.push({hip,knee});
+}
+const arms=[];
+for (const side of [-1,1]) {
+  const shoulder=new THREE.Group(); shoulder.position.set(side*.34,.53,0); torso.add(shoulder);
+  makeMesh(shoulder,new THREE.CapsuleGeometry(.105,.34,5,9),coat,[0,-.23,0],[1,1,.95]);
+  const elbow=new THREE.Group(); elbow.position.set(0,-.45,0); shoulder.add(elbow);
+  makeMesh(elbow,new THREE.CapsuleGeometry(.085,.32,5,9),coat,[0,-.19,0]);
+  makeMesh(elbow,new THREE.SphereGeometry(.09,10,8),skin,[0,-.42,-.005]);
+  arms.push({shoulder,elbow});
+}
 player.position.set(0,heightAt(0,0),0);
 scene.add(player);
 
@@ -146,7 +185,8 @@ function frame() {
   if(keys.a||keys.arrowleft)side-=1;
   if(keys.d||keys.arrowright)side+=1;
   const len=Math.hypot(forward,side);
-  if(len>.001){
+  const walking = len > .08;
+  if(walking){
     forward/=Math.max(1,len);side/=Math.max(1,len);
     const dx=Math.sin(yaw)*(-forward)-Math.cos(yaw)*side;
     const dz=Math.cos(yaw)*(-forward)+Math.sin(yaw)*side;
@@ -154,6 +194,15 @@ function frame() {
     player.position.x=next.x;player.position.z=next.z;
     player.rotation.y=Math.atan2(dx,dz);
   }
+  const walkTime = clock.elapsedTime * 8.5;
+  const stride = walking ? Math.sin(walkTime) : 0;
+  for (let i=0;i<2;i++) {
+    legs[i].hip.rotation.x = stride * .48 * (i===0?1:-1);
+    legs[i].knee.rotation.x = walking ? Math.max(0,Math.sin(walkTime+(i===0?0:Math.PI)))*.55 : 0;
+    arms[i].shoulder.rotation.x = -stride * .34 * (i===0?1:-1);
+    arms[i].elbow.rotation.x = -.12 + Math.max(0,stride*(i===0?1:-1))*.18;
+  }
+  torso.position.y = 1.05 + (walking ? Math.abs(Math.sin(walkTime*2))*.025 : Math.sin(clock.elapsedTime*1.7)*.008);
   player.position.y=heightAt(player.position.x,player.position.z);
   const target=new THREE.Vector3(player.position.x,player.position.y+1.35,player.position.z);
   const distance=7.2, horizontal=Math.cos(pitch)*distance;
