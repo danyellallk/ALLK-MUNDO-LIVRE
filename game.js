@@ -125,33 +125,56 @@ for (let i = 0; i < p.count; i++) {
 }
 groundGeo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
 groundGeo.computeVertexNormals();
-// Textura orgânica do solo: grãos, terra exposta, folhas secas e pequenas marcas minerais.
+// Textura de chão mais rica: manchas de terra, húmus, areia, raízes finas e grãos.
 const terrainCanvas=document.createElement('canvas');
 terrainCanvas.width=512;terrainCanvas.height=512;
 const terrainCtx=terrainCanvas.getContext('2d');
 const terrainImage=terrainCtx.createImageData(512,512);
-for(let i=0;i<terrainImage.data.length;i+=4){
-  const n=(rand()-.5)*34;
-  terrainImage.data[i]=218+n;
-  terrainImage.data[i+1]=218+n;
-  terrainImage.data[i+2]=205+n*.8;
-  terrainImage.data[i+3]=255;
+for(let y=0;y<512;y++){
+  for(let x=0;x<512;x++){
+    const i=(y*512+x)*4;
+    const wave=Math.sin(x*.047+Math.sin(y*.031)*2.2)*Math.cos(y*.039-x*.018);
+    const fine=Math.sin(x*.31+y*.17)*Math.cos(y*.27-x*.22);
+    const n=(rand()-.5)*42+wave*15+fine*5;
+    terrainImage.data[i]=157+n;
+    terrainImage.data[i+1]=148+n*.88;
+    terrainImage.data[i+2]=119+n*.72;
+    terrainImage.data[i+3]=255;
+  }
 }
 terrainCtx.putImageData(terrainImage,0,0);
-// Folhas secas pequenas, em formatos alongados e orientações aleatórias.
-for(let i=0;i<460;i++){
-  const x=rand()*512,y=rand()*512,a=rand()*Math.PI*2;
-  terrainCtx.save();terrainCtx.translate(x,y);terrainCtx.rotate(a);
-  terrainCtx.fillStyle=['rgba(104,91,48,.68)','rgba(126,91,48,.62)','rgba(76,91,48,.48)','rgba(151,119,66,.55)'][Math.floor(rand()*4)];
-  terrainCtx.beginPath();terrainCtx.ellipse(0,0,1.2+rand()*3.4,.55+rand()*.9,0,0,Math.PI*2);terrainCtx.fill();
-  terrainCtx.strokeStyle='rgba(67,61,39,.35)';terrainCtx.lineWidth=.45;terrainCtx.beginPath();terrainCtx.moveTo(-2,0);terrainCtx.lineTo(2,0);terrainCtx.stroke();
+// Nuvens irregulares de húmus e terra compactada para quebrar a aparência lisa.
+for(let i=0;i<260;i++){
+  const x=rand()*512,y=rand()*512,rx=5+rand()*25,ry=3+rand()*16;
+  terrainCtx.save();terrainCtx.translate(x,y);terrainCtx.rotate(rand()*Math.PI);
+  terrainCtx.fillStyle=rand()<.58?'rgba(75,65,43,.19)':'rgba(220,194,145,.20)';
+  terrainCtx.beginPath();terrainCtx.ellipse(0,0,rx,ry,0,0,Math.PI*2);terrainCtx.fill();
   terrainCtx.restore();
 }
-// Pontos escuros de húmus e areia, sem padrão geométrico repetitivo.
-for(let i=0;i<900;i++){
-  const x=rand()*512,y=rand()*512,r=.35+rand()*1.5;
-  terrainCtx.fillStyle=rand()<.5?'rgba(72,65,43,.13)':'rgba(238,222,178,.2)';
+// Pequenos grãos minerais e pontos de areia em várias escalas.
+for(let i=0;i<5200;i++){
+  const x=rand()*512,y=rand()*512,r=.25+rand()*1.35;
+  terrainCtx.fillStyle=rand()<.52?'rgba(48,43,31,.27)':'rgba(244,218,166,.28)';
   terrainCtx.beginPath();terrainCtx.arc(x,y,r,0,Math.PI*2);terrainCtx.fill();
+}
+// Fibras de raízes, riscos de erosão e fragmentos orgânicos discretos.
+for(let i=0;i<170;i++){
+  const x=rand()*512,y=rand()*512,a=rand()*Math.PI*2,len=2+rand()*13;
+  terrainCtx.strokeStyle=rand()<.5?'rgba(65,55,37,.24)':'rgba(226,203,157,.24)';
+  terrainCtx.lineWidth=.35+rand()*.65;
+  terrainCtx.beginPath();terrainCtx.moveTo(x,y);
+  terrainCtx.quadraticCurveTo(x+Math.cos(a+1)*len*.45,y+Math.sin(a+1)*len*.45,x+Math.cos(a)*len,y+Math.sin(a)*len);
+  terrainCtx.stroke();
+}
+// Folhas secas pequenas em tons terrosos.
+for(let i=0;i<720;i++){
+  const x=rand()*512,y=rand()*512,a=rand()*Math.PI*2;
+  terrainCtx.save();terrainCtx.translate(x,y);terrainCtx.rotate(a);
+  terrainCtx.fillStyle=['rgba(104,79,43,.72)','rgba(139,101,52,.66)','rgba(76,83,45,.58)','rgba(174,137,76,.62)'][Math.floor(rand()*4)];
+  terrainCtx.beginPath();terrainCtx.ellipse(0,0,1.4+rand()*3.8,.55+rand()*1.05,0,0,Math.PI*2);terrainCtx.fill();
+  terrainCtx.strokeStyle='rgba(67,52,32,.42)';terrainCtx.lineWidth=.45;
+  terrainCtx.beginPath();terrainCtx.moveTo(-2,0);terrainCtx.lineTo(2,0);terrainCtx.stroke();
+  terrainCtx.restore();
 }
 const terrainTexture=new THREE.CanvasTexture(terrainCanvas);
 terrainTexture.wrapS=THREE.RepeatWrapping;terrainTexture.wrapT=THREE.RepeatWrapping;
