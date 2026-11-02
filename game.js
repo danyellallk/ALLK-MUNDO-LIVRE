@@ -8,7 +8,7 @@ scene.fog = new THREE.Fog(0xb7d1dc, 95, 310);
 const camera = new THREE.PerspectiveCamera(62, innerWidth / innerHeight, 0.1, 700);
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
 // Qualidade alta adaptativa: até 2,25x a densidade nativa, limitada para proteger o Android.
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2.25));
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2.0));
 renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -156,6 +156,7 @@ scene.add(player);
 // Modelo humano 3D externo, texturizado, com esqueleto e animação.
 // O avatar procedural fica como reserva caso a conexão falhe.
 let humanMixer = null;
+let humanWalkAction = null;
 const humanLoader = new GLTFLoader();
 humanLoader.load(
   'https://grab3d.com/dl/man-base-character-rigged/man-base-character-rigged.glb',
@@ -183,8 +184,11 @@ humanLoader.load(
     if (gltf.animations && gltf.animations.length) {
       humanMixer = new THREE.AnimationMixer(human);
       const walkClip = gltf.animations.find((clip) => /walk/i.test(clip.name)) || gltf.animations[0];
-      humanMixer.clipAction(walkClip).play();
-      console.info('Animação ativa:', walkClip.name);
+      humanWalkAction = humanMixer.clipAction(walkClip);
+      humanWalkAction.play();
+      humanWalkAction.paused = true;
+      humanWalkAction.time = 0;
+      console.info('Animação preparada:', walkClip.name);
     }
     console.info('Modelo humano 3D carregado:', gltf.animations.length, 'animações');
   },
@@ -224,7 +228,7 @@ const clock = new THREE.Clock();
 function frame() {
   requestAnimationFrame(frame);
   const dt=Math.min(clock.getDelta(),.04);
-  if (humanMixer) humanMixer.update(dt);
+  if (humanMixer && humanWalkAction && !humanWalkAction.paused) humanMixer.update(dt);
   let forward=move.y, side=move.x;
   if(keys.w||keys.arrowup)forward-=1;
   if(keys.s||keys.arrowdown)forward+=1;
@@ -232,6 +236,7 @@ function frame() {
   if(keys.d||keys.arrowright)side+=1;
   const len=Math.hypot(forward,side);
   const walking = len > .08;
+  if (humanWalkAction) humanWalkAction.paused = !walking;
   if(walking){
     forward/=Math.max(1,len);side/=Math.max(1,len);
     const dx=Math.sin(yaw)*(-forward)-Math.cos(yaw)*side;
