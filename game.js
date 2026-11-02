@@ -5,6 +5,46 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xb7d1dc);
 scene.fog = new THREE.Fog(0xb7d1dc, 95, 310);
 
+// Céu atmosférico em gradiente: horizonte quente e azul mais profundo no alto.
+// Uma única malha mantém o custo baixo para celulares.
+scene.background = null;
+const skyDome = new THREE.Mesh(
+  new THREE.SphereGeometry(600, 24, 12),
+  new THREE.ShaderMaterial({
+    side: THREE.BackSide,
+    depthWrite: false,
+    toneMapped: false,
+    vertexShader: `
+      varying vec3 vWorldPosition;
+      void main() {
+        vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+        vWorldPosition = worldPosition.xyz;
+        gl_Position = projectionMatrix * viewMatrix * worldPosition;
+      }
+    `,
+    fragmentShader: `
+      varying vec3 vWorldPosition;
+      void main() {
+        vec3 direction = normalize(vWorldPosition - cameraPosition);
+        float height = clamp(direction.y * 0.5 + 0.5, 0.0, 1.0);
+        vec3 horizon = vec3(0.78, 0.72, 0.59);
+        vec3 middle = vec3(0.48, 0.66, 0.76);
+        vec3 zenith = vec3(0.16, 0.34, 0.49);
+        vec3 sky = mix(horizon, middle, smoothstep(0.02, 0.42, height));
+        sky = mix(sky, zenith, smoothstep(0.38, 1.0, height));
+        vec3 sunDirection = normalize(vec3(-0.48, 0.67, 0.42));
+        float sunGlow = pow(max(dot(direction, sunDirection), 0.0), 18.0);
+        float sunHalo = pow(max(dot(direction, sunDirection), 0.0), 3.0);
+        sky += vec3(0.20, 0.12, 0.055) * sunGlow;
+        sky += vec3(0.075, 0.065, 0.045) * sunHalo;
+        gl_FragColor = vec4(sky, 1.0);
+      }
+    `
+  })
+);
+skyDome.frustumCulled = false;
+scene.add(skyDome);
+
 const camera = new THREE.PerspectiveCamera(62, innerWidth / innerHeight, 0.1, 700);
 const isMobileDevice = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 const renderer = new THREE.WebGLRenderer({ antialias: !isMobileDevice, powerPreference: 'high-performance' });
