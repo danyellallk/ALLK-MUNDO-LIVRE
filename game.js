@@ -27,6 +27,8 @@ sun.shadow.camera.far = 260;
 scene.add(sun);
 
 const clamp = THREE.MathUtils.clamp;
+let seed = 78123;
+function rand() { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; }
 function heightAt(x, z) {
   const broad = Math.sin(x * .018 + .7) * 3.8 + Math.cos(z * .021 - .4) * 3.2;
   const hills = Math.sin((x + z) * .012) * 2.5 + Math.cos((x - z) * .015) * 1.8;
@@ -78,8 +80,6 @@ const trunkGeo = new THREE.CylinderGeometry(.22, .34, 3.5, 8);
 const leafGeo = new THREE.SphereGeometry(1, 10, 8);
 const trunkMat = new THREE.MeshStandardMaterial({ color: 0x68452d, roughness: 1 });
 const leafMats = [0x456b39, 0x527642, 0x3e6037].map(color => new THREE.MeshStandardMaterial({ color, roughness: .96 }));
-let seed = 78123;
-function rand() { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; }
 
 for (let i = 0; i < 190; i++) {
   const x = (rand() - .5) * 270, z = (rand() - .5) * 270;
