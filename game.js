@@ -404,7 +404,7 @@ function addCanopyWind(material){
     shader.uniforms.uCanopyTime=material.userData.canopyWind;
     shader.vertexShader=shader.vertexShader.replace(
       '#include <common>',
-      '#include <common>\\nuniform float uCanopyTime;'
+      '#include <common>\nuniform float uCanopyTime;'
     );
     shader.vertexShader=shader.vertexShader.replace(
       '#include <begin_vertex>',
