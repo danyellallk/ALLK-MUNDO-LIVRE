@@ -134,11 +134,14 @@ function makeGrassClump() {
     const sx=-dz, sz=dx;
     const bendX=dx*lean, bendZ=dz*lean;
     const baseY=0;
+    // Folhas largas e arredondadas: mantêm a altura, mas deixam de terminar em agulhas.
     const levels=[
-      [0, width],
-      [height*.32, width*.92],
-      [height*.68, width*.56],
-      [height, .001]
+      [0, width*.62],
+      [height*.22, width*.92],
+      [height*.48, width*1.08],
+      [height*.76, width*.86],
+      [height*.93, width*.52],
+      [height, width*.28]
     ];
     const first=positions.length/3;
     for(let k=0;k<levels.length;k++){
