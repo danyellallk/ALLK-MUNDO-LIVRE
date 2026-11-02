@@ -51,6 +51,28 @@ const ground = new THREE.Mesh(groundGeo, new THREE.MeshStandardMaterial({ vertex
 ground.receiveShadow = true;
 scene.add(ground);
 
+// Vegetação baixa em instâncias: dá textura ao campo sem criar centenas de objetos separados.
+const grassGeo = new THREE.ConeGeometry(.055, .42, 3);
+grassGeo.translate(0, .21, 0);
+const grassMat = new THREE.MeshStandardMaterial({color:0x71864a, roughness:1});
+const grassField = new THREE.InstancedMesh(grassGeo, grassMat, 1050);
+grassField.instanceMatrix.setUsage(THREE.StaticDrawUsage);
+const grassDummy = new THREE.Object3D();
+const grassColor = new THREE.Color();
+for (let i=0;i<1050;i++) {
+  const gx=(rand()-.5)*285, gz=(rand()-.5)*285;
+  const scale=.55+rand()*1.25;
+  grassDummy.position.set(gx,heightAt(gx,gz)+.015,gz);
+  grassDummy.rotation.set((rand()-.5)*.16,rand()*Math.PI*2,(rand()-.5)*.16);
+  grassDummy.scale.set(scale,scale,scale);
+  grassDummy.updateMatrix();
+  grassField.setMatrixAt(i,grassDummy.matrix);
+  grassColor.setHSL(.20+rand()*.07,.28+rand()*.24,.25+rand()*.13);
+  grassField.setColorAt(i,grassColor);
+}
+grassField.computeBoundingSphere();
+scene.add(grassField);
+
 const obstacles = [];
 const trunkGeo = new THREE.CylinderGeometry(.22, .34, 3.5, 8);
 const leafGeo = new THREE.SphereGeometry(1, 10, 8);
