@@ -285,11 +285,11 @@ for(let i=0;i<190;i++){
   obstacles.push({x,z,radius:.82*scale});
 }
 trunkMesh.count=trunkCount;branchMesh.count=branchCount;
+for(let i=0;i<leafMeshes.length;i++)leafMeshes[i].count=treeCounts[i];
 for(const mesh of [trunkMesh,branchMesh,...leafMeshes]){
   mesh.instanceMatrix.setUsage(THREE.StaticDrawUsage);
   mesh.castShadow=true;mesh.receiveShadow=true;mesh.computeBoundingSphere();scene.add(mesh);
 }
-for(let i=0;i<leafMeshes.length;i++)leafMeshes[i].count=treeCounts[i];
 
 const rockGeo = new THREE.IcosahedronGeometry(1, 1);
 const rockMat = new THREE.MeshStandardMaterial({ color: 0x77766e, roughness: 1, flatShading: true });
