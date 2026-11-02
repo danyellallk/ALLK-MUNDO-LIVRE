@@ -303,6 +303,91 @@ for(let i=0;i<flowerMeshes.length;i++){
   scene.add(flowerMeshes[i]);
 }
 
+// Camada de vegetação rasteira: folhas curtas e largas para dar continuidade ao solo.
+function makeLowGrassGeo() {
+  const positions=[], indices=[];
+  for(let b=0;b<7;b++){
+    const a=b*Math.PI*2/7+rand()*.35;
+    const dx=Math.cos(a), dz=Math.sin(a), sx=-dz, sz=dx;
+    const h=.10+rand()*.13, w=.025+rand()*.018;
+    const bx=Math.cos(a)*rand()*.055, bz=Math.sin(a)*rand()*.055;
+    const first=positions.length/3;
+    for(let k=0;k<3;k++){
+      const t=k/2, bend=t*t*.055;
+      const cx=bx+dx*bend, cz=bz+dz*bend, ww=w*(1-t*.88);
+      positions.push(cx-sx*ww,h*t,cz-sz*ww,cx+sx*ww,h*t,cz+sz*ww);
+    }
+    for(let k=0;k<2;k++){
+      const n=first+k*2;
+      indices.push(n,n+1,n+2,n+1,n+3,n+2);
+    }
+  }
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+  geo.setIndex(indices);geo.computeVertexNormals();
+  return geo;
+}
+const lowGrassGeo=makeLowGrassGeo();
+const lowGrassMats=[0x526d35,0x668044,0x78934d,0x8a9b55].map(color=>new THREE.MeshStandardMaterial({color,side:THREE.DoubleSide,roughness:1}));
+const lowGrassMeshes=lowGrassMats.map(mat=>new THREE.InstancedMesh(lowGrassGeo,mat,2400));
+const lowGrassCounts=[0,0,0,0];
+const lowGrassDummy=new THREE.Object3D();
+for(let i=0;i<2400;i++){
+  const x=(rand()-.5)*286,z=(rand()-.5)*286;
+  if(Math.hypot(x,z)<8) continue;
+  const patch=(Math.sin(x*.09+z*.04)*Math.cos(z*.08-x*.03)+1)*.5;
+  if(rand()>.38+patch*.55) continue;
+  lowGrassDummy.position.set(x,heightAt(x,z)+.035,z);
+  lowGrassDummy.rotation.y=rand()*Math.PI*2;
+  const s=.7+rand()*.8;
+  lowGrassDummy.scale.set(s,.7+rand()*.65,s);
+  lowGrassDummy.updateMatrix();
+  const type=Math.floor(rand()*4);
+  lowGrassMeshes[type].setMatrixAt(lowGrassCounts[type]++,lowGrassDummy.matrix);
+}
+for(let i=0;i<lowGrassMeshes.length;i++){
+  lowGrassMeshes[i].count=lowGrassCounts[i];
+  lowGrassMeshes[i].computeBoundingSphere();
+  scene.add(lowGrassMeshes[i]);
+}
+
+// Flores pequenas rente à terra, em grupos irregulares com folhas verdes.
+const creepingFlowerColors=[0xf2ead7,0xe8d16b,0xd99aa5,0xb9a4d4];
+const petalGeo=new THREE.SphereGeometry(.045,7,5);
+const centerGeo=new THREE.SphereGeometry(.025,7,5);
+const petalMats=creepingFlowerColors.map(color=>new THREE.MeshStandardMaterial({color,roughness:.95}));
+const petalMeshes=petalMats.map(mat=>new THREE.InstancedMesh(petalGeo,mat,1050));
+const centerMesh=new THREE.InstancedMesh(centerGeo,new THREE.MeshStandardMaterial({color:0xe4b94f,roughness:1}),1050);
+const petalCounts=[0,0,0,0];
+const flowerCenter=new THREE.Object3D(), petalDummy=new THREE.Object3D();
+for(let i=0;i<1050;i++){
+  const x=(rand()-.5)*280,z=(rand()-.5)*280;
+  if(Math.hypot(x,z)<10) continue;
+  const patch=Math.sin(x*.105+z*.06)*Math.cos(z*.095-x*.035);
+  if(patch<-.28) continue;
+  const y=heightAt(x,z)+.105, type=Math.floor(rand()*4);
+  const scale=.55+rand()*.8;
+  flowerCenter.position.set(x,y+.018,z);
+  flowerCenter.scale.setScalar(scale);
+  flowerCenter.updateMatrix();centerMesh.setMatrixAt(i,flowerCenter.matrix);
+  for(let p=0;p<5;p++){
+    const a=p*Math.PI*2/5;
+    petalDummy.position.set(x+Math.cos(a)*.055*scale,y,z+Math.sin(a)*.055*scale);
+    petalDummy.rotation.set(.15,0,-Math.cos(a)*.18);
+    petalDummy.scale.set(scale,scale*.72,scale);
+    petalDummy.updateMatrix();
+    petalMeshes[type].setMatrixAt(petalCounts[type]++,petalDummy.matrix);
+  }
+}
+for(let i=0;i<petalMeshes.length;i++){
+  petalMeshes[i].count=petalCounts[i];
+  petalMeshes[i].computeBoundingSphere();
+  scene.add(petalMeshes[i]);
+}
+centerMesh.count=1050;
+centerMesh.computeBoundingSphere();
+scene.add(centerMesh);
+
 // Personagem humano aprimorado, com roupa de viajante do século XIX e articulações animáveis.
 const player = new THREE.Group();
 const fallbackAvatar = new THREE.Group();
