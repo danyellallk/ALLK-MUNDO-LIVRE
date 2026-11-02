@@ -963,7 +963,9 @@ const move = { x: 0, y: 0 };
 let yaw = 0, pitch = .22, lookId = null, lastX = 0, lastY = 0;
 const joy = document.querySelector('#joystick'), knob = document.querySelector('#knob');
 const sprintButton = document.querySelector('#sprint');
+const jumpButton = document.querySelector('#jump');
 const staminaFill = document.querySelector('#stamina-fill');
+let jumpQueued = false, jumpVelocity = 0, jumpHeight = 0;
 let stamina = 100;
 let sprintHeld = false;
 function setSprint(value){sprintHeld=value; if(sprintButton)sprintButton.classList.toggle('active',value);}
@@ -972,6 +974,14 @@ if(sprintButton){
   sprintButton.addEventListener('pointerup',()=>setSprint(false));
   sprintButton.addEventListener('pointercancel',()=>setSprint(false));
   sprintButton.addEventListener('lostpointercapture',()=>setSprint(false));
+}
+function requestJump(){if(jumpHeight<=0.001)jumpQueued=true;}
+if(jumpButton){
+  jumpButton.addEventListener('pointerdown',e=>{unlockFootstepAudio();requestJump();jumpButton.classList.add('active');jumpButton.setPointerCapture(e.pointerId);e.preventDefault();});
+  const releaseJump=()=>jumpButton.classList.remove('active');
+  jumpButton.addEventListener('pointerup',releaseJump);
+  jumpButton.addEventListener('pointercancel',releaseJump);
+  jumpButton.addEventListener('lostpointercapture',releaseJump);
 }
 
 // Passos procedurais: áudio leve de terra/cascalho, sem arquivos externos.
@@ -1024,7 +1034,7 @@ addEventListener('pointerup',e=>{if(e.pointerId===lookId)lookId=null});
 addEventListener('pointercancel',e=>{if(e.pointerId===lookId)lookId=null});
 addEventListener('pointermove',e=>{if(e.pointerId!==lookId)return;yaw-=(e.clientX-lastX)*.0045;pitch=clamp(pitch+(e.clientY-lastY)*.003,-.25,.8);lastX=e.clientX;lastY=e.clientY});
 const keys = {};
-addEventListener('keydown',e=>{unlockFootstepAudio();keys[e.key.toLowerCase()]=true});
+addEventListener('keydown',e=>{unlockFootstepAudio();keys[e.key.toLowerCase()]=true;if(e.code==='Space'){if(!e.repeat)requestJump();e.preventDefault();}});
 addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
 
 function resolve(x,z) {
@@ -1125,7 +1135,13 @@ function frame() {
     arms[i].elbow.rotation.x = -.12 + Math.max(0,stride*(i===0?1:-1))*.18;
   }
   torso.position.y = 1.42 + (actuallyMoving ? Math.abs(Math.sin(walkTime*2))*(running ? .045 : .025) : Math.sin(clock.elapsedTime*1.7)*.008);
-  player.position.y=heightAt(player.position.x,player.position.z);
+  // Salto simples com impulso, gravidade e aterrissagem seguindo o relevo real do terreno.
+  if(jumpQueued && jumpHeight<=0.001){jumpVelocity=7.2;jumpQueued=false;}
+  jumpVelocity-=19.5*dt;
+  jumpHeight=Math.max(0,jumpHeight+jumpVelocity*dt);
+  if(jumpHeight===0)jumpVelocity=0;
+  if(jumpButton)jumpButton.classList.toggle('airborne',jumpHeight>0.04);
+  player.position.y=heightAt(player.position.x,player.position.z)+jumpHeight;
   const target=new THREE.Vector3(player.position.x,player.position.y+1.35,player.position.z);
   const distance=7.2, horizontal=Math.cos(pitch)*distance;
   camera.position.set(target.x+Math.sin(yaw)*horizontal,target.y+Math.sin(pitch)*distance,target.z+Math.cos(yaw)*horizontal);
