@@ -109,6 +109,36 @@ for(let i=0;i<11;i++){
   cloudGroup.add(cloud);
 }
 scene.add(cloudGroup);
+
+// Silhuetas de morros distantes para dar escala e profundidade ao horizonte.
+// Geometria leve em três camadas, sem colisão e fora da área jogável.
+function makeDistantRidge(innerRadius, outerRadius, baseHeight, amplitude, color, phase){
+  const segments=120, positions=[], indices=[];
+  for(let i=0;i<=segments;i++){
+    const a=i/segments*Math.PI*2;
+    const wave=Math.sin(a*3+phase)*.34+Math.sin(a*7-phase*.7)*.22+Math.sin(a*13+phase)*.12;
+    const peak=baseHeight+amplitude*(.5+wave);
+    const x=Math.cos(a), z=Math.sin(a);
+    positions.push(x*innerRadius,peak,z*innerRadius);
+    positions.push(x*outerRadius,0,z*outerRadius);
+    if(i<segments){
+      const n=i*2;
+      indices.push(n,n+1,n+2,n+1,n+3,n+2);
+    }
+  }
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+  geo.setIndex(indices);
+  geo.computeVertexNormals();
+  const mat=new THREE.MeshBasicMaterial({color,side:THREE.DoubleSide,fog:true});
+  const ridge=new THREE.Mesh(geo,mat);
+  ridge.frustumCulled=false;
+  scene.add(ridge);
+}
+makeDistantRidge(188,218,13,11,0x777b69,.4);
+makeDistantRidge(215,246,17,15,0x687567,1.8);
+makeDistantRidge(242,276,20,18,0x596d69,3.1);
+
 // Pequenas depressões naturais no terreno, com bordas suaves e irregulares.
 const terrainPits=[];
 for(let i=0;i<22;i++){
