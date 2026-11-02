@@ -285,12 +285,12 @@ const obstacles = [];
 // Árvores instanciadas: mesma aparência orgânica, com muito menos chamadas de desenho.
 const trunkGeo = new THREE.CylinderGeometry(.18,.34,4.1,9);
 const branchGeo = new THREE.CylinderGeometry(.055,.13,1.65,7);
-const leafGeo = new THREE.IcosahedronGeometry(1,2);
+const leafGeo = new THREE.SphereGeometry(1, 10, 8);
 const trunkMat = new THREE.MeshStandardMaterial({color:0x60432d,roughness:1});
 const branchMat = new THREE.MeshStandardMaterial({color:0x68482e,roughness:1});
 const leafMats=[0x385d32,0x456b39,0x527642,0x607e3c,0x718647].map(color=>new THREE.MeshStandardMaterial({color,roughness:.98}));
 const trunkMesh=new THREE.InstancedMesh(trunkGeo,trunkMat,190);
-const branchMesh=new THREE.InstancedMesh(branchGeo,branchMat,190*4);
+const branchMesh=new THREE.InstancedMesh(branchGeo,branchMat,190*7);
 const leafMeshes=leafMats.map(mat=>new THREE.InstancedMesh(leafGeo,mat,190*8));
 const treeRoot=new THREE.Object3D(), part=new THREE.Object3D(), worldMatrix=new THREE.Matrix4();
 const treeCounts=[0,0,0,0,0];
@@ -311,6 +311,15 @@ for(let i=0;i<190;i++){
     part.position.set(Math.cos(angle)*.55*scale,(2.25+rand()*.75)*scale,Math.sin(angle)*.55*scale);
     part.rotation.set(Math.sin(angle)*.72,angle,Math.cos(angle)*-.72);
     part.scale.setScalar(scale*(.75+rand()*.25));
+    part.updateMatrix();worldMatrix.multiplyMatrices(treeRoot.matrix,part.matrix);
+    branchMesh.setMatrixAt(branchCount++,worldMatrix);
+  }
+  // Raízes superficiais alargadas na base para dar mais peso e aparência natural ao tronco.
+  for(let root=0;root<3;root++){
+    const angle=root*Math.PI*2/3+rand()*.28;
+    part.position.set(Math.cos(angle)*.28*scale,.13*scale,Math.sin(angle)*.28*scale);
+    part.rotation.set(Math.cos(angle)*.92,angle,Math.sin(angle)*-.92);
+    part.scale.set(.62*scale,.62*scale,.62*scale);
     part.updateMatrix();worldMatrix.multiplyMatrices(treeRoot.matrix,part.matrix);
     branchMesh.setMatrixAt(branchCount++,worldMatrix);
   }
