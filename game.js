@@ -142,11 +142,11 @@ for(let i=0;i<pebbleMeshes.length;i++){
 // Campo de capim natural: tufos baixos e cheios, com folhas curvas, largas na base e pontas suaves.
 function makeGrassClump() {
   const positions=[], colors=[], indices=[];
-  const palette=[0x526f32,0x66823a,0x789447,0x8da34e,0x9aa85a,0x49652f];
+  const palette=[0x668b38,0x7fa044,0x91ad50,0xa5b95c,0xb0bd68,0x587a32];
   for(let blade=0;blade<12;blade++){
     const angle=rand()*Math.PI*2;
     const height=.22+rand()*.42;
-    const width=.0014+rand()*.001;
+    const width=.0028+rand()*.0015;
     const lean=.06+rand()*.16;
     const bx=Math.cos(angle)*(.015+rand()*.12);
     const bz=Math.sin(angle)*(.015+rand()*.12);
@@ -188,7 +188,7 @@ function makeGrassClump() {
 }
 const grassGeo=makeGrassClump();
 const grassMat=new THREE.MeshStandardMaterial({vertexColors:true,side:THREE.DoubleSide,roughness:1});
-const grassField=new THREE.InstancedMesh(grassGeo,grassMat,14500);
+const grassField=new THREE.InstancedMesh(grassGeo,grassMat,21000);
 grassField.instanceMatrix.setUsage(THREE.StaticDrawUsage);
 const grassDummy=new THREE.Object3D();
 let grassCount=0;
@@ -204,12 +204,12 @@ function trailDistance(x,z){
   return best;
 }
 const PATH_CLEAR_WIDTH=3.18; // largura do caminho + pequena margem para as folhas do capim
-for(let i=0;i<14500;i++){
+for(let i=0;i<21000;i++){
   const gx=(rand()-.5)*286, gz=(rand()-.5)*286;
   if(Math.hypot(gx,gz)<9 || trailDistance(gx,gz)<PATH_CLEAR_WIDTH) continue;
   // Manchas de capim: áreas mais cheias alternadas com pequenas clareiras naturais.
   const patch=(Math.sin(gx*.075+Math.cos(gz*.06))*Math.cos(gz*.082+gx*.025)+1)*.5;
-  if(rand()>.28+patch*.68) continue;
+  if(rand()>.42+patch*.58) continue;
   const scale=.78+rand()*.82;
   grassDummy.position.set(gx,heightAt(gx,gz)+.025,gz);
   grassDummy.rotation.set((rand()-.5)*.08,rand()*Math.PI*2,(rand()-.5)*.08);
@@ -362,7 +362,7 @@ function makeLowGrassGeo() {
   for(let b=0;b<5;b++){
     const a=b*Math.PI*2/5+rand()*.35;
     const dx=Math.cos(a), dz=Math.sin(a), sx=-dz, sz=dx;
-    const h=.10+rand()*.13, w=.0015+rand()*.0013;
+    const h=.13+rand()*.17, w=.0027+rand()*.0015;
     const bx=Math.cos(a)*rand()*.055, bz=Math.sin(a)*rand()*.055;
     const first=positions.length/3;
     for(let k=0;k<3;k++){
@@ -381,15 +381,15 @@ function makeLowGrassGeo() {
   return geo;
 }
 const lowGrassGeo=makeLowGrassGeo();
-const lowGrassMats=[0x526d35,0x668044,0x78934d,0x8a9b55].map(color=>new THREE.MeshStandardMaterial({color,side:THREE.DoubleSide,roughness:1}));
-const lowGrassMeshes=lowGrassMats.map(mat=>new THREE.InstancedMesh(lowGrassGeo,mat,2400));
+const lowGrassMats=[0x66863d,0x7d9d49,0x91aa53,0xa4b45e].map(color=>new THREE.MeshStandardMaterial({color,side:THREE.DoubleSide,roughness:1}));
+const lowGrassMeshes=lowGrassMats.map(mat=>new THREE.InstancedMesh(lowGrassGeo,mat,4200));
 const lowGrassCounts=[0,0,0,0];
 const lowGrassDummy=new THREE.Object3D();
-for(let i=0;i<2400;i++){
+for(let i=0;i<4200;i++){
   const x=(rand()-.5)*286,z=(rand()-.5)*286;
   if(Math.hypot(x,z)<8 || trailDistance(x,z)<PATH_CLEAR_WIDTH) continue;
   const patch=(Math.sin(x*.09+z*.04)*Math.cos(z*.08-x*.03)+1)*.5;
-  if(rand()>.38+patch*.55) continue;
+  if(rand()>.52+patch*.48) continue;
   lowGrassDummy.position.set(x,heightAt(x,z)+.035,z);
   lowGrassDummy.rotation.y=rand()*Math.PI*2;
   const s=.7+rand()*.8;
