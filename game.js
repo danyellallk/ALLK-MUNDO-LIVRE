@@ -54,17 +54,17 @@ ground.receiveShadow = true;
 scene.add(ground);
 
 // Vegetação mais visível, distribuída em tufos instanciados para manter bom desempenho no Android.
-const grassGeo = new THREE.ConeGeometry(.095, .82, 4);
-grassGeo.translate(0, .41, 0);
-const grassMat = new THREE.MeshStandardMaterial({color:0x9aaa58, roughness:1});
-const grassField = new THREE.InstancedMesh(grassGeo, grassMat, 6200);
+const grassGeo = new THREE.ConeGeometry(.12, 1.05, 4);
+grassGeo.translate(0, .525, 0);
+const grassMat = new THREE.MeshStandardMaterial({color:0x9aaa58, roughness:1, side:THREE.DoubleSide});
+const grassField = new THREE.InstancedMesh(grassGeo, grassMat, 9000);
 grassField.instanceMatrix.setUsage(THREE.StaticDrawUsage);
 const grassDummy = new THREE.Object3D();
 const grassColor = new THREE.Color();
-for (let i=0;i<6200;i++) {
+for (let i=0;i<9000;i++) {
   const gx=(rand()-.5)*292, gz=(rand()-.5)*292;
-  const scale=.72+rand()*1.5;
-  grassDummy.position.set(gx,heightAt(gx,gz)+.025,gz);
+  const scale=.9+rand()*1.8;
+  grassDummy.position.set(gx,heightAt(gx,gz)+.09,gz);
   grassDummy.rotation.set((rand()-.5)*.12,rand()*Math.PI*2,(rand()-.5)*.12);
   grassDummy.scale.set(scale,scale,scale);
   grassDummy.updateMatrix();
@@ -117,6 +117,7 @@ for (let i = 0; i < 85; i++) {
 const player = new THREE.Group();
 const fallbackAvatar = new THREE.Group();
 fallbackAvatar.visible = false;
+fallbackAvatar.scale.setScalar(.72);
 player.add(fallbackAvatar);
 const skin = new THREE.MeshStandardMaterial({ color: 0xa96f4d, roughness: .92 });
 const coat = new THREE.MeshStandardMaterial({ color: 0x514234, roughness: 1 });
@@ -133,7 +134,7 @@ function makeMesh(parent, geo, mat, pos, scale) {
   return m;
 }
 const torso = new THREE.Group();
-torso.position.y = 1.05;
+torso.position.y = 1.42;
 fallbackAvatar.add(torso);
 makeMesh(torso,new THREE.CapsuleGeometry(.34,.55,6,12),coat,[0,.22,0],[.92,1,.62]);
 makeMesh(torso,new THREE.BoxGeometry(.42,.55,.035),vest,[0,.22,-.205]);
@@ -306,7 +307,7 @@ function frame() {
     arms[i].shoulder.rotation.x = -stride * .34 * (i===0?1:-1);
     arms[i].elbow.rotation.x = -.12 + Math.max(0,stride*(i===0?1:-1))*.18;
   }
-  torso.position.y = 1.05 + (walking ? Math.abs(Math.sin(walkTime*2))*.025 : Math.sin(clock.elapsedTime*1.7)*.008);
+  torso.position.y = 1.42 + (walking ? Math.abs(Math.sin(walkTime*2))*.025 : Math.sin(clock.elapsedTime*1.7)*.008);
   player.position.y=heightAt(player.position.x,player.position.z);
   const target=new THREE.Vector3(player.position.x,player.position.y+1.35,player.position.z);
   const distance=7.2, horizontal=Math.cos(pitch)*distance;
