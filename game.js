@@ -3,7 +3,7 @@ import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xb7d1dc);
-scene.fog = new THREE.Fog(0xb7d1dc, 95, 310);
+scene.fog = new THREE.Fog(0xc2c5b0, 105, 325);
 
 // Céu atmosférico em gradiente: horizonte quente e azul mais profundo no alto.
 // Uma única malha mantém o custo baixo para celulares.
@@ -55,21 +55,26 @@ renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.12;
+renderer.toneMappingExposure = 1.15;
 document.body.appendChild(renderer.domElement);
 
-scene.add(new THREE.HemisphereLight(0xdcecff, 0x66513a, 1.25));
-const sun = new THREE.DirectionalLight(0xffe1b5, 2.1);
+scene.add(new THREE.HemisphereLight(0xe5e0c9, 0x59452f, 1.16));
+const sun = new THREE.DirectionalLight(0xffdfad, 2.25);
 sun.position.set(-65, 100, 45);
 sun.castShadow = true;
 sun.shadow.mapSize.set(isMobileDevice ? 1024 : 2048, isMobileDevice ? 1024 : 2048);
 sun.shadow.camera.left = -95; sun.shadow.camera.right = 95;
 sun.shadow.camera.top = 95; sun.shadow.camera.bottom = -95;
 sun.shadow.camera.far = 260;
+sun.shadow.bias = -0.00018;
+sun.shadow.normalBias = 0.025;
+sun.shadow.radius = isMobileDevice ? 2 : 3;
+sun.shadow.camera.near = 1;
+sun.shadow.camera.updateProjectionMatrix();
 scene.add(sun);
 
 // Luz ambiente de preenchimento para suavizar sombras e dar profundidade às árvores.
-const fillLight = new THREE.DirectionalLight(0xc8d9e8, 0.42);
+const fillLight = new THREE.DirectionalLight(0xd5d8c8, 0.34);
 fillLight.position.set(55, 38, -70);
 scene.add(fillLight);
 
