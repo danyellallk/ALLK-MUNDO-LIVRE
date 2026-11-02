@@ -94,8 +94,6 @@ for (let i = 0; i < 85; i++) {
 const player = new THREE.Group();
 const fallbackAvatar = new THREE.Group();
 fallbackAvatar.visible = false;
-// O rosto do avatar reserva fica voltado para -Z; alinhar com o eixo frontal do modelo externo.
-fallbackAvatar.rotation.y = Math.PI;
 player.add(fallbackAvatar);
 const skin = new THREE.MeshStandardMaterial({ color: 0xa96f4d, roughness: .92 });
 const coat = new THREE.MeshStandardMaterial({ color: 0x514234, roughness: 1 });
@@ -171,7 +169,6 @@ humanLoader.load(
     human.scale.setScalar(scale);
     const scaledBounds = new THREE.Box3().setFromObject(human);
     human.position.y -= scaledBounds.min.y;
-    human.rotation.y = Math.PI;
     human.traverse((part) => {
       if (part.isMesh) {
         part.castShadow = true;
@@ -255,7 +252,7 @@ function frame() {
     player.position.x = next.x;
     player.position.z = next.z;
     // O rosto do personagem aponta para a direção em que está caminhando.
-    player.rotation.y = Math.atan2(dx, dz);
+    player.rotation.y = Math.atan2(-dx, -dz);
   }
   const walkTime = clock.elapsedTime * 8.5;
   const stride = walking ? Math.sin(walkTime) : 0;
