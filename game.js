@@ -412,12 +412,27 @@ for(let i=0;i<115;i++){let x=(Math.random()-.5)*220,z=(Math.random()-.5)*220;if(
  if(heads.instanceColor)heads.instanceColor.needsUpdate=true;
  scene.add(stems,heads);
 }
-// Pedras físicas: podem ser empurradas pelo jogador e desaceleram no terreno.
+// Pedras com contorno irregular, manchas minerais e tons de granito natural.
 const rocks=[];
+const rockMaterial=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.96,flatShading:true});
 for(let i=0;i<38;i++){
- const rock=new THREE.Mesh(new THREE.DodecahedronGeometry(.7+Math.random()*.8,0),mat(0x858b88));
- const rx=(Math.random()-.5)*190,rz=(Math.random()-.5)*190;rock.position.set(rx,terrainHeight(rx,rz)+.35,rz);
- rock.scale.y=.65;rock.castShadow=true;rock.receiveShadow=true;rock.rotation.set(Math.random()*.3,Math.random()*Math.PI,Math.random()*.3);
+ const size=.7+Math.random()*.8,geo=new THREE.SphereGeometry(1,11,8),pos=geo.attributes.position;
+ const colors=[],stone=new THREE.Color(),base=new THREE.Color().setHSL(.09+Math.random()*.025,.035,.43+Math.random()*.12);
+ for(let j=0;j<pos.count;j++){
+  const x=pos.getX(j),y=pos.getY(j),z=pos.getZ(j);
+  const n=Math.sin(x*9.3+y*5.7+z*7.1+i)*.055+Math.cos(x*14-z*8+i*.7)*.025;
+  const factor=1+n;
+  pos.setXYZ(j,x*factor,y*factor,z*factor);
+  const mineral=.78+.18*(.5+.5*Math.sin(x*18+y*11-z*13+i));
+  stone.copy(base).multiplyScalar(mineral*(y>.45?1.12:.94));
+  colors.push(stone.r,stone.g,stone.b);
+ }
+ geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));geo.computeVertexNormals();
+ const rock=new THREE.Mesh(geo,rockMaterial);
+ const rx=(Math.random()-.5)*190,rz=(Math.random()-.5)*190;
+ rock.position.set(rx,terrainHeight(rx,rz)+size*.32,rz);rock.scale.set(size*1.08,size*.65,size*.92);
+ rock.castShadow=true;rock.receiveShadow=true;
+ rock.rotation.set(Math.random()*.3,Math.random()*Math.PI,Math.random()*.3);
  rock.userData={vx:0,vz:0,radius:.72+rock.scale.x*.45};
  scene.add(rock);rocks.push(rock);
 }
