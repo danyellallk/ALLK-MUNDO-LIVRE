@@ -65,7 +65,7 @@ const trailPoints=[
   new THREE.Vector3(132,0,-34),new THREE.Vector3(158,0,-26)
 ];
 const trailCurve=new THREE.CatmullRomCurve3(trailPoints);
-const trailVertices=[],trailIndices=[],trailColors=[];
+const trailVertices=[],trailIndices=[],trailColors=[],trailUvs=[];
 const trailSegments=220;
 for(let i=0;i<=trailSegments;i++){
   const t=i/trailSegments;
@@ -76,10 +76,11 @@ for(let i=0;i<=trailSegments;i++){
   for(const side of [-1,1]){
     const x=point.x+nx*width*side;
     const z=point.z+nz*width*side;
-    trailVertices.push(x,heightAt(x,z)+.045,z);
-    const variation=.88+Math.sin(t*87+i*.19)*.06+(side*.025);
+    trailVertices.push(x,heightAt(x,z)+.055,z);
+    const variation=.94+Math.sin(t*87+i*.19)*.035+(side*.018);
     const col=new THREE.Color(0x806344).multiplyScalar(variation);
     trailColors.push(col.r,col.g,col.b);
+    trailUvs.push(t*24,side===-1?0:1);
   }
   if(i<trailSegments){
     const n=i*2;
@@ -89,9 +90,28 @@ for(let i=0;i<=trailSegments;i++){
 const trailGeo=new THREE.BufferGeometry();
 trailGeo.setAttribute('position',new THREE.Float32BufferAttribute(trailVertices,3));
 trailGeo.setAttribute('color',new THREE.Float32BufferAttribute(trailColors,3));
+trailGeo.setAttribute('uv',new THREE.Float32BufferAttribute(trailUvs,2));
 trailGeo.setIndex(trailIndices);
 trailGeo.computeVertexNormals();
-const trail=new THREE.Mesh(trailGeo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,side:THREE.DoubleSide}));
+// Textura procedural de terra compactada: grãos, manchas minerais e pequenas variações de cor.
+const soilCanvas=document.createElement('canvas');
+soilCanvas.width=512;soilCanvas.height=256;
+const soilCtx=soilCanvas.getContext('2d');
+const soilPixels=soilCtx.createImageData(512,256);
+for(let p=0;p<soilPixels.data.length;p+=4){
+  const n=(rand()-.5)*34;
+  const fleck=rand()<.035?-18:0;
+  soilPixels.data[p]=Math.max(0,126+n+fleck);
+  soilPixels.data[p+1]=Math.max(0,91+n*.72+fleck*.65);
+  soilPixels.data[p+2]=Math.max(0,59+n*.48+fleck*.4);
+  soilPixels.data[p+3]=255;
+}
+soilCtx.putImageData(soilPixels,0,0);
+const soilTexture=new THREE.CanvasTexture(soilCanvas);
+soilTexture.wrapS=THREE.RepeatWrapping;soilTexture.wrapT=THREE.RepeatWrapping;
+soilTexture.colorSpace=THREE.SRGBColorSpace;
+soilTexture.anisotropy=Math.min(renderer.capabilities.getMaxAnisotropy(),4);
+const trail=new THREE.Mesh(trailGeo,new THREE.MeshStandardMaterial({map:soilTexture,color:0xd0b08a,vertexColors:true,roughness:1,side:THREE.DoubleSide}));
 trail.receiveShadow=true;
 scene.add(trail);
 
@@ -172,9 +192,19 @@ const grassField=new THREE.InstancedMesh(grassGeo,grassMat,14500);
 grassField.instanceMatrix.setUsage(THREE.StaticDrawUsage);
 const grassDummy=new THREE.Object3D();
 let grassCount=0;
+// Mede a distância lateral ao eixo do caminho para manter a terra totalmente livre de capim.
+function trailDistance(x,z){
+  let best=Infinity;
+  for(let j=0;j<=100;j++){
+    const q=trailCurve.getPoint(j/100);
+    const d=Math.hypot(x-q.x,z-q.z);
+    if(d<best)best=d;
+  }
+  return best;
+}
 for(let i=0;i<14500;i++){
   const gx=(rand()-.5)*286, gz=(rand()-.5)*286;
-  if(Math.hypot(gx,gz)<9) continue;
+  if(Math.hypot(gx,gz)<9 || trailDistance(gx,gz)<3.05) continue;
   // Manchas de capim: áreas mais cheias alternadas com pequenas clareiras naturais.
   const patch=(Math.sin(gx*.075+Math.cos(gz*.06))*Math.cos(gz*.082+gx*.025)+1)*.5;
   if(rand()>.28+patch*.68) continue;
@@ -184,6 +214,23 @@ for(let i=0;i<14500;i++){
   grassDummy.scale.set(scale,.82+rand()*.42,scale);
   grassDummy.updateMatrix();
   grassField.setMatrixAt(grassCount++,grassDummy.matrix);
+}
+// Faixas irregulares de capim nas duas bordas, acompanhando todas as curvas do caminho.
+for(let j=0;j<520;j++){
+  const t=(j+.5)/520;
+  const point=trailCurve.getPoint(t), tangent=trailCurve.getTangent(t);
+  const nx=-tangent.z,nz=tangent.x;
+  for(const side of [-1,1]){
+    const offset=2.95+rand()*.72;
+    const x=point.x+nx*offset*side+(rand()-.5)*.28;
+    const z=point.z+nz*offset*side+(rand()-.5)*.28;
+    grassDummy.position.set(x,heightAt(x,z)+.025,z);
+    grassDummy.rotation.set((rand()-.5)*.06,rand()*Math.PI*2,(rand()-.5)*.06);
+    const scale=.72+rand()*.62;
+    grassDummy.scale.set(scale,.78+rand()*.35,scale);
+    grassDummy.updateMatrix();
+    if(grassCount<14500)grassField.setMatrixAt(grassCount++,grassDummy.matrix);
+  }
 }
 grassField.count=grassCount;
 grassField.computeBoundingSphere();
@@ -338,7 +385,7 @@ const lowGrassCounts=[0,0,0,0];
 const lowGrassDummy=new THREE.Object3D();
 for(let i=0;i<2400;i++){
   const x=(rand()-.5)*286,z=(rand()-.5)*286;
-  if(Math.hypot(x,z)<8) continue;
+  if(Math.hypot(x,z)<8 || trailDistance(x,z)<3.12) continue;
   const patch=(Math.sin(x*.09+z*.04)*Math.cos(z*.08-x*.03)+1)*.5;
   if(rand()>.38+patch*.55) continue;
   lowGrassDummy.position.set(x,heightAt(x,z)+.035,z);
