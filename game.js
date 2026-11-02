@@ -6,9 +6,10 @@ scene.background = new THREE.Color(0xb7d1dc);
 scene.fog = new THREE.Fog(0xb7d1dc, 95, 310);
 
 const camera = new THREE.PerspectiveCamera(62, innerWidth / innerHeight, 0.1, 700);
-const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-// Qualidade alta adaptativa: até 2,25x a densidade nativa, limitada para proteger o Android.
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2.0));
+const isMobileDevice = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+const renderer = new THREE.WebGLRenderer({ antialias: !isMobileDevice, powerPreference: 'high-performance' });
+// Resolução adaptada ao aparelho para manter fluidez no Android.
+renderer.setPixelRatio(Math.min(devicePixelRatio, isMobileDevice ? 1.35 : 1.8));
 renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -20,7 +21,7 @@ scene.add(new THREE.HemisphereLight(0xdcecff, 0x66513a, 1.25));
 const sun = new THREE.DirectionalLight(0xffe1b5, 2.1);
 sun.position.set(-65, 100, 45);
 sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.mapSize.set(isMobileDevice ? 1024 : 2048, isMobileDevice ? 1024 : 2048);
 sun.shadow.camera.left = -95; sun.shadow.camera.right = 95;
 sun.shadow.camera.top = 95; sun.shadow.camera.bottom = -95;
 sun.shadow.camera.far = 260;
@@ -288,7 +289,8 @@ trunkMesh.count=trunkCount;branchMesh.count=branchCount;
 for(let i=0;i<leafMeshes.length;i++)leafMeshes[i].count=treeCounts[i];
 for(const mesh of [trunkMesh,branchMesh,...leafMeshes]){
   mesh.instanceMatrix.setUsage(THREE.StaticDrawUsage);
-  mesh.castShadow=true;mesh.receiveShadow=true;mesh.computeBoundingSphere();scene.add(mesh);
+  mesh.castShadow=!isMobileDevice && mesh!==leafMeshes[0] && !leafMeshes.includes(mesh);
+  mesh.receiveShadow=false;mesh.computeBoundingSphere();scene.add(mesh);
 }
 
 const rockGeo = new THREE.IcosahedronGeometry(1, 1);
@@ -332,8 +334,8 @@ for(let i=0;i<bushCount;i++){
 for(const mesh of bushMeshes){
   mesh.count=bushCounts[bushMeshes.indexOf(mesh)];
   mesh.computeBoundingSphere();
-  mesh.castShadow=true;
-  mesh.receiveShadow=true;
+  mesh.castShadow=false;
+  mesh.receiveShadow=false;
   scene.add(mesh);
 }
 
