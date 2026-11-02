@@ -159,10 +159,10 @@ let humanMixer = null;
 let humanWalkAction = null;
 const humanLoader = new GLTFLoader();
 humanLoader.load(
-  'https://grab3d.com/dl/man-base-character-rigged/man-base-character-rigged.glb',
+  'https://files.innerscene.com/library/male-base-mesh-3d-person-rigged-a-pose-380e6d89/038f3a526b2fc3efd012/male-base-mesh-base_male.glb',
   (gltf) => {
     const human = gltf.scene;
-    human.name = 'ALLK_HUMAN_4K_BASE';
+    human.name = 'ALLK_HUMAN_REALISTIC_BASE';
     const bounds = new THREE.Box3().setFromObject(human);
     const size = bounds.getSize(new THREE.Vector3());
     const scale = 1.78 / Math.max(size.y, 0.001);
@@ -190,10 +190,10 @@ humanLoader.load(
       humanWalkAction.time = 0;
       console.info('Animação preparada:', walkClip.name);
     }
-    console.info('Modelo humano 3D carregado:', gltf.animations.length, 'animações');
+    console.info('Modelo humano 3D carregado:', gltf.animations.length, 'animações. Fonte CC0 Innerscene/MakeHuman.');
   },
   undefined,
-  (error) => { fallbackAvatar.visible = true; console.warn('Modelo humano 3D indisponível; usando personagem reserva.', error); }
+  (error) => { fallbackAvatar.visible = true; console.error('Falha ao carregar o modelo humano externo. Verifique CORS ou disponibilidade do arquivo.', error); }
 );
 
 const move = { x: 0, y: 0 };
