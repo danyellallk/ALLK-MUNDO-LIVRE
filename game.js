@@ -142,11 +142,11 @@ for(let i=0;i<pebbleMeshes.length;i++){
 // Campo de capim natural: tufos baixos e cheios, com folhas curvas, largas na base e pontas suaves.
 function makeGrassClump() {
   const positions=[], colors=[], indices=[];
-  const palette=[0x668b38,0x7fa044,0x91ad50,0xa5b95c,0xb0bd68,0x587a32];
+  const palette=[0x526f32,0x66823a,0x789447,0x8da34e,0x9aa85a,0x49652f];
   for(let blade=0;blade<12;blade++){
     const angle=rand()*Math.PI*2;
     const height=.22+rand()*.42;
-    const width=.0028+rand()*.0015;
+    const width=.0014+rand()*.001;
     const lean=.06+rand()*.16;
     const bx=Math.cos(angle)*(.015+rand()*.12);
     const bz=Math.sin(angle)*(.015+rand()*.12);
@@ -362,7 +362,7 @@ function makeLowGrassGeo() {
   for(let b=0;b<5;b++){
     const a=b*Math.PI*2/5+rand()*.35;
     const dx=Math.cos(a), dz=Math.sin(a), sx=-dz, sz=dx;
-    const h=.13+rand()*.17, w=.0027+rand()*.0015;
+    const h=.10+rand()*.13, w=.0015+rand()*.0013;
     const bx=Math.cos(a)*rand()*.055, bz=Math.sin(a)*rand()*.055;
     const first=positions.length/3;
     for(let k=0;k<3;k++){
@@ -381,7 +381,7 @@ function makeLowGrassGeo() {
   return geo;
 }
 const lowGrassGeo=makeLowGrassGeo();
-const lowGrassMats=[0x66863d,0x7d9d49,0x91aa53,0xa4b45e].map(color=>new THREE.MeshStandardMaterial({color,side:THREE.DoubleSide,roughness:1}));
+const lowGrassMats=[0x526d35,0x668044,0x78934d,0x8a9b55].map(color=>new THREE.MeshStandardMaterial({color,side:THREE.DoubleSide,roughness:1}));
 const lowGrassMeshes=lowGrassMats.map(mat=>new THREE.InstancedMesh(lowGrassGeo,mat,6500));
 const lowGrassCounts=[0,0,0,0];
 const lowGrassDummy=new THREE.Object3D();
