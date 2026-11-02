@@ -159,10 +159,10 @@ let humanMixer = null;
 let humanWalkAction = null;
 const humanLoader = new GLTFLoader();
 humanLoader.load(
-  'https://files.innerscene.com/library/male-base-mesh-3d-person-rigged-a-pose-380e6d89/038f3a526b2fc3efd012/male-base-mesh-base_male.glb',
+  'https://grab3d.com/dl/man-base-character-rigged/man-base-character-rigged.glb',
   (gltf) => {
     const human = gltf.scene;
-    human.name = 'ALLK_HUMAN_REALISTIC_BASE';
+    human.name = 'ALLK_HUMAN_4K_BASE';
     const bounds = new THREE.Box3().setFromObject(human);
     const size = bounds.getSize(new THREE.Vector3());
     const scale = 1.78 / Math.max(size.y, 0.001);
