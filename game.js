@@ -55,6 +55,70 @@ const ground = new THREE.Mesh(groundGeo, new THREE.MeshStandardMaterial({ vertex
 ground.receiveShadow = true;
 scene.add(ground);
 
+ 
+// Caminho de terra batida sinuoso, acompanhando as ondulações do terreno.
+const trailPoints=[
+  new THREE.Vector3(-150,0,42),new THREE.Vector3(-112,0,28),
+  new THREE.Vector3(-78,0,34),new THREE.Vector3(-42,0,12),
+  new THREE.Vector3(-8,0,18),new THREE.Vector3(28,0,-2),
+  new THREE.Vector3(62,0,-18),new THREE.Vector3(96,0,-12),
+  new THREE.Vector3(132,0,-34),new THREE.Vector3(158,0,-26)
+];
+const trailCurve=new THREE.CatmullRomCurve3(trailPoints);
+const trailVertices=[],trailIndices=[],trailColors=[];
+const trailSegments=220;
+for(let i=0;i<=trailSegments;i++){
+  const t=i/trailSegments;
+  const point=trailCurve.getPoint(t);
+  const tangent=trailCurve.getTangent(t);
+  const nx=-tangent.z,nz=tangent.x;
+  const width=2.3+Math.sin(t*31)*.32+Math.sin(t*13)*.25;
+  for(const side of [-1,1]){
+    const x=point.x+nx*width*side;
+    const z=point.z+nz*width*side;
+    trailVertices.push(x,heightAt(x,z)+.045,z);
+    const variation=.88+Math.sin(t*87+i*.19)*.06+(side*.025);
+    const col=new THREE.Color(0x806344).multiplyScalar(variation);
+    trailColors.push(col.r,col.g,col.b);
+  }
+  if(i<trailSegments){
+    const n=i*2;
+    trailIndices.push(n,n+1,n+2,n+1,n+3,n+2);
+  }
+}
+const trailGeo=new THREE.BufferGeometry();
+trailGeo.setAttribute('position',new THREE.Float32BufferAttribute(trailVertices,3));
+trailGeo.setAttribute('color',new THREE.Float32BufferAttribute(trailColors,3));
+trailGeo.setIndex(trailIndices);
+trailGeo.computeVertexNormals();
+const trail=new THREE.Mesh(trailGeo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,side:THREE.DoubleSide}));
+trail.receiveShadow=true;
+scene.add(trail);
+
+// Pequenas pedras achatadas nas margens do caminho e em clareiras.
+const pebbleGeo=new THREE.IcosahedronGeometry(1,1);
+const pebbleMats=[0x77766d,0x918879,0x625e55].map(color=>new THREE.MeshStandardMaterial({color,roughness:1,flatShading:true}));
+const pebbleMeshes=pebbleMats.map(mat=>new THREE.InstancedMesh(pebbleGeo,mat,240));
+const pebbleCounts=[0,0,0];
+const pebbleDummy=new THREE.Object3D();
+for(let i=0;i<240;i++){
+  const x=(rand()-.5)*270,z=(rand()-.5)*270;
+  if(Math.hypot(x,z)<12) continue;
+  const size=.08+rand()*.2;
+  const type=Math.floor(rand()*3);
+  pebbleDummy.position.set(x,heightAt(x,z)+size*.22,z);
+  pebbleDummy.rotation.set(rand()*.4,rand()*Math.PI*2,rand()*.4);
+  pebbleDummy.scale.set(size*1.5,size*.55,size);
+  pebbleDummy.updateMatrix();
+  pebbleMeshes[type].setMatrixAt(pebbleCounts[type]++,pebbleDummy.matrix);
+}
+for(let i=0;i<pebbleMeshes.length;i++){
+  pebbleMeshes[i].count=pebbleCounts[i];
+  pebbleMeshes[i].computeBoundingSphere();
+  pebbleMeshes[i].receiveShadow=true;
+  scene.add(pebbleMeshes[i]);
+}
+
 // Campo de capim natural: tufos baixos e cheios, com folhas curvas, largas na base e pontas suaves.
 function makeGrassClump() {
   const positions=[], colors=[], indices=[];
