@@ -437,9 +437,30 @@ for(let i=0;i<38;i++){
  scene.add(rock);rocks.push(rock);
 }
 
-// Arbustos de frutas silvestres
+// Arbustos de frutas silvestres: folhagem em camadas e frutos preservados.
 const berryBushes=[];
-for(let i=0;i<16;i++){const bush=new THREE.Group();const green=mat(0x356d35),red=mat(0xc93636);const leaves=new THREE.Mesh(new THREE.SphereGeometry(1.05,8,7),green);leaves.scale.set(1.2,.7,.9);leaves.position.y=.8;bush.add(leaves);for(let k=0;k<5;k++){const fruit=new THREE.Mesh(new THREE.SphereGeometry(.13,7,6),red);fruit.position.set(Math.cos(k*1.25)*.7,1+Math.sin(k*1.25)*.25,Math.sin(k*1.25)*.65);bush.add(fruit)}const bx=(Math.random()-.5)*90,bz=(Math.random()-.5)*90;bush.position.set(bx,terrainHeight(bx,bz),bz);bush.userData.windPhase=Math.random()*Math.PI*2;scene.add(bush);berryBushes.push(bush)}
+const bushLeafMatA=mat(0x356d35,.96),bushLeafMatB=mat(0x477c3b,.98),bushLeafMatC=mat(0x285b30,.98),bushFruitMat=mat(0xc93636,.48);
+const bushCoreGeo=new THREE.SphereGeometry(1.05,9,7),bushLeafGeo=new THREE.SphereGeometry(.62,8,6),bushFruitGeo=new THREE.SphereGeometry(.13,7,6);
+for(let i=0;i<16;i++){
+ const bush=new THREE.Group();
+ const core=new THREE.Mesh(bushCoreGeo,bushLeafMatA);core.scale.set(1.12,.64,.86);core.position.y=.78;core.castShadow=true;core.receiveShadow=true;bush.add(core);
+ // Camadas de folhas menores criam volume sem aumentar demais o custo de desenho.
+ for(let k=0;k<7;k++){
+  const a=k*Math.PI*2/7+(i%3)*.16,ring=.57+(k%2)*.08;
+  const leaf=new THREE.Mesh(bushLeafGeo,k%3===0?bushLeafMatC:k%2===0?bushLeafMatB:bushLeafMatA);
+  leaf.position.set(Math.cos(a)*ring,.58+(k%3)*.22,Math.sin(a)*ring*.78);
+  leaf.scale.set(.92,.78,1.02);leaf.rotation.y=-a;leaf.castShadow=true;leaf.receiveShadow=true;bush.add(leaf);
+ }
+ // Os cinco frutos mantêm a estrutura e o comportamento de coleta originais.
+ for(let k=0;k<5;k++){
+  const fruit=new THREE.Mesh(bushFruitGeo,bushFruitMat);
+  fruit.position.set(Math.cos(k*1.25)*.7,1+Math.sin(k*1.25)*.25,Math.sin(k*1.25)*.65);
+  fruit.castShadow=true;bush.add(fruit);
+ }
+ const bx=(Math.random()-.5)*90,bz=(Math.random()-.5)*90;
+ bush.position.set(bx,terrainHeight(bx,bz),bz);bush.userData.windPhase=Math.random()*Math.PI*2;
+ scene.add(bush);berryBushes.push(bush);
+}
 // Animais simples que passeiam pelo vale
 const animals=[];
 function makeAnimal(kind,x,z){
