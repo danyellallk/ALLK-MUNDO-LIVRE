@@ -194,17 +194,19 @@ const grassDummy=new THREE.Object3D();
 let grassCount=0;
 // Mede a distância lateral ao eixo do caminho para manter a terra totalmente livre de capim.
 function trailDistance(x,z){
+  // Amostragem mais precisa do eixo central para limpar somente a faixa de terra.
   let best=Infinity;
-  for(let j=0;j<=100;j++){
-    const q=trailCurve.getPoint(j/100);
+  for(let j=0;j<=600;j++){
+    const q=trailCurve.getPoint(j/600);
     const d=Math.hypot(x-q.x,z-q.z);
     if(d<best)best=d;
   }
   return best;
 }
+const PATH_CLEAR_WIDTH=3.18; // largura do caminho + pequena margem para as folhas do capim
 for(let i=0;i<14500;i++){
   const gx=(rand()-.5)*286, gz=(rand()-.5)*286;
-  if(Math.hypot(gx,gz)<9 || trailDistance(gx,gz)<3.05) continue;
+  if(Math.hypot(gx,gz)<9 || trailDistance(gx,gz)<PATH_CLEAR_WIDTH) continue;
   // Manchas de capim: áreas mais cheias alternadas com pequenas clareiras naturais.
   const patch=(Math.sin(gx*.075+Math.cos(gz*.06))*Math.cos(gz*.082+gx*.025)+1)*.5;
   if(rand()>.28+patch*.68) continue;
@@ -221,7 +223,7 @@ for(let j=0;j<520;j++){
   const point=trailCurve.getPoint(t), tangent=trailCurve.getTangent(t);
   const nx=-tangent.z,nz=tangent.x;
   for(const side of [-1,1]){
-    const offset=2.95+rand()*.72;
+    const offset=3.35+rand()*.62;
     const x=point.x+nx*offset*side+(rand()-.5)*.28;
     const z=point.z+nz*offset*side+(rand()-.5)*.28;
     grassDummy.position.set(x,heightAt(x,z)+.025,z);
@@ -385,7 +387,7 @@ const lowGrassCounts=[0,0,0,0];
 const lowGrassDummy=new THREE.Object3D();
 for(let i=0;i<2400;i++){
   const x=(rand()-.5)*286,z=(rand()-.5)*286;
-  if(Math.hypot(x,z)<8 || trailDistance(x,z)<3.12) continue;
+  if(Math.hypot(x,z)<8 || trailDistance(x,z)<PATH_CLEAR_WIDTH) continue;
   const patch=(Math.sin(x*.09+z*.04)*Math.cos(z*.08-x*.03)+1)*.5;
   if(rand()>.38+patch*.55) continue;
   lowGrassDummy.position.set(x,heightAt(x,z)+.035,z);
