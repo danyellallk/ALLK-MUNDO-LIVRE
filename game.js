@@ -123,28 +123,49 @@ grassField.frustumCulled=true;
 scene.add(grassField);
 
 const obstacles = [];
-const trunkGeo = new THREE.CylinderGeometry(.22, .34, 3.5, 8);
-const leafGeo = new THREE.SphereGeometry(1, 10, 8);
-const trunkMat = new THREE.MeshStandardMaterial({ color: 0x68452d, roughness: 1 });
-const leafMats = [0x456b39, 0x527642, 0x3e6037].map(color => new THREE.MeshStandardMaterial({ color, roughness: .96 }));
-
-for (let i = 0; i < 190; i++) {
-  const x = (rand() - .5) * 270, z = (rand() - .5) * 270;
-  if (Math.hypot(x, z) < 13) continue;
-  const y = heightAt(x, z), scale = .75 + rand() * .75;
-  const tree = new THREE.Group();
-  const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-  trunk.position.y = 1.75 * scale; trunk.scale.setScalar(scale); trunk.castShadow = true;
-  tree.add(trunk);
-  for (let k = 0; k < 3; k++) {
-    const crown = new THREE.Mesh(leafGeo, leafMats[Math.floor(rand() * leafMats.length)]);
-    crown.position.set((rand() - .5) * .45, (3.25 + k * .62) * scale, (rand() - .5) * .45);
-    crown.scale.set((1.15 - k * .17) * scale, (1.05 - k * .12) * scale, (1.1 - k * .15) * scale);
-    crown.castShadow = true; crown.receiveShadow = true; tree.add(crown);
+// Árvores com troncos irregulares, galhos aparentes e copas orgânicas em vários volumes.
+const trunkGeo = new THREE.CylinderGeometry(.18,.34,4.1,9);
+const branchGeo = new THREE.CylinderGeometry(.055,.13,1.65,7);
+const leafGeo = new THREE.IcosahedronGeometry(1,2);
+const trunkMat = new THREE.MeshStandardMaterial({color:0x60432d,roughness:1});
+const branchMat = new THREE.MeshStandardMaterial({color:0x68482e,roughness:1});
+const leafMats=[0x385d32,0x456b39,0x527642,0x607e3c,0x718647].map(color=>new THREE.MeshStandardMaterial({color,roughness:.98}));
+for(let i=0;i<190;i++){
+  const x=(rand()-.5)*270,z=(rand()-.5)*270;
+  if(Math.hypot(x,z)<13) continue;
+  const y=heightAt(x,z),scale=.78+rand()*.8;
+  const tree=new THREE.Group();
+  const trunk=new THREE.Mesh(trunkGeo,trunkMat);
+  trunk.position.y=2.05*scale;
+  trunk.scale.set(scale*(.9+rand()*.2),scale,scale*(.9+rand()*.2));
+  trunk.rotation.z=(rand()-.5)*.08;
+  trunk.castShadow=true;tree.add(trunk);
+  // Galhos inclinados saindo do tronco.
+  for(let b=0;b<4;b++){
+    const angle=b*Math.PI*.5+rand()*.45;
+    const branch=new THREE.Mesh(branchGeo,branchMat);
+    branch.position.set(Math.cos(angle)*.55*scale,(2.25+rand()*.75)*scale,Math.sin(angle)*.55*scale);
+    branch.rotation.z=Math.cos(angle)*-.72;
+    branch.rotation.x=Math.sin(angle)*.72;
+    branch.rotation.y=angle;
+    branch.scale.setScalar(scale*(.75+rand()*.25));
+    branch.castShadow=true;tree.add(branch);
   }
-  tree.position.set(x, y, z); tree.rotation.y = rand() * Math.PI * 2;
+  // Copa formada por massas assimétricas, evitando o aspecto de bolas empilhadas.
+  const crownParts=8;
+  for(let k=0;k<crownParts;k++){
+    const angle=rand()*Math.PI*2;
+    const ring=k<6;
+    const radius=(ring?.85:.35)*scale;
+    const crown=new THREE.Mesh(leafGeo,leafMats[Math.floor(rand()*leafMats.length)]);
+    crown.position.set(Math.cos(angle)*radius,(3.55+rand()*1.25)*scale,Math.sin(angle)*radius);
+    crown.scale.set((.72+rand()*.48)*scale,(.65+rand()*.5)*scale,(.72+rand()*.48)*scale);
+    crown.rotation.set(rand()*.5,rand()*Math.PI*2,rand()*.5);
+    crown.castShadow=true;crown.receiveShadow=true;tree.add(crown);
+  }
+  tree.position.set(x,y,z);tree.rotation.y=rand()*Math.PI*2;
   scene.add(tree);
-  obstacles.push({ x, z, radius: .72 * scale });
+  obstacles.push({x,z,radius:.82*scale});
 }
 
 const rockGeo = new THREE.IcosahedronGeometry(1, 1);
