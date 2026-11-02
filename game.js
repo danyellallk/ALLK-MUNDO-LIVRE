@@ -316,7 +316,28 @@ function makeGrassClump() {
   return geo;
 }
 const grassGeo=makeGrassClump();
+// Vento leve nas pontas do capim: animação feita no shader para poupar a CPU do celular.
+function addGrassWind(material,strength){
+  material.userData.windUniform={value:0};
+  material.onBeforeCompile=(shader)=>{
+    shader.uniforms.uWindTime=material.userData.windUniform;
+    shader.vertexShader=shader.vertexShader.replace(
+      '#include <common>',
+      '#include <common>\nuniform float uWindTime;'
+    );
+    shader.vertexShader=shader.vertexShader.replace(
+      '#include <begin_vertex>',
+      `#include <begin_vertex>
+      vec4 windWorld = modelMatrix * instanceMatrix * vec4(transformed, 1.0);
+      float windHeight = clamp(transformed.y * 2.2, 0.0, 1.0);
+      float windWave = sin(uWindTime * 1.25 + windWorld.x * 0.12 + windWorld.z * 0.09);
+      transformed.x += windWave * ${strength.toFixed(3)} * windHeight;
+      transformed.z += cos(uWindTime * 0.92 + windWorld.z * 0.10) * ${(strength*.34).toFixed(3)} * windHeight;`
+    );
+  };
+}
 const grassMat=new THREE.MeshStandardMaterial({vertexColors:true,side:THREE.DoubleSide,roughness:1});
+addGrassWind(grassMat,.045);
 const grassField=new THREE.InstancedMesh(grassGeo,grassMat,52000);
 grassField.instanceMatrix.setUsage(THREE.StaticDrawUsage);
 const grassDummy=new THREE.Object3D();
@@ -621,7 +642,11 @@ function makeLowGrassGeo() {
   return geo;
 }
 const lowGrassGeo=makeLowGrassGeo();
-const lowGrassMats=[0x526d35,0x668044,0x78934d,0x8a9b55].map(color=>new THREE.MeshStandardMaterial({color,side:THREE.DoubleSide,roughness:1}));
+const lowGrassMats=[0x526d35,0x668044,0x78934d,0x8a9b55].map(color=>{
+  const mat=new THREE.MeshStandardMaterial({color,side:THREE.DoubleSide,roughness:1});
+  addGrassWind(mat,.018);
+  return mat;
+});
 const lowGrassMeshes=lowGrassMats.map(mat=>new THREE.InstancedMesh(lowGrassGeo,mat,13000));
 const lowGrassCounts=[0,0,0,0];
 const lowGrassDummy=new THREE.Object3D();
@@ -878,6 +903,9 @@ let frameTimeTotal=0,frameSamples=0;
 function frame() {
   requestAnimationFrame(frame);
   const dt=Math.min(clock.getDelta(),.04);
+  const windTime=clock.elapsedTime;
+  grassMat.userData.windUniform.value=windTime;
+  for(const mat of lowGrassMats)mat.userData.windUniform.value=windTime;
   // Ajusta a resolução dinamicamente quando o celular começa a perder fluidez.
   if(isMobileDevice){
     frameTimeTotal+=dt;frameSamples++;
