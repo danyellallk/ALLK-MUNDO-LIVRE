@@ -1121,7 +1121,7 @@ function frame() {
     // O som dispara a cada meia passada da mesma fase usada para animar as pernas.
     gaitPhase += dt * (running ? 13.2 : 8.5);
     const stepIndex = Math.floor(gaitPhase / Math.PI);
-    if(stepIndex > previousStepIndex){ playFootstep(); previousStepIndex = stepIndex; }
+    if(stepIndex > previousStepIndex && jumpHeight < 0.08){ playFootstep(); previousStepIndex = stepIndex; }
   } else {
     gaitPhase = 0;
     previousStepIndex = 0;
@@ -1142,6 +1142,19 @@ function frame() {
   if(jumpHeight===0)jumpVelocity=0;
   if(jumpButton)jumpButton.classList.toggle('airborne',jumpHeight>0.04);
   player.position.y=heightAt(player.position.x,player.position.z)+jumpHeight;
+  // Pose de salto: recolhe as pernas e ergue os braços enquanto o personagem está no ar.
+  const jumpBlend=THREE.MathUtils.clamp(jumpHeight*2.1,0,1);
+  if(jumpBlend>0.01){
+    for(let i=0;i<2;i++){
+      legs[i].hip.rotation.x=-.34*jumpBlend;
+      legs[i].knee.rotation.x=.92*jumpBlend;
+      arms[i].shoulder.rotation.x=-.92*jumpBlend;
+      arms[i].elbow.rotation.x=-.42*jumpBlend;
+    }
+    torso.rotation.x=-.07*jumpBlend;
+  } else {
+    torso.rotation.x=0;
+  }
   const target=new THREE.Vector3(player.position.x,player.position.y+1.35,player.position.z);
   const distance=7.2, horizontal=Math.cos(pitch)*distance;
   camera.position.set(target.x+Math.sin(yaw)*horizontal,target.y+Math.sin(pitch)*distance,target.z+Math.cos(yaw)*horizontal);
