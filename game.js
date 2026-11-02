@@ -81,6 +81,31 @@ const sunDisc = new THREE.Mesh(
 sunDisc.position.copy(sun.position).normalize().multiplyScalar(360);
 scene.add(sunDisc);
 
+// Nuvens altas e suaves para dar profundidade ao céu sem pesar no celular.
+const cloudGroup=new THREE.Group();
+const cloudGeometry=new THREE.SphereGeometry(1,10,7);
+const cloudMaterial=new THREE.MeshBasicMaterial({
+  color:0xf3eee2,transparent:true,opacity:.19,depthWrite:false,fog:false
+});
+const clouds=[];
+for(let i=0;i<11;i++){
+  const cloud=new THREE.Group();
+  const width=7+rand()*10;
+  const puffCount=3+Math.floor(rand()*3);
+  for(let j=0;j<puffCount;j++){
+    const puff=new THREE.Mesh(cloudGeometry,cloudMaterial);
+    puff.position.set((rand()-.5)*width,rand()*1.1,(rand()-.5)*3.5);
+    const s=.9+rand()*1.5;
+    puff.scale.set(s*1.7,s*.48,s*.85);
+    cloud.add(puff);
+  }
+  cloud.position.set((rand()-.5)*330,38+rand()*24,(rand()-.5)*300);
+  cloud.userData.drift=.45+rand()*.35;
+  clouds.push(cloud);
+  cloudGroup.add(cloud);
+}
+scene.add(cloudGroup);
+
 const clamp = THREE.MathUtils.clamp;
 let seed = 78123;
 function rand() { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; }
@@ -924,6 +949,11 @@ function frame() {
   requestAnimationFrame(frame);
   const dt=Math.min(clock.getDelta(),.04);
   const windTime=clock.elapsedTime;
+  // Deriva lenta das nuvens; ao sair do mapa, reaparecem do outro lado.
+  for(const cloud of clouds){
+    cloud.position.x+=cloud.userData.drift*dt;
+    if(cloud.position.x>178)cloud.position.x=-178;
+  }
   grassMat.userData.windUniform.value=windTime;
   for(const mat of lowGrassMats)mat.userData.windUniform.value=windTime;
   for(const mat of leafMats)mat.userData.canopyWind.value=windTime;
