@@ -830,11 +830,11 @@ function playFootstep(){
   const noise=footstepAudio.createBufferSource();
   noise.buffer=footstepNoise;
   const filter=footstepAudio.createBiquadFilter();
-  filter.type='lowpass';filter.frequency.value=520+Math.random()*260;
+  filter.type='lowpass';filter.frequency.value=340+Math.random()*150;
   const grit=footstepAudio.createGain();
   grit.gain.setValueAtTime(.0001,now);
-  grit.gain.exponentialRampToValueAtTime(.12,now+.012);
-  grit.gain.exponentialRampToValueAtTime(.0001,now+.13);
+  grit.gain.exponentialRampToValueAtTime(.045,now+.022);
+  grit.gain.exponentialRampToValueAtTime(.0001,now+.17);
   noise.connect(filter);filter.connect(grit);grit.connect(footstepAudio.destination);
   noise.start(now);noise.stop(now+.15);
   const thump=footstepAudio.createOscillator();
@@ -842,8 +842,8 @@ function playFootstep(){
   thump.type='sine';thump.frequency.setValueAtTime(105+Math.random()*22,now);
   thump.frequency.exponentialRampToValueAtTime(58,now+.09);
   body.gain.setValueAtTime(.0001,now);
-  body.gain.exponentialRampToValueAtTime(.16,now+.009);
-  body.gain.exponentialRampToValueAtTime(.0001,now+.11);
+  body.gain.exponentialRampToValueAtTime(.065,now+.018);
+  body.gain.exponentialRampToValueAtTime(.0001,now+.15);
   thump.connect(body);body.connect(footstepAudio.destination);
   thump.start(now);thump.stop(now+.12);
 }
@@ -873,6 +873,7 @@ function resolve(x,z) {
   return {x,z};
 }
 const clock = new THREE.Clock();
+let gaitPhase=0, previousStepIndex=0;
 let frameTimeTotal=0,frameSamples=0;
 function frame() {
   requestAnimationFrame(frame);
@@ -919,10 +920,15 @@ function frame() {
     player.rotation.y = Math.atan2(-dx, -dz);
   }
   if(actuallyMoving){
-    footstepClock += dt;
-    if(footstepClock >= .38){ playFootstep(); footstepClock -= .38; }
-  } else { footstepClock = Math.min(footstepClock,.12); }
-  const walkTime = clock.elapsedTime * 8.5;
+    // O som dispara a cada meia passada da mesma fase usada para animar as pernas.
+    gaitPhase += dt * 8.5;
+    const stepIndex = Math.floor(gaitPhase / Math.PI);
+    if(stepIndex > previousStepIndex){ playFootstep(); previousStepIndex = stepIndex; }
+  } else {
+    gaitPhase = 0;
+    previousStepIndex = 0;
+  }
+  const walkTime = gaitPhase;
   const stride = walking ? Math.sin(walkTime) : 0;
   for (let i=0;i<2;i++) {
     legs[i].hip.rotation.x = stride * .48 * (i===0?1:-1);
