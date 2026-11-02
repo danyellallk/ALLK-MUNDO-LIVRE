@@ -6,6 +6,7 @@ Este branch inicia uma reconstrução independente do jogo, mantendo o branch an
 - Mundo aberto 3D inspirado no ano de 1870.
 - Navegação em terceira pessoa e controles Android.
 - Terreno procedural, vegetação e rochas.
+- Personagem humanoide com roupa de viajante do século XIX e animação de caminhada.
 - Próximas etapas: modelo humano realista, povoados, casas, animais, água, inventário e salvamento.
 
 ## Tecnologia
