@@ -9,7 +9,8 @@ const camera = new THREE.PerspectiveCamera(62, innerWidth / innerHeight, 0.1, 70
 const isMobileDevice = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 const renderer = new THREE.WebGLRenderer({ antialias: !isMobileDevice, powerPreference: 'high-performance' });
 // Resolução adaptada ao aparelho para manter fluidez no Android.
-renderer.setPixelRatio(Math.min(devicePixelRatio, isMobileDevice ? 1.35 : 1.8));
+let renderScale=Math.min(devicePixelRatio,isMobileDevice?1.2:1.8);
+renderer.setPixelRatio(renderScale);
 renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -605,9 +606,22 @@ function resolve(x,z) {
   return {x,z};
 }
 const clock = new THREE.Clock();
+let frameTimeTotal=0,frameSamples=0;
 function frame() {
   requestAnimationFrame(frame);
   const dt=Math.min(clock.getDelta(),.04);
+  // Ajusta a resolução dinamicamente quando o celular começa a perder fluidez.
+  if(isMobileDevice){
+    frameTimeTotal+=dt;frameSamples++;
+    if(frameSamples>=90){
+      const average=frameTimeTotal/frameSamples;
+      let nextScale=renderScale;
+      if(average>.023)nextScale=Math.max(.85,renderScale-.1);
+      else if(average<.018)nextScale=Math.min(Math.min(devicePixelRatio,1.2),renderScale+.05);
+      if(Math.abs(nextScale-renderScale)>.001){renderScale=nextScale;renderer.setPixelRatio(renderScale);renderer.setSize(innerWidth,innerHeight,false);}
+      frameTimeTotal=0;frameSamples=0;
+    }
+  }
   if (humanMixer && humanWalkAction && !humanWalkAction.paused) humanMixer.update(dt);
   // Controles corrigidos: joystick para cima = avançar; direita = mover à direita.
   let forward = -move.y;
