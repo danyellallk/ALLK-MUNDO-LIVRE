@@ -68,6 +68,19 @@ sun.shadow.camera.top = 95; sun.shadow.camera.bottom = -95;
 sun.shadow.camera.far = 260;
 scene.add(sun);
 
+// Luz ambiente de preenchimento para suavizar sombras e dar profundidade às árvores.
+const fillLight = new THREE.DirectionalLight(0xc8d9e8, 0.42);
+fillLight.position.set(55, 38, -70);
+scene.add(fillLight);
+
+// Disco solar discreto no céu, sem geometria pesada nem sombra adicional.
+const sunDisc = new THREE.Mesh(
+  new THREE.SphereGeometry(2.8, 12, 8),
+  new THREE.MeshBasicMaterial({ color: 0xffe0a8, fog: false, toneMapped: false })
+);
+sunDisc.position.copy(sun.position).normalize().multiplyScalar(360);
+scene.add(sunDisc);
+
 const clamp = THREE.MathUtils.clamp;
 let seed = 78123;
 function rand() { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; }
@@ -88,7 +101,10 @@ for (let i = 0; i < p.count; i++) {
   const patch = Math.sin(x*.11+Math.cos(z*.07))*Math.cos(z*.09-x*.035);
   const grain = Math.sin(x*1.7+z*.8)*Math.cos(z*1.35-x*.6)*.018;
   const shade = .82 + .12*patch + grain;
-  c.set(patch>.35 ? 0x849653 : 0x687e43).multiplyScalar(shade);
+  // Manchas suaves de solo mais seco e pequenas variações de vegetação.
+  const dryPatch = Math.sin(x*.038+z*.021)*Math.cos(z*.031-x*.017);
+  const baseColor = dryPatch > .58 ? 0x8b8159 : (patch > .35 ? 0x849653 : 0x687e43);
+  c.set(baseColor).multiplyScalar(shade);
   colors.push(c.r, c.g, c.b);
 }
 groundGeo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
