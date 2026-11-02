@@ -543,13 +543,16 @@ for(let i=0;i<190;i++){
     part.updateMatrix();worldMatrix.multiplyMatrices(treeRoot.matrix,part.matrix);
     branchMesh.setMatrixAt(branchCount++,worldMatrix);
   }
-  // Copas em volumes assimétricos e cores variadas.
+  // Cada árvore recebe uma silhueta própria: copa mais larga, estreita, alta ou baixa.
+  const crownSpread=.68+rand()*.58;
+  const crownLift=.82+rand()*.42;
   for(let k=0;k<8;k++){
-    const angle=rand()*Math.PI*2,ring=k<6,radius=(ring?.85:.35)*scale;
+    const angle=rand()*Math.PI*2;
+    const radius=(k<6?.62+rand()*.38:.2+rand()*.2)*crownSpread*scale;
     const type=Math.floor(rand()*leafMeshes.length);
-    part.position.set(Math.cos(angle)*radius,(3.55+rand()*1.25)*scale,Math.sin(angle)*radius);
-    part.rotation.set(rand()*.5,rand()*Math.PI*2,rand()*.5);
-    part.scale.set((.72+rand()*.48)*scale,(.65+rand()*.5)*scale,(.72+rand()*.48)*scale);
+    part.position.set(Math.cos(angle)*radius,(3.15+rand()*1.55)*crownLift*scale,Math.sin(angle)*radius);
+    part.rotation.set(rand()*.62,rand()*Math.PI*2,rand()*.62);
+    part.scale.set((.68+rand()*.52)*crownSpread*scale,(.62+rand()*.55)*crownLift*scale,(.68+rand()*.52)*crownSpread*scale);
     part.updateMatrix();worldMatrix.multiplyMatrices(treeRoot.matrix,part.matrix);
     leafMeshes[type].setMatrixAt(treeCounts[type]++,worldMatrix);
   }
