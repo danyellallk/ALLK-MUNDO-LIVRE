@@ -53,26 +53,27 @@ const ground = new THREE.Mesh(groundGeo, new THREE.MeshStandardMaterial({ vertex
 ground.receiveShadow = true;
 scene.add(ground);
 
-// Vegetação baixa em instâncias: dá textura ao campo sem criar centenas de objetos separados.
-const grassGeo = new THREE.ConeGeometry(.055, .42, 3);
-grassGeo.translate(0, .21, 0);
-const grassMat = new THREE.MeshStandardMaterial({color:0x71864a, roughness:1});
-const grassField = new THREE.InstancedMesh(grassGeo, grassMat, 1050);
+// Vegetação mais visível, distribuída em tufos instanciados para manter bom desempenho no Android.
+const grassGeo = new THREE.ConeGeometry(.095, .82, 4);
+grassGeo.translate(0, .41, 0);
+const grassMat = new THREE.MeshStandardMaterial({color:0x9aaa58, roughness:1});
+const grassField = new THREE.InstancedMesh(grassGeo, grassMat, 6200);
 grassField.instanceMatrix.setUsage(THREE.StaticDrawUsage);
 const grassDummy = new THREE.Object3D();
 const grassColor = new THREE.Color();
-for (let i=0;i<1050;i++) {
-  const gx=(rand()-.5)*285, gz=(rand()-.5)*285;
-  const scale=.55+rand()*1.25;
-  grassDummy.position.set(gx,heightAt(gx,gz)+.015,gz);
-  grassDummy.rotation.set((rand()-.5)*.16,rand()*Math.PI*2,(rand()-.5)*.16);
+for (let i=0;i<6200;i++) {
+  const gx=(rand()-.5)*292, gz=(rand()-.5)*292;
+  const scale=.72+rand()*1.5;
+  grassDummy.position.set(gx,heightAt(gx,gz)+.025,gz);
+  grassDummy.rotation.set((rand()-.5)*.12,rand()*Math.PI*2,(rand()-.5)*.12);
   grassDummy.scale.set(scale,scale,scale);
   grassDummy.updateMatrix();
   grassField.setMatrixAt(i,grassDummy.matrix);
-  grassColor.setHSL(.20+rand()*.07,.28+rand()*.24,.25+rand()*.13);
+  grassColor.setHSL(.19+rand()*.075,.38+rand()*.2,.34+rand()*.16);
   grassField.setColorAt(i,grassColor);
 }
 grassField.computeBoundingSphere();
+grassField.frustumCulled = true;
 scene.add(grassField);
 
 const obstacles = [];
