@@ -1078,7 +1078,10 @@ function frame() {
   }
   if (humanWalkAction) humanWalkAction.paused = !walking || (running && !!humanRunAction);
   if (humanRunAction) humanRunAction.paused = !walking || !running;
-  if (humanMixer) humanMixer.timeScale = running ? 1.12 : 1;
+  if (humanMixer) {
+    humanMixer.timeScale = running ? 1.12 : 1;
+    humanMixer.update(dt);
+  }
 
   if (walking) {
     const magnitude = Math.max(1, len);
@@ -1107,14 +1110,14 @@ function frame() {
     previousStepIndex = 0;
   }
   const walkTime = gaitPhase;
-  const stride = walking ? Math.sin(walkTime) * (running ? 1.22 : 1) : 0;
+  const stride = actuallyMoving ? Math.sin(walkTime) * (running ? 1.22 : 1) : 0;
   for (let i=0;i<2;i++) {
     legs[i].hip.rotation.x = stride * (running ? .68 : .48) * (i===0?1:-1);
-    legs[i].knee.rotation.x = walking ? Math.max(0,Math.sin(walkTime+(i===0?0:Math.PI)))*(running ? .82 : .55) : 0;
+    legs[i].knee.rotation.x = actuallyMoving ? Math.max(0,Math.sin(walkTime+(i===0?0:Math.PI)))*(running ? .82 : .55) : 0;
     arms[i].shoulder.rotation.x = -stride * (running ? .52 : .34) * (i===0?1:-1);
     arms[i].elbow.rotation.x = -.12 + Math.max(0,stride*(i===0?1:-1))*.18;
   }
-  torso.position.y = 1.42 + (walking ? Math.abs(Math.sin(walkTime*2))*(running ? .045 : .025) : Math.sin(clock.elapsedTime*1.7)*.008);
+  torso.position.y = 1.42 + (actuallyMoving ? Math.abs(Math.sin(walkTime*2))*(running ? .045 : .025) : Math.sin(clock.elapsedTime*1.7)*.008);
   player.position.y=heightAt(player.position.x,player.position.z);
   const target=new THREE.Vector3(player.position.x,player.position.y+1.35,player.position.z);
   const distance=7.2, horizontal=Math.cos(pitch)*distance;
