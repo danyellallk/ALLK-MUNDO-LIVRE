@@ -472,7 +472,20 @@ const obstacles = [];
 // Árvores instanciadas: mesma aparência orgânica, com muito menos chamadas de desenho.
 const trunkGeo = new THREE.CylinderGeometry(.18,.34,4.1,9);
 const branchGeo = new THREE.CylinderGeometry(.055,.13,1.65,7);
-const leafGeo = new THREE.SphereGeometry(1, 10, 8);
+// Deformação leve de malha para quebrar o aspecto de formas geométricas perfeitas.
+function makeOrganicGeometry(geometry, amount, frequency=3){
+  const position=geometry.attributes.position;
+  for(let i=0;i<position.count;i++){
+    const x=position.getX(i),y=position.getY(i),z=position.getZ(i);
+    const wobble=Math.sin(x*frequency+z*2.7)*Math.cos(y*frequency*.83-z*1.9);
+    const scale=1+amount*wobble;
+    position.setXYZ(i,x*scale,y*scale,z*scale);
+  }
+  position.needsUpdate=true;
+  geometry.computeVertexNormals();
+  return geometry;
+}
+const leafGeo = makeOrganicGeometry(new THREE.IcosahedronGeometry(1, 2), .105, 4.2);
 const trunkMat = new THREE.MeshStandardMaterial({color:0x60432d,roughness:1});
 const branchMat = new THREE.MeshStandardMaterial({color:0x68482e,roughness:1});
 const leafMats=[0x385d32,0x456b39,0x527642,0x607e3c,0x718647].map(color=>new THREE.MeshStandardMaterial({color,roughness:.98}));
@@ -550,7 +563,7 @@ for(const mesh of [trunkMesh,branchMesh,...leafMeshes]){
   mesh.receiveShadow=false;mesh.computeBoundingSphere();scene.add(mesh);
 }
 
-const rockGeo = new THREE.IcosahedronGeometry(1, 1);
+const rockGeo = makeOrganicGeometry(new THREE.IcosahedronGeometry(1, 1), .24, 5.1);
 const rockMat = new THREE.MeshStandardMaterial({ color: 0x77766e, roughness: 1, flatShading: true });
 for (let i = 0; i < 85; i++) {
   const x = (rand() - .5) * 270, z = (rand() - .5) * 270, size = .35 + rand() * 1.15;
