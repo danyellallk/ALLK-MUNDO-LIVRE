@@ -84,11 +84,27 @@ scene.add(sunDisc);
 const clamp = THREE.MathUtils.clamp;
 let seed = 78123;
 function rand() { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; }
+// Pequenas depressões naturais no terreno, com bordas suaves e irregulares.
+const terrainPits=[];
+for(let i=0;i<22;i++){
+  const x=(rand()-.5)*260,z=(rand()-.5)*260;
+  if(Math.hypot(x,z)<16) continue;
+  terrainPits.push({x,z,r:.8+rand()*1.5,d:.12+rand()*.22});
+}
 function heightAt(x, z) {
   const broad = Math.sin(x * .018 + .7) * 3.8 + Math.cos(z * .021 - .4) * 3.2;
   const hills = Math.sin((x + z) * .012) * 2.5 + Math.cos((x - z) * .015) * 1.8;
   const detail = Math.sin(x * .065) * Math.cos(z * .058) * .55;
-  return broad + hills + detail;
+  let depressions=0;
+  for(const pit of terrainPits){
+    const d=Math.hypot(x-pit.x,z-pit.z)/pit.r;
+    if(d<1.8){
+      const bowl=Math.exp(-d*d*2.1);
+      const rim=Math.exp(-Math.pow((d-1.12)*5,2));
+      depressions+=pit.d*(bowl-.16*rim);
+    }
+  }
+  return broad + hills + detail - depressions;
 }
 const groundGeo = new THREE.PlaneGeometry(320, 320, 150, 150);
 groundGeo.rotateX(-Math.PI / 2);
@@ -109,7 +125,39 @@ for (let i = 0; i < p.count; i++) {
 }
 groundGeo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
 groundGeo.computeVertexNormals();
-const ground = new THREE.Mesh(groundGeo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1 }));
+// Textura orgânica do solo: grãos, terra exposta, folhas secas e pequenas marcas minerais.
+const terrainCanvas=document.createElement('canvas');
+terrainCanvas.width=512;terrainCanvas.height=512;
+const terrainCtx=terrainCanvas.getContext('2d');
+const terrainImage=terrainCtx.createImageData(512,512);
+for(let i=0;i<terrainImage.data.length;i+=4){
+  const n=(rand()-.5)*34;
+  terrainImage.data[i]=218+n;
+  terrainImage.data[i+1]=218+n;
+  terrainImage.data[i+2]=205+n*.8;
+  terrainImage.data[i+3]=255;
+}
+terrainCtx.putImageData(terrainImage,0,0);
+// Folhas secas pequenas, em formatos alongados e orientações aleatórias.
+for(let i=0;i<460;i++){
+  const x=rand()*512,y=rand()*512,a=rand()*Math.PI*2;
+  terrainCtx.save();terrainCtx.translate(x,y);terrainCtx.rotate(a);
+  terrainCtx.fillStyle=['rgba(104,91,48,.68)','rgba(126,91,48,.62)','rgba(76,91,48,.48)','rgba(151,119,66,.55)'][Math.floor(rand()*4)];
+  terrainCtx.beginPath();terrainCtx.ellipse(0,0,1.2+rand()*3.4,.55+rand()*.9,0,0,Math.PI*2);terrainCtx.fill();
+  terrainCtx.strokeStyle='rgba(67,61,39,.35)';terrainCtx.lineWidth=.45;terrainCtx.beginPath();terrainCtx.moveTo(-2,0);terrainCtx.lineTo(2,0);terrainCtx.stroke();
+  terrainCtx.restore();
+}
+// Pontos escuros de húmus e areia, sem padrão geométrico repetitivo.
+for(let i=0;i<900;i++){
+  const x=rand()*512,y=rand()*512,r=.35+rand()*1.5;
+  terrainCtx.fillStyle=rand()<.5?'rgba(72,65,43,.13)':'rgba(238,222,178,.2)';
+  terrainCtx.beginPath();terrainCtx.arc(x,y,r,0,Math.PI*2);terrainCtx.fill();
+}
+const terrainTexture=new THREE.CanvasTexture(terrainCanvas);
+terrainTexture.wrapS=THREE.RepeatWrapping;terrainTexture.wrapT=THREE.RepeatWrapping;
+terrainTexture.repeat.set(22,22);terrainTexture.colorSpace=THREE.SRGBColorSpace;
+terrainTexture.anisotropy=Math.min(renderer.capabilities.getMaxAnisotropy(),4);
+const ground = new THREE.Mesh(groundGeo, new THREE.MeshStandardMaterial({ map:terrainTexture, vertexColors: true, roughness: 1 }));
 ground.receiveShadow = true;
 scene.add(ground);
 
@@ -372,6 +420,42 @@ for (let i = 0; i < 85; i++) {
 }
 
  
+// Folhas caídas 3D e galhos secos espalhados pelo chão, todos instanciados para poupar desempenho.
+const fallenLeafGeo=new THREE.PlaneGeometry(1,.42);
+const fallenLeafMats=[0x806b3d,0x9a7948,0x5e673b,0x786044,0xa18a59].map(color=>new THREE.MeshStandardMaterial({color,roughness:1,side:THREE.DoubleSide}));
+const fallenLeafMeshes=fallenLeafMats.map(mat=>new THREE.InstancedMesh(fallenLeafGeo,mat,260));
+const fallenLeafCounts=[0,0,0,0,0];
+const leafDummy=new THREE.Object3D();
+for(let i=0;i<1300;i++){
+  const x=(rand()-.5)*282,z=(rand()-.5)*282;
+  if(Math.hypot(x,z)<9) continue;
+  const type=Math.floor(rand()*5),s=.12+rand()*.24;
+  leafDummy.position.set(x,heightAt(x,z)+.045,z);
+  leafDummy.rotation.set(-Math.PI/2+(rand()-.5)*.12,rand()*Math.PI*2,(rand()-.5)*.12);
+  leafDummy.scale.set(s,s*(.55+rand()*.65),s);
+  leafDummy.updateMatrix();
+  if(fallenLeafCounts[type]<260)fallenLeafMeshes[type].setMatrixAt(fallenLeafCounts[type]++,leafDummy.matrix);
+}
+for(let i=0;i<fallenLeafMeshes.length;i++){
+  fallenLeafMeshes[i].count=fallenLeafCounts[i];
+  fallenLeafMeshes[i].computeBoundingSphere();
+  fallenLeafMeshes[i].receiveShadow=false;
+  scene.add(fallenLeafMeshes[i]);
+}
+// Galhos quebrados e troncos finos parcialmente apoiados no relevo.
+const fallenBranchGeo=new THREE.CylinderGeometry(.035,.065,1,6);
+const fallenBranchMat=new THREE.MeshStandardMaterial({color:0x59432e,roughness:1});
+const fallenBranches=new THREE.InstancedMesh(fallenBranchGeo,fallenBranchMat,95);
+const branchDummy=new THREE.Object3D();
+for(let i=0;i<95;i++){
+  const x=(rand()-.5)*278,z=(rand()-.5)*278,length=.65+rand()*2.1;
+  branchDummy.position.set(x,heightAt(x,z)+.09,z);
+  branchDummy.rotation.set((rand()-.5)*.16,rand()*Math.PI*2,Math.PI/2+(rand()-.5)*.16);
+  branchDummy.scale.set(.65+rand()*.5,length,.65+rand()*.5);
+  branchDummy.updateMatrix();fallenBranches.setMatrixAt(i,branchDummy.matrix);
+}
+fallenBranches.computeBoundingSphere();fallenBranches.receiveShadow=true;scene.add(fallenBranches);
+
 // Arbustos nativos e moitas baixas para quebrar a repetição das árvores.
 const bushGeo=new THREE.IcosahedronGeometry(1,2);
 const bushMats=[0x405d2d,0x56763a,0x718b43,0x3d572c].map(color=>new THREE.MeshStandardMaterial({color,roughness:1}));
