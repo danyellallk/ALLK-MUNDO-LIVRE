@@ -1,4 +1,5 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xb7d1dc);
@@ -90,6 +91,8 @@ for (let i = 0; i < 85; i++) {
 
 // Personagem humano aprimorado, com roupa de viajante do século XIX e articulações animáveis.
 const player = new THREE.Group();
+const fallbackAvatar = new THREE.Group();
+player.add(fallbackAvatar);
 const skin = new THREE.MeshStandardMaterial({ color: 0xa96f4d, roughness: .92 });
 const coat = new THREE.MeshStandardMaterial({ color: 0x514234, roughness: 1 });
 const vest = new THREE.MeshStandardMaterial({ color: 0x8a6a45, roughness: .95 });
@@ -106,7 +109,7 @@ function makeMesh(parent, geo, mat, pos, scale) {
 }
 const torso = new THREE.Group();
 torso.position.y = 1.05;
-player.add(torso);
+fallbackAvatar.add(torso);
 makeMesh(torso,new THREE.CapsuleGeometry(.34,.55,6,12),coat,[0,.22,0],[.92,1,.62]);
 makeMesh(torso,new THREE.BoxGeometry(.42,.55,.035),vest,[0,.22,-.205]);
 makeMesh(torso,new THREE.CylinderGeometry(.115,.13,.16,12),leather,[0,-.17,0]);
@@ -144,8 +147,46 @@ for (const side of [-1,1]) {
   makeMesh(elbow,new THREE.SphereGeometry(.09,10,8),skin,[0,-.42,-.005]);
   arms.push({shoulder,elbow});
 }
+
 player.position.set(0,heightAt(0,0),0);
 scene.add(player);
+
+// Modelo humano 3D externo, texturizado, com esqueleto e animação.
+// O avatar procedural fica como reserva caso a conexão falhe.
+let humanMixer = null;
+const humanLoader = new GLTFLoader();
+humanLoader.load(
+  'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/CesiumMan/glTF-Binary/CesiumMan.glb',
+  (gltf) => {
+    const human = gltf.scene;
+    human.name = 'ALLK_HUMAN_3D';
+    const bounds = new THREE.Box3().setFromObject(human);
+    const size = bounds.getSize(new THREE.Vector3());
+    const scale = 1.78 / Math.max(size.y, 0.001);
+    human.scale.setScalar(scale);
+    const scaledBounds = new THREE.Box3().setFromObject(human);
+    human.position.y -= scaledBounds.min.y;
+    human.rotation.y = Math.PI;
+    human.traverse((part) => {
+      if (part.isMesh) {
+        part.castShadow = true;
+        part.receiveShadow = true;
+        if (part.material) {
+          part.material.roughness = Math.max(part.material.roughness ?? 0.8, 0.72);
+        }
+      }
+    });
+    player.add(human);
+    fallbackAvatar.visible = false;
+    if (gltf.animations && gltf.animations.length) {
+      humanMixer = new THREE.AnimationMixer(human);
+      humanMixer.clipAction(gltf.animations[0]).play();
+    }
+    console.info('Modelo humano 3D carregado:', gltf.animations.length, 'animações');
+  },
+  undefined,
+  (error) => console.warn('Não foi possível carregar o modelo humano 3D; usando personagem reserva.', error)
+);
 
 const move = { x: 0, y: 0 };
 let yaw = 0, pitch = .22, lookId = null, lastX = 0, lastY = 0;
@@ -179,6 +220,7 @@ const clock = new THREE.Clock();
 function frame() {
   requestAnimationFrame(frame);
   const dt=Math.min(clock.getDelta(),.04);
+  if (humanMixer) humanMixer.update(dt);
   let forward=move.y, side=move.x;
   if(keys.w||keys.arrowup)forward-=1;
   if(keys.s||keys.arrowdown)forward+=1;
