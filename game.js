@@ -188,7 +188,7 @@ function makeGrassClump() {
 }
 const grassGeo=makeGrassClump();
 const grassMat=new THREE.MeshStandardMaterial({vertexColors:true,side:THREE.DoubleSide,roughness:1});
-const grassField=new THREE.InstancedMesh(grassGeo,grassMat,60000);
+const grassField=new THREE.InstancedMesh(grassGeo,grassMat,52000);
 grassField.instanceMatrix.setUsage(THREE.StaticDrawUsage);
 const grassDummy=new THREE.Object3D();
 let grassCount=0;
@@ -204,12 +204,12 @@ function trailDistance(x,z){
   return best;
 }
 const PATH_CLEAR_WIDTH=3.18; // largura do caminho + pequena margem para as folhas do capim
-for(let i=0;i<60000;i++){
+for(let i=0;i<52000;i++){
   const gx=(rand()-.5)*286, gz=(rand()-.5)*286;
   if(Math.hypot(gx,gz)<9 || trailDistance(gx,gz)<PATH_CLEAR_WIDTH) continue;
   // Manchas de capim: áreas mais cheias alternadas com pequenas clareiras naturais.
   const patch=(Math.sin(gx*.075+Math.cos(gz*.06))*Math.cos(gz*.082+gx*.025)+1)*.5;
-  if(rand()>.84+patch*.16) continue;
+  if(rand()>.87+patch*.13) continue;
   const scale=.78+rand()*.82;
   grassDummy.position.set(gx,heightAt(gx,gz)+.025,gz);
   grassDummy.rotation.set((rand()-.5)*.08,rand()*Math.PI*2,(rand()-.5)*.08);
@@ -382,14 +382,14 @@ function makeLowGrassGeo() {
 }
 const lowGrassGeo=makeLowGrassGeo();
 const lowGrassMats=[0x526d35,0x668044,0x78934d,0x8a9b55].map(color=>new THREE.MeshStandardMaterial({color,side:THREE.DoubleSide,roughness:1}));
-const lowGrassMeshes=lowGrassMats.map(mat=>new THREE.InstancedMesh(lowGrassGeo,mat,16000));
+const lowGrassMeshes=lowGrassMats.map(mat=>new THREE.InstancedMesh(lowGrassGeo,mat,13000));
 const lowGrassCounts=[0,0,0,0];
 const lowGrassDummy=new THREE.Object3D();
-for(let i=0;i<16000;i++){
+for(let i=0;i<13000;i++){
   const x=(rand()-.5)*286,z=(rand()-.5)*286;
   if(Math.hypot(x,z)<8 || trailDistance(x,z)<PATH_CLEAR_WIDTH) continue;
   const patch=(Math.sin(x*.09+z*.04)*Math.cos(z*.08-x*.03)+1)*.5;
-  if(rand()>.86+patch*.14) continue;
+  if(rand()>.88+patch*.12) continue;
   lowGrassDummy.position.set(x,heightAt(x,z)+.035,z);
   lowGrassDummy.rotation.y=rand()*Math.PI*2;
   const s=.7+rand()*.8;
