@@ -397,6 +397,26 @@ const leafGeo = new THREE.SphereGeometry(1, 10, 8);
 const trunkMat = new THREE.MeshStandardMaterial({color:0x60432d,roughness:1});
 const branchMat = new THREE.MeshStandardMaterial({color:0x68482e,roughness:1});
 const leafMats=[0x385d32,0x456b39,0x527642,0x607e3c,0x718647].map(color=>new THREE.MeshStandardMaterial({color,roughness:.98}));
+ // Movimento quase imperceptível das copas, separado do tronco para preservar a estabilidade.
+function addCanopyWind(material){
+  material.userData.canopyWind={value:0};
+  material.onBeforeCompile=(shader)=>{
+    shader.uniforms.uCanopyTime=material.userData.canopyWind;
+    shader.vertexShader=shader.vertexShader.replace(
+      '#include <common>',
+      '#include <common>\\nuniform float uCanopyTime;'
+    );
+    shader.vertexShader=shader.vertexShader.replace(
+      '#include <begin_vertex>',
+      `#include <begin_vertex>
+      vec4 canopyWorld = modelMatrix * instanceMatrix * vec4(transformed, 1.0);
+      float canopyWave = sin(uCanopyTime * 0.72 + canopyWorld.x * 0.035 + canopyWorld.z * 0.028);
+      transformed.x += canopyWave * 0.018;
+      transformed.z += cos(uCanopyTime * 0.61 + canopyWorld.z * 0.03) * 0.009;`
+    );
+  };
+}
+for(const mat of leafMats)addCanopyWind(mat);
 const trunkMesh=new THREE.InstancedMesh(trunkGeo,trunkMat,190);
 const branchMesh=new THREE.InstancedMesh(branchGeo,branchMat,190*7);
 const leafMeshes=leafMats.map(mat=>new THREE.InstancedMesh(leafGeo,mat,190*8));
@@ -906,6 +926,7 @@ function frame() {
   const windTime=clock.elapsedTime;
   grassMat.userData.windUniform.value=windTime;
   for(const mat of lowGrassMats)mat.userData.windUniform.value=windTime;
+  for(const mat of leafMats)mat.userData.canopyWind.value=windTime;
   // Ajusta a resolução dinamicamente quando o celular começa a perder fluidez.
   if(isMobileDevice){
     frameTimeTotal+=dt;frameSamples++;
