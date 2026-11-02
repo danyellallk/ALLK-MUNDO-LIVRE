@@ -53,36 +53,41 @@ const ground = new THREE.Mesh(groundGeo, new THREE.MeshStandardMaterial({ vertex
 ground.receiveShadow = true;
 scene.add(ground);
 
-// Grama natural: cada tufo é formado por lâminas curvas e finas, com alturas e tons variados.
+// Campo de capim natural: tufos baixos e cheios, com folhas curvas, largas na base e pontas suaves.
 function makeGrassClump() {
-  const positions=[], colors=[];
-  const greenPalette=[0x526f32,0x6f8d3d,0x8da64c,0x9eaa55,0x42652f];
-  for(let blade=0;blade<7;blade++){
+  const positions=[], colors=[], indices=[];
+  const palette=[0x526f32,0x66823a,0x789447,0x8da34e,0x9aa85a,0x49652f];
+  for(let blade=0;blade<15;blade++){
     const angle=rand()*Math.PI*2;
-    const height=.32+rand()*.62;
-    const width=.025+rand()*.025;
-    const lean=.08+rand()*.18;
-    const bx=Math.cos(angle)*(rand()*.13), bz=Math.sin(angle)*(rand()*.13);
+    const height=.22+rand()*.42;
+    const width=.018+rand()*.018;
+    const lean=.06+rand()*.16;
+    const bx=Math.cos(angle)*(.015+rand()*.12);
+    const bz=Math.sin(angle)*(.015+rand()*.12);
     const dx=Math.cos(angle), dz=Math.sin(angle);
-    const sideX=-dz*width, sideZ=dx*width;
+    const sx=-dz, sz=dx;
     const bendX=dx*lean, bendZ=dz*lean;
-    const base=[bx,0,bz];
-    const mid=[bx+bendX*.38,height*.56,bz+bendZ*.38];
-    const tip=[bx+bendX,height,bz+bendZ];
-    const v=[
-      base[0]-sideX,base[1],base[2]-sideZ, base[0]+sideX,base[1],base[2]+sideZ,
-      mid[0]-sideX*.58,mid[1],mid[2]-sideZ*.58,
-      mid[0]+sideX*.58,mid[1],mid[2]+sideZ*.58,
-      tip[0],tip[1],tip[2]
+    const baseY=0;
+    const levels=[
+      [0, width],
+      [height*.32, width*.92],
+      [height*.68, width*.56],
+      [height, .001]
     ];
-    positions.push(...v);
-    const col=new THREE.Color(greenPalette[Math.floor(rand()*greenPalette.length)]);
-    for(let j=0;j<5;j++) colors.push(col.r,col.g,col.b);
-  }
-  const indices=[];
-  for(let i=0;i<7;i++){
-    const n=i*5;
-    indices.push(n,n+1,n+2,n+1,n+3,n+2,n+2,n+3,n+4);
+    const first=positions.length/3;
+    for(let k=0;k<levels.length;k++){
+      const [yy,ww]=levels[k];
+      const t=yy/height;
+      const curve=t*t;
+      const cx=bx+bendX*curve, cz=bz+bendZ*curve;
+      positions.push(cx-sx*ww,baseY+yy,cz-sz*ww,cx+sx*ww,baseY+yy,cz+sz*ww);
+    }
+    for(let k=0;k<levels.length-1;k++){
+      const n=first+k*2;
+      indices.push(n,n+1,n+2,n+1,n+3,n+2);
+    }
+    const col=new THREE.Color(palette[Math.floor(rand()*palette.length)]);
+    for(let k=0;k<levels.length*2;k++) colors.push(col.r,col.g,col.b);
   }
   const geo=new THREE.BufferGeometry();
   geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
@@ -93,16 +98,16 @@ function makeGrassClump() {
 }
 const grassGeo=makeGrassClump();
 const grassMat=new THREE.MeshStandardMaterial({vertexColors:true,side:THREE.DoubleSide,roughness:1});
-const grassField=new THREE.InstancedMesh(grassGeo,grassMat,7600);
+const grassField=new THREE.InstancedMesh(grassGeo,grassMat,10500);
 grassField.instanceMatrix.setUsage(THREE.StaticDrawUsage);
 const grassDummy=new THREE.Object3D();
-for(let i=0;i<7600;i++){
+for(let i=0;i<10500;i++){
   const gx=(rand()-.5)*286, gz=(rand()-.5)*286;
   if(Math.hypot(gx,gz)<9) continue;
-  const scale=.8+rand()*1.25;
-  grassDummy.position.set(gx,heightAt(gx,gz)+.035,gz);
+  const scale=.85+rand()*.9;
+  grassDummy.position.set(gx,heightAt(gx,gz)+.025,gz);
   grassDummy.rotation.set(0,rand()*Math.PI*2,0);
-  grassDummy.scale.set(scale,.85+rand()*.55,scale);
+  grassDummy.scale.set(scale,.9+rand()*.35,scale);
   grassDummy.updateMatrix();
   grassField.setMatrixAt(i,grassDummy.matrix);
 }
