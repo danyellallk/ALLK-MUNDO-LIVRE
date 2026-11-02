@@ -811,13 +811,49 @@ humanLoader.load(
 const move = { x: 0, y: 0 };
 let yaw = 0, pitch = .22, lookId = null, lastX = 0, lastY = 0;
 const joy = document.querySelector('#joystick'), knob = document.querySelector('#knob');
+
+// Passos procedurais: áudio leve de terra/cascalho, sem arquivos externos.
+let footstepAudio=null, footstepNoise=null, footstepClock=0;
+function unlockFootstepAudio(){
+  if(footstepAudio) { if(footstepAudio.state==='suspended') footstepAudio.resume(); return; }
+  const AudioCtx=window.AudioContext||window.webkitAudioContext;
+  if(!AudioCtx) return;
+  footstepAudio=new AudioCtx();
+  const length=Math.floor(footstepAudio.sampleRate*.16);
+  footstepNoise=footstepAudio.createBuffer(1,length,footstepAudio.sampleRate);
+  const data=footstepNoise.getChannelData(0);
+  for(let i=0;i<length;i++) data[i]=(Math.random()*2-1)*Math.pow(1-i/length,1.8);
+}
+function playFootstep(){
+  if(!footstepAudio||footstepAudio.state!=='running') return;
+  const now=footstepAudio.currentTime;
+  const noise=footstepAudio.createBufferSource();
+  noise.buffer=footstepNoise;
+  const filter=footstepAudio.createBiquadFilter();
+  filter.type='lowpass';filter.frequency.value=520+Math.random()*260;
+  const grit=footstepAudio.createGain();
+  grit.gain.setValueAtTime(.0001,now);
+  grit.gain.exponentialRampToValueAtTime(.12,now+.012);
+  grit.gain.exponentialRampToValueAtTime(.0001,now+.13);
+  noise.connect(filter);filter.connect(grit);grit.connect(footstepAudio.destination);
+  noise.start(now);noise.stop(now+.15);
+  const thump=footstepAudio.createOscillator();
+  const body=footstepAudio.createGain();
+  thump.type='sine';thump.frequency.setValueAtTime(105+Math.random()*22,now);
+  thump.frequency.exponentialRampToValueAtTime(58,now+.09);
+  body.gain.setValueAtTime(.0001,now);
+  body.gain.exponentialRampToValueAtTime(.16,now+.009);
+  body.gain.exponentialRampToValueAtTime(.0001,now+.11);
+  thump.connect(body);body.connect(footstepAudio.destination);
+  thump.start(now);thump.stop(now+.12);
+}
 let joyId = null;
 function setJoy(e) {
   const r = joy.getBoundingClientRect(), dx = e.clientX-r.left-r.width/2, dy=e.clientY-r.top-r.height/2;
   const d=Math.hypot(dx,dy), f=Math.min(1, d/43)/(d||1);
   move.x=dx*f; move.y=dy*f; knob.style.transform=`translate(${move.x*43}px,${move.y*43}px)`;
 }
-joy.addEventListener('pointerdown',e=>{joyId=e.pointerId;joy.setPointerCapture(e.pointerId);setJoy(e);e.preventDefault()});
+joy.addEventListener('pointerdown',e=>{unlockFootstepAudio();joyId=e.pointerId;joy.setPointerCapture(e.pointerId);setJoy(e);e.preventDefault()});
 joy.addEventListener('pointermove',e=>{if(e.pointerId===joyId)setJoy(e)});
 function resetJoy(){joyId=null;move.x=move.y=0;knob.style.transform='translate(0,0)'}
 joy.addEventListener('pointerup',resetJoy);joy.addEventListener('pointercancel',resetJoy);
@@ -826,7 +862,7 @@ addEventListener('pointerup',e=>{if(e.pointerId===lookId)lookId=null});
 addEventListener('pointercancel',e=>{if(e.pointerId===lookId)lookId=null});
 addEventListener('pointermove',e=>{if(e.pointerId!==lookId)return;yaw-=(e.clientX-lastX)*.0045;pitch=clamp(pitch+(e.clientY-lastY)*.003,-.25,.8);lastX=e.clientX;lastY=e.clientY});
 const keys = {};
-addEventListener('keydown',e=>keys[e.key.toLowerCase()]=true);
+addEventListener('keydown',e=>{unlockFootstepAudio();keys[e.key.toLowerCase()]=true});
 addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
 
 function resolve(x,z) {
@@ -863,6 +899,7 @@ function frame() {
   if (keys.d || keys.arrowright) side += 1;
   const len = Math.hypot(forward, side);
   const walking = len > 0.08;
+  let actuallyMoving=false;
   if (humanWalkAction) humanWalkAction.paused = !walking;
   if (walking) {
     const magnitude = Math.max(1, len);
@@ -875,11 +912,16 @@ function frame() {
       player.position.x + dx * 5.2 * dt,
       player.position.z + dz * 5.2 * dt
     );
+    actuallyMoving = Math.hypot(next.x-player.position.x,next.z-player.position.z) > .005;
     player.position.x = next.x;
     player.position.z = next.z;
     // O rosto do personagem aponta para a direção em que está caminhando.
     player.rotation.y = Math.atan2(-dx, -dz);
   }
+  if(actuallyMoving){
+    footstepClock += dt;
+    if(footstepClock >= .38){ playFootstep(); footstepClock -= .38; }
+  } else { footstepClock = Math.min(footstepClock,.12); }
   const walkTime = clock.elapsedTime * 8.5;
   const stride = walking ? Math.sin(walkTime) : 0;
   for (let i=0;i<2;i++) {
