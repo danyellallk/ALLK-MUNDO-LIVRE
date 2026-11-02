@@ -16,5 +16,8 @@ Three.js 0.160.0 carregado por CDN. O código do jogo neste branch foi escrito p
 ## Execução
 Abra o projeto por um servidor estático ou publique o branch no GitHub Pages. É necessário acesso à internet para carregar Three.js pela CDN.
 
-## Créditos do personagem 3D
-O modelo `Cesium Man` é fornecido pelo Khronos Group / Cesium, sob licença Creative Commons Attribution 4.0 International (CC BY 4.0). Créditos: Cesium, 2015–2017. Modelo original: https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/CesiumMan . A licença exige atribuição; marcas e logotipos Cesium não são licenciados para uso como marca do jogo.
+## Personagem 3D
+O protagonista usa o modelo humano `Man Base Mesh` do Grab3D, com malha anatômica, materiais PBR e versão rigged com animações de caminhada/corrida. O modelo é disponibilizado sob CC0 1.0, gratuito para uso e modificação. Fonte: https://grab3d.com/models/characters/man-base-character/ .
+
+## Qualidade gráfica
+Renderização adaptativa de alta densidade (até 2,25x a densidade de pixels do dispositivo), com sombras em 2048 px. A resolução efetiva e o desempenho dependem da tela, GPU, navegador e memória do aparelho; isso não garante saída nativa 4K em todos os celulares.
