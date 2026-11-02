@@ -94,6 +94,8 @@ for (let i = 0; i < 85; i++) {
 const player = new THREE.Group();
 const fallbackAvatar = new THREE.Group();
 fallbackAvatar.visible = false;
+// O rosto do avatar reserva fica voltado para -Z; alinhar com o eixo frontal do modelo externo.
+fallbackAvatar.rotation.y = Math.PI;
 player.add(fallbackAvatar);
 const skin = new THREE.MeshStandardMaterial({ color: 0xa96f4d, roughness: .92 });
 const coat = new THREE.MeshStandardMaterial({ color: 0x514234, roughness: 1 });
