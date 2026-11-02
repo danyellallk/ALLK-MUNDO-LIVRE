@@ -170,7 +170,7 @@ const bushMeshes=bushMats.map(mat=>{
   return mesh;
 });
 const bushDummy=new THREE.Object3D();
-let bushIndex=0;
+const bushCounts=[0,0,0,0];
 for(let i=0;i<bushCount;i++){
   const x=(rand()-.5)*270,z=(rand()-.5)*270;
   if(Math.hypot(x,z)<15) continue;
@@ -180,12 +180,13 @@ for(let i=0;i<bushCount;i++){
     bushDummy.rotation.set(rand()*.3,rand()*Math.PI*2,rand()*.3);
     bushDummy.scale.set(size*(.55+rand()*.35),size*(.42+rand()*.3),size*(.55+rand()*.35));
     bushDummy.updateMatrix();
-    bushMeshes[Math.floor(rand()*bushMeshes.length)].setMatrixAt(bushIndex++,bushDummy.matrix);
+    const bushType=Math.floor(rand()*bushMeshes.length);
+    bushMeshes[bushType].setMatrixAt(bushCounts[bushType]++,bushDummy.matrix);
   }
   obstacles.push({x,z,radius:size*.62});
 }
 for(const mesh of bushMeshes){
-  mesh.count=bushIndex;
+  mesh.count=bushCounts[bushMeshes.indexOf(mesh)];
   mesh.computeBoundingSphere();
   mesh.castShadow=true;
   mesh.receiveShadow=true;
