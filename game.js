@@ -229,21 +229,31 @@ function frame() {
   requestAnimationFrame(frame);
   const dt=Math.min(clock.getDelta(),.04);
   if (humanMixer && humanWalkAction && !humanWalkAction.paused) humanMixer.update(dt);
-  let forward=move.y, side=move.x;
-  if(keys.w||keys.arrowup)forward-=1;
-  if(keys.s||keys.arrowdown)forward+=1;
-  if(keys.a||keys.arrowleft)side-=1;
-  if(keys.d||keys.arrowright)side+=1;
-  const len=Math.hypot(forward,side);
-  const walking = len > .08;
+  // Controles corrigidos: joystick para cima = avançar; direita = mover à direita.
+  let forward = -move.y;
+  let side = move.x;
+  if (keys.w || keys.arrowup) forward += 1;
+  if (keys.s || keys.arrowdown) forward -= 1;
+  if (keys.a || keys.arrowleft) side -= 1;
+  if (keys.d || keys.arrowright) side += 1;
+  const len = Math.hypot(forward, side);
+  const walking = len > 0.08;
   if (humanWalkAction) humanWalkAction.paused = !walking;
-  if(walking){
-    forward/=Math.max(1,len);side/=Math.max(1,len);
-    const dx=Math.sin(yaw)*(-forward)-Math.cos(yaw)*side;
-    const dz=Math.cos(yaw)*(-forward)+Math.sin(yaw)*side;
-    const next=resolve(player.position.x+dx*5.2*dt,player.position.z+dz*5.2*dt);
-    player.position.x=next.x;player.position.z=next.z;
-    player.rotation.y=Math.atan2(dx,dz);
+  if (walking) {
+    const magnitude = Math.max(1, len);
+    forward /= magnitude;
+    side /= magnitude;
+    // Movimento relativo à câmera: frente acompanha para onde a câmera olha.
+    const dx = -Math.sin(yaw) * forward + Math.cos(yaw) * side;
+    const dz = -Math.cos(yaw) * forward - Math.sin(yaw) * side;
+    const next = resolve(
+      player.position.x + dx * 5.2 * dt,
+      player.position.z + dz * 5.2 * dt
+    );
+    player.position.x = next.x;
+    player.position.z = next.z;
+    // O rosto do personagem aponta para a direção em que está caminhando.
+    player.rotation.y = Math.atan2(-dx, -dz);
   }
   const walkTime = clock.elapsedTime * 8.5;
   const stride = walking ? Math.sin(walkTime) : 0;
