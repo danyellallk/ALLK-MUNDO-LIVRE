@@ -963,6 +963,8 @@ const move = { x: 0, y: 0 };
 let yaw = 0, pitch = .22, lookId = null, lastX = 0, lastY = 0;
 const joy = document.querySelector('#joystick'), knob = document.querySelector('#knob');
 const sprintButton = document.querySelector('#sprint');
+const staminaFill = document.querySelector('#stamina-fill');
+let stamina = 100;
 let sprintHeld = false;
 function setSprint(value){sprintHeld=value; if(sprintButton)sprintButton.classList.toggle('active',value);}
 if(sprintButton){
@@ -1068,7 +1070,12 @@ function frame() {
   if (keys.d || keys.arrowright) side += 1;
   const len = Math.hypot(forward, side);
   const walking = len > 0.08;
-  const running = walking && (sprintHeld || keys.shift);
+  const sprintRequested = sprintHeld || keys.shift;
+  if(walking && sprintRequested && stamina>0) stamina=Math.max(0,stamina-dt*23);
+  else stamina=Math.min(100,stamina+dt*(walking?11:19));
+  const running = walking && sprintRequested && stamina>0;
+  if(staminaFill) staminaFill.style.width=stamina+'%';
+  if(sprintButton) sprintButton.classList.toggle('exhausted',stamina<=0.5);
   let actuallyMoving=false;
   const desiredHumanAction = running && humanRunAction ? humanRunAction : humanWalkAction;
   if (desiredHumanAction && desiredHumanAction !== activeHumanAction) {
